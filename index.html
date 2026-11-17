@@ -749,10 +749,14 @@
       function agendaMonthKey(){ var a = agendaAnchorDate(); return a.getFullYear()+"-"+String(a.getMonth()+1).padStart(2,"0"); }
 
       /* ---------- shared bits ---------- */
-      function filterBarHTML(){
+      function filterBarHTML(actsForFilter){
+        var sourceActs = actsForFilter || state.activities;
+        var withActs = {};
+        sourceActs.forEach(function(a){ if (a.member_id != null) withActs[a.member_id] = true; });
         var h = '<div class="filterbar"><span class="flabel">'+icon("users",14)+' Filtrar</span>';
         h += '<button type="button" class="chip'+(memberFilter==null?" active":"")+'" data-filter="" aria-pressed="'+(memberFilter==null)+'">Todo el equipo</button>';
         state.members.forEach(function(m){
+          if (!withActs[m.orden]) return;
           h += '<button type="button" class="chip-person'+(memberFilter===m.orden?" active":"")+'" data-filter="'+m.orden+'" aria-pressed="'+(memberFilter===m.orden)+'">'+avatar(m,24)+esc(m.name.split(" ")[0])+'</button>';
         });
         return h + "</div>";
@@ -813,9 +817,10 @@
       function renderSemana(main){
         var mo = monday();
         var wa = weekActs();
+        if (memberFilter != null && !wa.some(function(a){return a.member_id===memberFilter;})) memberFilter = null;
         var visible = memberFilter == null ? wa : wa.filter(function(a){return a.member_id===memberFilter;});
         var ov = overdueActs();
-        var h = filterBarHTML();
+        var h = filterBarHTML(wa);
         if (ov.length > 0) {
           h += '<section class="overdue-box" aria-label="Actividades vencidas"><h2><span class="ob-ico">'+icon("alert",16)+'</span>Vencidas sin completar<span class="ob-count">'+ov.length+'</span></h2><div class="grid-2">';
           ov.forEach(function(a){ h += activityCardHTML(a, true); });
@@ -853,6 +858,7 @@
         var days = []; for (var i=0;i<42;i++) days.push(addDaysISO(gridStart, i));
         var mk = agendaMonthKey();
         var monthAll = state.activities.filter(function(a){return a.date.indexOf(mk)===0;});
+        if (memberFilter != null && !monthAll.some(function(a){return a.member_id===memberFilter;})) memberFilter = null;
         var monthActs = memberFilter == null ? monthAll : monthAll.filter(function(a){return a.member_id===memberFilter;});
         var monthDone = monthActs.filter(function(a){return a.status==="completada";}).length;
         var byDate = {};
@@ -861,7 +867,7 @@
           (byDate[a.date] = byDate[a.date] || []).push(a);
         });
         var h = '<section aria-label="Agenda mensual"><div class="agenda-head"><h2>'+secBadge("agenda", true)+MONTHS[anchor.getMonth()]+" "+anchor.getFullYear()+'</h2><div class="month-nav"><button type="button" class="arrow" id="mPrev" aria-label="Mes anterior">'+icon("chevL",18)+'</button>'+(agendaMonthOffset!==0?'<button type="button" class="hoy" id="mToday">Hoy</button>':"")+'<button type="button" class="arrow" id="mNext" aria-label="Mes siguiente">'+icon("chevR",18)+"</button></div></div>";
-        h += filterBarHTML();
+        h += filterBarHTML(monthAll);
         h += '<div class="month-stats"><span class="mstat dark">'+icon("layers",13)+monthActs.length+' en el mes</span><span class="mstat light">'+icon("checkCircle",13)+monthDone+' completadas</span><span class="mstat light">'+icon("clock",13)+(monthActs.length-monthDone)+" por hacer</span></div>";
         h += '<div class="cal"><div class="cal-week">'+DAYS_SHORT.map(function(d){return "<span>"+d+"</span>";}).join("")+'</div><div class="cal-grid">';
         days.forEach(function(dateISO){
