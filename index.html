@@ -527,7 +527,9 @@
         return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="'+sw+'" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+ps+'</svg>';
       }
       var STATUS_LABEL={pendiente:"Pendiente",en_curso:"En curso",completada:"Completada"};
-      var PRIORITY_LABEL={alta:"Alta",media:"Media",baja:"Baja"};
+      var PRIORITY_LABEL={alta:"Alta",media:"Media",baja:"Baja",ninguna:"Sin prioridad"};
+      function normPriority(p){return String(p==null?"":p).toLowerCase().trim();}
+      function hasPriority(p){var n=normPriority(p);return n==="alta"||n==="media"||n==="baja";}
       var NEXT_STATUS={pendiente:"en_curso",en_curso:"completada",completada:"pendiente"};
 
       function memberByOrden(orden){for(var i=0;i<state.members.length;i++)if(state.members[i].orden===orden)return state.members[i];return undefined;}
@@ -653,7 +655,7 @@
               seedCollection("actividades", SEED_ACTIVITIES, function(s){ return { title:s.title, detail:s.detail, member_id:s.member_id, date:s.date, place:s.place, deliverable:s.deliverable, status:s.status, priority:s.priority }; });
             } else {
               var arr = [];
-              snap.forEach(function(d){ var v=d.data(); arr.push({ id:d.id, title:v.title||"", detail:v.detail||"", member_id:v.member_id!=null?Number(v.member_id):null, date:v.date||TODAY, place:v.place||"", deliverable:v.deliverable||"", status:v.status||"pendiente", priority:v.priority||"media" }); });
+              snap.forEach(function(d){ var v=d.data(); arr.push({ id:d.id, title:v.title||"", detail:v.detail||"", member_id:v.member_id!=null?Number(v.member_id):null, date:v.date||TODAY, place:v.place||"", deliverable:v.deliverable||"", status:v.status||"pendiente", priority:v.priority!=null?String(v.priority).toLowerCase().trim():"" }); });
               arr.sort(function(a,b){ return a.date<b.date?-1:a.date>b.date?1:(a.title<b.title?-1:1); });
               state.activities = arr;
             }
@@ -831,7 +833,7 @@
         var m = a.member_id != null ? memberByOrden(a.member_id) : undefined;
         var overdue = a.date < TODAY && a.status !== "completada";
         var done = a.status === "completada";
-        var barColor = overdue ? "var(--accent)" : done ? "#000" : a.priority === "alta" ? "var(--accent)" : "#e4e4e7";
+        var barColor = overdue ? "var(--accent)" : done ? "#000" : normPriority(a.priority) === "alta" ? "var(--accent)" : "#e4e4e7";
         var h = '<article class="card'+(overdue?" overdue":"")+'"><span class="bar" style="background:'+barColor+'" aria-hidden="true"></span><div class="card-top">';
         h += m ? avatar(m,40) : '<span class="agenda-ico">'+icon("users",16)+'</span>';
         h += '<div class="card-main"><div class="card-title-row"><h4 class="'+(done?"done":"")+'">'+esc(a.title)+'</h4><button type="button" class="icon-btn" data-act-edit="'+esc(a.id)+'" aria-label="Editar '+esc(a.title)+'">'+icon("pencil",15)+'</button></div>';
@@ -843,7 +845,8 @@
         h += '<div class="tags">';
         if (a.place) h += '<span class="tag tag-place">'+icon("pin",12)+esc(a.place)+'</span>';
         if (a.deliverable) h += '<span class="tag tag-deliv">'+icon("box",12)+esc(a.deliverable)+'</span>';
-        h += '<span class="tag tag-prio '+a.priority+'">'+icon("flag",11,2.4)+PRIORITY_LABEL[a.priority]+'</span></div>';
+        if (hasPriority(a.priority)) { var _prio = normPriority(a.priority); h += '<span class="tag tag-prio '+_prio+'">'+icon("flag",11,2.4)+PRIORITY_LABEL[_prio]+'</span>'; }
+        h += '</div>';
         h += "</div></div>";
         h += '<div class="status-group" role="group" aria-label="Cambiar estado de '+esc(a.title)+'">';
         ["pendiente","en_curso","completada"].forEach(function(st){
@@ -1121,8 +1124,10 @@
         }).join("");
       }
       function priorityOptions(selected){
-        return ["alta","media","baja"].map(function(s){
-          return '<option value="' + s + '"' + (selected === s ? " selected" : "") + '>' + PRIORITY_LABEL[s] + '</option>';
+        var sel = normPriority(selected);
+        if (!hasPriority(sel)) sel = "ninguna";
+        return ["ninguna","alta","media","baja"].map(function(s){
+          return '<option value="' + s + '"' + (sel === s ? " selected" : "") + '>' + PRIORITY_LABEL[s] + '</option>';
         }).join("");
       }
 
@@ -1203,7 +1208,7 @@
       function openActivityModal(a, presetDate){
         if (!guardEdit()) return;
         var isEdit = !!a;
-        a = a || { title:"", detail:"", member_id:null, date:presetDate || TODAY, place:"", deliverable:"", status:"pendiente", priority:"media" };
+        a = a || { title:"", detail:"", member_id:null, date:presetDate || TODAY, place:"", deliverable:"", status:"pendiente", priority:"ninguna" };
         var body = '<form class="form" id="actForm">'
           + '<div><label class="flabel" for="fTitle">Actividad *</label><input class="input" id="fTitle" type="text" placeholder="Ej.: Visita de campo a tienda" value="' + esc(a.title) + '"></div>'
           + '<div><label class="flabel" for="fDetail">Detalle</label><textarea class="input" id="fDetail" placeholder="Notas, alcance o instrucciones (opcional)">' + esc(a.detail) + '</textarea></div>'
