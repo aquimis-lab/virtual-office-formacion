@@ -151,9 +151,16 @@
       .day-pill{display:flex;width:2.75rem;height:2.75rem;flex-shrink:0;flex-direction:column;align-items:center;justify-content:center;border-radius:.75rem;font-family:var(--font-display);line-height:1;background:var(--surface-2);color:var(--dim)}
       .day-pill.has{background:#000;color:#fff}
       .day-pill.today{background:var(--accent);color:#fff;box-shadow:0 8px 20px -6px rgba(227,6,19,.6)}
+      .day-pill.holiday{background:#fff;color:var(--accent-ink);box-shadow:inset 0 0 0 2px var(--accent)}
+      .day-section.holiday .day-head h2{color:var(--accent-ink)}
       .day-pill .dnum{font-size:1rem;font-weight:900}
       .day-head h2{margin:0;display:flex;align-items:center;gap:.5rem;font-family:var(--font-display);font-size:1.125rem;font-weight:800;text-transform:capitalize;line-height:1.2}
       .today-badge{border-radius:999px;background:var(--accent);padding:2px .5rem;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;color:#fff}
+      .holiday-badge{border-radius:999px;background:#000;padding:3px .6rem;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:#fff;box-shadow:inset 0 0 0 1px #000;white-space:nowrap}
+      .holiday-badge::before{content:"";display:inline-block;width:.45rem;height:.45rem;border-radius:50%;background:var(--accent);margin-right:.35rem;vertical-align:1px}
+      .holiday-banner{margin:-.25rem 0 .85rem;display:flex;align-items:flex-start;gap:.6rem;border-radius:12px;background:var(--accent-soft);box-shadow:inset 0 0 0 1px #fecdd3;padding:.7rem .85rem}
+      .holiday-banner strong{font-family:var(--font-display);font-size:13px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-ink);white-space:nowrap}
+      .holiday-banner span{font-size:13px;font-weight:600;line-height:1.45;color:rgba(10,10,10,.8)}
       .day-sub{font-size:13px;font-weight:600;color:var(--dim)}
       .day-line{margin-left:auto;height:1px;flex:1;background:var(--border);display:none}
       @media(min-width:640px){.day-line{display:block}}
@@ -167,6 +174,9 @@
       @media(min-width:1024px){.dp-grid{grid-template-columns:repeat(7,1fr)}}
       .dp-card{border-radius:14px;border:1px solid var(--border);background:#fff;padding:.75rem;box-shadow:0 1px 3px rgba(0,0,0,.05)}
       .dp-card.today{border-color:var(--accent);box-shadow:inset 0 0 0 1px rgba(227,6,19,.25),0 1px 3px rgba(0,0,0,.05)}
+      .dp-card.holiday{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px rgba(227,6,19,.35)}
+      .dp-card.holiday .dp-day{color:var(--accent-ink)}
+      .dp-holiday-tag{display:inline-flex;margin-top:.45rem;border-radius:999px;background:#000;color:#fff;padding:2px .5rem;font-size:9px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
       .dp-card.full{border-color:#000}
       .dp-day{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:var(--dim)}
       .dp-card.today .dp-day{color:var(--accent-ink)}
@@ -262,6 +272,12 @@
       .cal-day:hover{background:var(--accent-soft)}
       .cal-day.selected{background:#000;color:#fff}
       .cal-day.selected:hover{background:#000}
+      .cal-day.holiday{background:var(--accent-soft);box-shadow:inset 0 0 0 1px #fecdd3}
+      .cal-day.holiday:hover{background:#ffe4e6}
+      .cal-day.holiday.selected{background:#000;color:#fff;box-shadow:none}
+      .cal-holiday-tag{display:inline-flex;align-items:center;border-radius:999px;background:var(--accent);color:#fff;padding:2px .45rem;font-size:8px;font-weight:900;letter-spacing:.07em;text-transform:uppercase;line-height:1.2;white-space:nowrap}
+      @media(min-width:640px){.cal-holiday-tag{font-size:9px;padding:3px .55rem}}
+      .cal-day.selected .cal-holiday-tag{background:var(--accent);color:#fff}
       .cal-num{display:flex;width:1.5rem;height:1.5rem;align-items:center;justify-content:center;border-radius:50%;font-family:var(--font-display);font-size:13px;font-weight:900;line-height:1}
       @media(min-width:640px){.cal-num{width:1.75rem;height:1.75rem;font-size:.875rem}}
       .cal-num.today{background:var(--accent);color:#fff}
@@ -463,6 +479,9 @@
       var MONTHS_SHORT = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
       var DAYS = ["lunes","martes","miércoles","jueves","viernes","sábado","domingo"];
       var DAYS_SHORT = ["lun","mar","mié","jue","vie","sáb","dom"];
+      var HOLIDAYS = { "2026-11-20": { label:"FERIADO", detail:"Descanso obligatorio y no recuperable en todo el país · Decreto Ejecutivo 507 · Festival Internacional de Artes Vivas de Loja" } };
+      function holidayOf(s){ return HOLIDAYS[s] || null; }
+      function isHoliday(s){ return !!HOLIDAYS[s]; }
       function isoOf(d){var m=String(d.getMonth()+1).padStart(2,"0");var day=String(d.getDate()).padStart(2,"0");return d.getFullYear()+"-"+m+"-"+day;}
       function parseISO(s){var p=String(s||"").split("-").map(Number);return new Date(p[0]||2026,(p[1]||1)-1,p[2]||1);}
       function addDaysISO(s,n){var d=parseISO(s);d.setDate(d.getDate()+n);return isoOf(d);}
@@ -861,7 +880,8 @@
             var dDone = dActs.filter(function(a){return a.status==="completada";}).length;
             var dPct = dActs.length ? Math.round(dDone/dActs.length*100) : 0;
             var dToday = dISO === TODAY;
-            h += '<article class="dp-card'+(dToday?" today":"")+(dActs.length&&dPct===100?" full":"")+'" aria-label="Avance del '+dayName+' '+fmtShort(dISO)+': '+dPct+' por ciento"><p class="dp-day">'+DAYS_SHORT[i]+(dToday?" · Hoy":"")+'</p><p class="dp-date">'+parseISO(dISO).getDate()+" "+MONTHS_SHORT[parseISO(dISO).getMonth()]+'</p><p class="dp-pct">'+dPct+'<span>%</span></p><p class="dp-count">'+(dActs.length ? dDone+"/"+dActs.length+" hechas" : "Sin actividades")+'</p><div class="dp-bar"><div class="'+(dPct===100?"full":dActs.length===0?"empty":"")+'" style="width:'+dPct+'%"></div></div></article>';
+            var dHol = holidayOf(dISO);
+            h += '<article class="dp-card'+(dToday?" today":"")+(dHol?" holiday":"")+(dActs.length&&dPct===100?" full":"")+'" aria-label="Avance del '+dayName+' '+fmtShort(dISO)+': '+dPct+' por ciento'+(dHol?". Es feriado":"")+'"><p class="dp-day">'+DAYS_SHORT[i]+(dToday?" · Hoy":"")+(dHol?" · Feriado":"")+'</p><p class="dp-date">'+parseISO(dISO).getDate()+" "+MONTHS_SHORT[parseISO(dISO).getMonth()]+'</p>'+(dHol?'<span class="dp-holiday-tag">Feriado</span>':"")+'<p class="dp-pct">'+dPct+'<span>%</span></p><p class="dp-count">'+(dActs.length ? dDone+"/"+dActs.length+" hechas" : "Sin actividades")+'</p><div class="dp-bar"><div class="'+(dPct===100?"full":dActs.length===0?"empty":"")+'" style="width:'+dPct+'%"></div></div></article>';
           });
           h += "</div></section>";
         }
@@ -877,13 +897,15 @@
             var dateISO = addDaysISO(mo, i);
             var dayActs = visible.filter(function(a){return a.date===dateISO;});
             var isToday = dateISO === TODAY;
-            var pillCls = isToday ? "today" : dayActs.length > 0 ? "has" : "";
+            var hol = holidayOf(dateISO);
+            var pillCls = isToday ? "today" : hol ? "holiday" : dayActs.length > 0 ? "has" : "";
             var dayDone = dayActs.filter(function(a){return a.status==="completada";}).length;
             var dayPct = dayActs.length ? Math.round(dayDone/dayActs.length*100) : 0;
             var dayProg = dayActs.length
               ? '<div class="day-progress-inline"><span class="dp-bar"><div class="'+(dayPct===100?"full":"")+'" style="width:'+dayPct+'%"></div></span><span class="dp-inline-txt">Avance del día: '+dayPct+'% · '+dayDone+'/'+dayActs.length+' hechas</span></div>'
               : '<div class="day-progress-inline"><span class="dp-inline-txt muted">Avance del día: sin actividades</span></div>';
-            h += '<section class="day-section" aria-label="'+dayName+" "+fmtShort(dateISO)+'"><div class="day-head"><span class="day-pill '+pillCls+'" aria-hidden="true"><span class="dnum">'+parseISO(dateISO).getDate()+'</span></span><div><h2>'+dayName+(isToday?'<span class="today-badge">Hoy</span>':"")+'</h2><p class="day-sub">'+fmtShort(dateISO)+" · "+(dayActs.length>0 ? dayActs.length+(dayActs.length===1?" actividad":" actividades") : "sin actividades")+'</p>'+dayProg+'</div><span class="day-line" aria-hidden="true"></span><button type="button" class="day-add" data-add-day="'+dateISO+'">'+icon("plus",13,2.6)+' Agregar</button></div>';
+            h += '<section class="day-section'+(hol?" holiday":"")+'" aria-label="'+dayName+" "+fmtShort(dateISO)+(hol?". Feriado":"")+'"><div class="day-head"><span class="day-pill '+pillCls+'" aria-hidden="true"><span class="dnum">'+parseISO(dateISO).getDate()+'</span></span><div><h2>'+dayName+(isToday?'<span class="today-badge">Hoy</span>':"")+(hol?'<span class="holiday-badge">Feriado</span>':"")+'</h2><p class="day-sub">'+fmtShort(dateISO)+(hol?" · Feriado · ":" · ")+(dayActs.length>0 ? dayActs.length+(dayActs.length===1?" actividad":" actividades") : "sin actividades")+'</p>'+dayProg+'</div><span class="day-line" aria-hidden="true"></span><button type="button" class="day-add" data-add-day="'+dateISO+'">'+icon("plus",13,2.6)+' Agregar</button></div>';
+            if (hol) h += '<div class="holiday-banner" role="note"><strong>Feriado</strong><span>'+esc(hol.detail)+'</span></div>';
             if (dayActs.length > 0) {
               h += '<div class="grid-2">';
               dayActs.forEach(function(a){ h += activityCardHTML(a, false); });
@@ -925,9 +947,10 @@
           var acts = byDate[dateISO] || [];
           var isToday = dateISO === TODAY;
           var isSel = dateISO === selectedDay;
+          var hol = holidayOf(dateISO);
           var allDone = acts.length > 0 && acts.every(function(a){return a.status==="completada";});
           var hasOver = dateISO < TODAY && acts.some(function(a){return a.status!=="completada";});
-          h += '<button type="button" class="cal-day'+(inMonth?"":" out")+(isSel?" selected":"")+'" data-day="'+dateISO+'" aria-pressed="'+isSel+'" aria-label="'+esc(fmtFull(dateISO))+": "+acts.length+(acts.length===1?" actividad":" actividades")+'"><span class="cal-num'+(isToday?" today":hasOver&&inMonth?" over":"")+'">'+d.getDate()+"</span>";
+          h += '<button type="button" class="cal-day'+(inMonth?"":" out")+(isSel?" selected":"")+(hol&&inMonth?" holiday":"")+'" data-day="'+dateISO+'" aria-pressed="'+isSel+'" aria-label="'+esc(fmtFull(dateISO))+(hol?". Feriado. ":"")+": "+acts.length+(acts.length===1?" actividad":" actividades")+'"><span class="cal-num'+(isToday?" today":hasOver&&inMonth?" over":"")+'">'+d.getDate()+"</span>"+(hol&&inMonth?'<span class="cal-holiday-tag">Feriado</span>':"");
           if (acts.length > 0) {
             h += '<span class="cal-dots">';
             acts.slice(0,4).forEach(function(a){ var m = a.member_id!=null?memberByOrden(a.member_id):undefined; h += '<span class="cdot" style="background-color:'+(m?m.color:"#a1a1aa")+'" aria-hidden="true"></span>'; });
@@ -945,7 +968,9 @@
         var selProg = selActs.length
           ? '<div class="day-progress-inline"><span class="dp-bar"><div class="'+(selPct===100?"full":"")+'" style="width:'+selPct+'%"></div></span><span class="dp-inline-txt">Avance de este día: '+selPct+'% · '+selDone+'/'+selActs.length+' hechas</span></div>'
           : '<div class="day-progress-inline"><span class="dp-inline-txt muted">Avance de este día: sin actividades</span></div>';
-        h += '<div class="agenda-detail"><div class="agenda-detail-head"><div><h3>'+esc(fmtFull(selectedDay))+(selectedDay===TODAY?'<span class="today-badge">Hoy</span>':"")+'</h3><p>'+(selActs.length===0 ? "Sin actividades este día" : selActs.length+(selActs.length===1?" actividad":" actividades")+" · "+selDone+" completadas")+'</p>'+selProg+'</div><button type="button" class="btn-red" id="agendaAdd">'+icon("plus",15,2.5)+' Agregar este día</button></div>';
+        var selHol = holidayOf(selectedDay);
+        h += '<div class="agenda-detail"><div class="agenda-detail-head"><div><h3>'+esc(fmtFull(selectedDay))+(selectedDay===TODAY?'<span class="today-badge">Hoy</span>':"")+(selHol?'<span class="holiday-badge">Feriado</span>':"")+'</h3><p>'+(selActs.length===0 ? "Sin actividades este día" : selActs.length+(selActs.length===1?" actividad":" actividades")+" · "+selDone+" completadas")+'</p>'+selProg+'</div><button type="button" class="btn-red" id="agendaAdd">'+icon("plus",15,2.5)+' Agregar este día</button></div>';
+        if (selHol) h += '<div class="holiday-banner" role="note"><strong>Feriado</strong><span>'+esc(selHol.detail)+'</span></div>';
         if (selActs.length === 0) {
           h += emptyHTML("agenda", "Nada registrado este día", "Este día no tiene actividades. Pulsa «Agregar este día» para crear la primera.", true);
         } else {
