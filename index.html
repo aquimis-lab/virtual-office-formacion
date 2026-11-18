@@ -514,8 +514,12 @@
       var MONTHS_SHORT = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
       var DAYS = ["lunes","martes","miércoles","jueves","viernes","sábado","domingo"];
       var DAYS_SHORT = ["lun","mar","mié","jue","vie","sáb","dom"];
-      /* Sin feriados activos: el feriado del viernes 20 de noviembre ya pasó, por lo que no se muestra en la semana del 23 al 29 de noviembre ni en ninguna otra vista. */
-      var HOLIDAYS = {};
+      /* Feriado nacional autorizado: viernes 20 de noviembre de 2026 (Decreto 507), día no laborable.
+         Es un día entre semana, por lo que se marca como FERIADO además de día de descanso.
+         Los fines de semana sin actividades se muestran solo como Día de descanso. */
+      var HOLIDAYS = {
+        "2026-11-20": { label: "Feriado", detail: "Feriado nacional autorizado — Decreto 507. Día no laborable: sin actividades programadas. Es feriado entre semana, no fin de semana." }
+      };
       function holidayOf(s){ return HOLIDAYS[s] || null; }
       function isHoliday(s){ return !!HOLIDAYS[s]; }
       function isoOf(d){var m=String(d.getMonth()+1).padStart(2,"0");var day=String(d.getDate()).padStart(2,"0");return d.getFullYear()+"-"+m+"-"+day;}
@@ -1020,8 +1024,8 @@
             var dPct = dActs.length ? Math.round(dDone/dActs.length*100) : 0;
             var dToday = dISO === TODAY;
             var dHol = holidayOf(dISO);
-            var dRest = !dHol && dActs.length===0;
-            h += '<article class="dp-card'+(dToday?" today":"")+(dHol?" holiday":"")+(dRest?" rest":"")+(dActs.length&&dPct===100?" full":"")+'" aria-label="Avance del '+dayName+' '+fmtShort(dISO)+': '+dPct+' por ciento'+(dHol?". Es feriado":dRest?". Día de descanso":"")+'"><p class="dp-day">'+DAYS_SHORT[i]+(dToday?" · Hoy":"")+(dHol?" · Feriado":dRest?" · Descanso":"")+'</p><p class="dp-date">'+parseISO(dISO).getDate()+" "+MONTHS_SHORT[parseISO(dISO).getMonth()]+'</p>'+(dHol?'<span class="dp-holiday-tag">Feriado</span>':"")+'<p class="dp-pct">'+dPct+'<span>%</span></p><p class="dp-count">'+(dActs.length ? dDone+"/"+dActs.length+" hechas" : dRest ? "Día de descanso" : "Sin actividades")+'</p><div class="dp-bar"><div class="'+(dPct===100?"full":dActs.length===0?"empty":"")+'" style="width:'+dPct+'%"></div></div></article>';
+            var dRest = dActs.length===0;
+            h += '<article class="dp-card'+(dToday?" today":"")+(dHol?" holiday":"")+(dRest?" rest":"")+(dActs.length&&dPct===100?" full":"")+'" aria-label="Avance del '+dayName+' '+fmtShort(dISO)+': '+dPct+' por ciento'+(dHol&&dRest?". Es feriado. Día de descanso":dHol?". Es feriado":dRest?". Día de descanso":"")+'"><p class="dp-day">'+DAYS_SHORT[i]+(dToday?" · Hoy":"")+(dHol?" · Feriado":"")+(dRest&&!dHol?" · Descanso":dHol&&dRest?" · Descanso":"")+'</p><p class="dp-date">'+parseISO(dISO).getDate()+" "+MONTHS_SHORT[parseISO(dISO).getMonth()]+'</p>'+(dHol?'<span class="dp-holiday-tag">Feriado</span>':"")+'<p class="dp-pct">'+dPct+'<span>%</span></p><p class="dp-count">'+(dActs.length ? dDone+"/"+dActs.length+" hechas" : dHol ? "Feriado · Día de descanso" : dRest ? "Día de descanso" : "Sin actividades")+'</p><div class="dp-bar"><div class="'+(dPct===100?"full":dActs.length===0?"empty":"")+'" style="width:'+dPct+'%"></div></div></article>';
           });
           h += "</div></section>";
         }
@@ -1041,13 +1045,13 @@
             var pillCls = isToday ? "today" : hol ? "holiday" : dayActs.length > 0 ? "has" : "";
             var dayDone = dayActs.filter(function(a){return a.status==="completada";}).length;
             var dayPct = dayActs.length ? Math.round(dayDone/dayActs.length*100) : 0;
-            var isRest = !hol && dayActs.length===0;
+            var isRest = dayActs.length===0;
             var dayProg = dayActs.length
               ? '<div class="day-progress-inline"><span class="dp-bar"><div class="'+(dayPct===100?"full":"")+'" style="width:'+dayPct+'%"></div></span><span class="dp-inline-txt">Avance del día: '+dayPct+'% · '+dayDone+'/'+dayActs.length+' hechas</span></div>'
               : isRest
                 ? '<div class="day-progress-inline"><span class="dp-inline-txt muted">Hoy no hay avance que medir: ¡a descansar!</span></div>'
                 : '<div class="day-progress-inline"><span class="dp-inline-txt muted">Avance del día: sin actividades</span></div>';
-            h += '<section class="day-section'+(hol?" holiday":"")+(isRest?" rest":"")+'" aria-label="'+dayName+" "+fmtShort(dateISO)+(hol?". Feriado":isRest?". Día de descanso":"")+'"><div class="day-head"><span class="day-pill '+pillCls+'" aria-hidden="true"><span class="dnum">'+parseISO(dateISO).getDate()+'</span></span><div><h2>'+dayName+(isToday?'<span class="today-badge">Hoy</span>':"")+(hol?'<span class="holiday-badge">Feriado</span>':"")+(isRest?'<span class="rest-badge">'+icon("sun",11,2.4)+'Día de descanso</span>':"")+'</h2><p class="day-sub">'+fmtShort(dateISO)+(hol?" · Feriado · ":" · ")+(dayActs.length>0 ? dayActs.length+(dayActs.length===1?" actividad":" actividades") : isRest ? "día de descanso" : "sin actividades")+'</p>'+dayProg+'</div><span class="day-line" aria-hidden="true"></span><button type="button" class="day-add" data-add-day="'+dateISO+'">'+icon("plus",13,2.6)+' Agregar</button></div>';
+            h += '<section class="day-section'+(hol?" holiday":"")+(isRest?" rest":"")+'" aria-label="'+dayName+" "+fmtShort(dateISO)+(hol&&isRest?". Feriado. Día de descanso":hol?". Feriado":isRest?". Día de descanso":"")+'"><div class="day-head"><span class="day-pill '+pillCls+'" aria-hidden="true"><span class="dnum">'+parseISO(dateISO).getDate()+'</span></span><div><h2>'+dayName+(isToday?'<span class="today-badge">Hoy</span>':"")+(hol?'<span class="holiday-badge">Feriado</span>':"")+(isRest?'<span class="rest-badge">'+icon("sun",11,2.4)+'Día de descanso</span>':"")+'</h2><p class="day-sub">'+fmtShort(dateISO)+(hol?" · Feriado · ":" · ")+(dayActs.length>0 ? dayActs.length+(dayActs.length===1?" actividad":" actividades") : isRest ? "día de descanso" : "sin actividades")+'</p>'+dayProg+'</div><span class="day-line" aria-hidden="true"></span><button type="button" class="day-add" data-add-day="'+dateISO+'">'+icon("plus",13,2.6)+' Agregar</button></div>';
             if (hol) h += '<div class="holiday-banner" role="note"><strong>Feriado</strong><span>'+esc(hol.detail)+'</span></div>';
             if (isRest) h += '<div class="rest-banner" role="note"><span class="rb-ico" aria-hidden="true">'+icon("sun",19,2.1)+'</span><div><strong>¡Día de descanso!</strong><span>Hoy no hay actividades programadas. A descansar, recargar energías y disfrutar — mañana seguimos con todo.</span></div></div>';
             if (dayActs.length > 0) {
