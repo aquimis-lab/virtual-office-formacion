@@ -92,18 +92,6 @@
       .phrase-meta{margin-top:.45rem;display:flex;align-items:center;gap:.45rem;flex-wrap:wrap;font-size:12px;font-weight:700;color:var(--dim)}
       .phrase-meta .pm-tag{display:inline-flex;align-items:center;gap:.3rem;border-radius:999px;background:#000;color:#fff;padding:3px .6rem;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.07em}
       .phrase-meta .pm-tag.pending{background:#fff;color:var(--accent-ink);box-shadow:inset 0 0 0 1px #fecdd3}
-      .phrase-month{margin-top:.8rem;padding-top:.75rem;border-top:1px solid #fecdd3}
-      .phrase-month-head{display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap}
-      .phrase-month-head p{margin:0;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.14em;color:var(--accent-ink)}
-      .phrase-month-head span{font-size:12px;font-weight:700;color:var(--dim)}
-      .phrase-weeks{margin-top:.55rem;display:flex;gap:.4rem;flex-wrap:wrap}
-      .phrase-week-chip{display:inline-flex;align-items:center;gap:.45rem;border-radius:999px;background:#fff;box-shadow:inset 0 0 0 1px var(--border-strong);padding:.45rem .7rem;font-size:12.5px;font-weight:800;color:#000;min-height:2.25rem;transition:all .15s;text-align:left}
-      .phrase-week-chip:hover{box-shadow:inset 0 0 0 1px #000}
-      .phrase-week-chip.current{background:#000;color:#fff;box-shadow:none}
-      .phrase-week-chip .pw-dot{width:.55rem;height:.55rem;border-radius:50%;background:var(--accent);flex-shrink:0}
-      .phrase-week-chip.empty .pw-dot{background:#fff;box-shadow:inset 0 0 0 2px var(--border-strong)}
-      .phrase-week-chip .pw-sub{font-weight:600;color:var(--dim);font-size:11.5px}
-      .phrase-week-chip.current .pw-sub{color:rgba(255,255,255,.7)}
       .phrase-plan-note{border-radius:.75rem;background:var(--accent-soft);box-shadow:inset 0 0 0 1px #fecdd3;padding:.7rem .85rem;font-size:13px;font-weight:600;line-height:1.55;color:rgba(10,10,10,.85)}
       .phrase-plan-note strong{color:var(--accent-ink)}
       .phrase-plan-monthnav{display:flex;align-items:center;justify-content:space-between;gap:.5rem}
@@ -942,33 +930,8 @@
           ? '<p class="phrase-text">&ldquo;'+esc(phrase)+'&rdquo;</p>'
           : '<p class="phrase-empty">Esta semana todavía no tiene frase fijada. Se fija el día 1 en la planificación del mes.</p>';
         var meta = '<div class="phrase-meta"><span class="pm-tag'+(fixed?"":" pending")+'">'+(fixed?"Fijada por mes":"Pendiente del mes")+'</span><span>Semana del '+esc(shortWeekRange(mo))+' · una frase distinta cada semana, fijada el día 1 para todo el mes</span></div>';
-        /* Franjas del mes de la semana que se está viendo: todas sus semanas,
-           cada una con su propia frase. Tocar una semana navega hasta ella. */
-        var d = parseISO(mo);
-        var monthMondays = mondaysInMonth(d.getFullYear(), d.getMonth());
-        var fixedCount = weeksFixedCount(monthMondays);
-        var monthHTML = "";
-        if (monthMondays.length > 0) {
-          monthHTML = '<div class="phrase-month"><div class="phrase-month-head"><p>Frases de '+esc(monthLabelOfMonday(mo))+'</p><span>'+fixedCount+' de '+monthMondays.length+' semanas fijadas</span></div><div class="phrase-weeks" role="group" aria-label="Semanas de '+esc(monthLabelOfMonday(mo))+'">';
-          monthMondays.forEach(function(mISO){
-            var isCurrent = mISO === mo;
-            var has = phraseIsFixed(mISO);
-            monthHTML += '<button type="button" class="phrase-week-chip'+(isCurrent?" current":"")+(has?"":" empty")+'" data-phrase-week="'+mISO+'" aria-pressed="'+isCurrent+'" aria-label="Ver semana del '+esc(shortWeekRange(mISO))+(has?": "+esc(phraseForMonday(mISO)):", sin frase fijada")+'"><span class="pw-dot" aria-hidden="true"></span><span>Lun '+parseISO(mISO).getDate()+'<span class="pw-sub"> · '+esc(shortWeekRange(mISO))+'</span></span></button>';
-          });
-          monthHTML += "</div></div>";
-        }
-        box.innerHTML = '<div class="phrase-row"><span class="phrase-ico">'+icon("quote",18)+'</span><div class="phrase-body"><p class="phrase-kicker">Frase de la semana</p>'+inner+meta+'</div><button type="button" class="btn-black" id="phraseEditBtn">'+icon("calendar",13)+' Plan del mes</button></div>' + monthHTML;
+        box.innerHTML = '<div class="phrase-row"><span class="phrase-ico">'+icon("quote",18)+'</span><div class="phrase-body"><p class="phrase-kicker">Frase de la semana</p>'+inner+meta+'</div><button type="button" class="btn-black" id="phraseEditBtn">'+icon("calendar",13)+' Plan del mes</button></div>';
         $("phraseEditBtn").addEventListener("click", function(){ phrasePlanMonthOffset = 0; openPhraseModal(); });
-        var chips = box.querySelectorAll("[data-phrase-week]");
-        for (var ci=0; ci<chips.length; ci++) chips[ci].addEventListener("click", function(){
-          var target = this.getAttribute("data-phrase-week");
-          var base = mondayOfISO(TODAY);
-          var diffDays = Math.round((parseISO(target) - parseISO(base)) / 86400000);
-          weekOffset = Math.round(diffDays / 7);
-          view = "semana";
-          render();
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        });
       }
       function renderTabs(){
         var monthKey = agendaMonthKey();
