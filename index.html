@@ -260,6 +260,14 @@
       .apertura-text{margin:0;font-size:.875rem;line-height:1.55;color:rgba(10,10,10,.85);overflow-wrap:break-word}
       .apertura-fecha{margin:.4rem 0 0;display:inline-flex;align-items:center;gap:.35rem;font-size:.8rem;font-weight:700;line-height:1.3;color:var(--accent-ink);background:var(--accent-soft);border-radius:999px;padding:.3rem .65rem}
       .apertura-fecha svg{flex-shrink:0}
+      .act-detail{margin-top:.5rem}
+      .act-detail-plain{margin-top:.375rem;font-size:.875rem;line-height:1.6;color:rgba(0,0,0,.7);white-space:pre-line;overflow-wrap:break-word}
+      .visit-intro{margin:0;font-size:.85rem;font-weight:700;line-height:1.5;color:#0a0a0a}
+      .visit-note{margin:.65rem 0 0;font-size:.83rem;line-height:1.55;color:rgba(10,10,10,.78);background:var(--surface-2);border-radius:.65rem;padding:.6rem .7rem}
+      .locales-list{margin-top:.55rem;display:flex;flex-direction:column;border-top:1px solid var(--border)}
+      .locales-list .apertura-item{padding:.6rem 0}
+      .locales-list .apertura-code{min-width:3.35rem;padding:.45rem .35rem}
+      .locales-list .apertura-code strong{font-size:.95rem}
       .topic-actions{display:flex;flex-shrink:0;gap:.25rem}
       .topic-actions button{display:flex;width:2.25rem;height:2.25rem;align-items:center;justify-content:center;border-radius:50%;color:var(--dim)}
       .topic-actions button:hover{background:var(--surface-2);color:var(--text)}
@@ -858,6 +866,105 @@
         var cyc = root.querySelectorAll("[data-act-cycle]");
         for (var k=0;k<cyc.length;k++) cyc[k].addEventListener("click", function(){ var a = activityById(this.getAttribute("data-act-cycle")); if (a) fsSetStatus(a.id, NEXT_STATUS[a.status]); });
       }
+      /* ----- Detalle de visitas / recorridos: un local debajo del otro -----
+         Igual que en el tema de Próximas aperturas: el detalle puede venir
+         todo junto (locales separados por comas), con un local por línea o
+         con punto y coma; en todos los casos se muestra como lista vertical
+         con el número de local destacado, la cabecera (Distrito / Zona) arriba
+         y las notas de apoyo (p. ej. Speech en caja) debajo de la lista. */
+      function parseLocalesDetail(detail){
+        var raw = String(detail == null ? "" : detail).trim();
+        if (!raw) return null;
+        var re = /\b\d{3,4}\b/g, matches = [], mm;
+        while ((mm = re.exec(raw)) !== null) matches.push({ code: mm[0], index: mm.index });
+        if (matches.length < 2) return null;
+        var introRaw = raw.slice(0, matches[0].index).trim();
+        var intro = introRaw.replace(/^[-•·\s]+/, "").replace(/locales?\s*[:\-–—]?\s*$/i, "").replace(/[:\-–—\s]+$/, "").trim();
+        if (/^locales?$/i.test(intro)) intro = "";
+        var locales = [], footer = "";
+        for (var i = 0; i < matches.length; i++){
+          var start = matches[i].index;
+          var end = (i + 1 < matches.length) ? matches[i + 1].index : raw.length;
+          var seg = raw.slice(start, end).trim();
+          var isLast = i === matches.length - 1;
+          var footerPart = "";
+          if (isLast){
+            var nlIdx = seg.indexOf("\n");
+            if (nlIdx !== -1){ footerPart = seg.slice(nlIdx + 1).trim(); seg = seg.slice(0, nlIdx).trim(); }
+            var parenEnd = seg.lastIndexOf(")");
+            if (parenEnd !== -1){
+              var afterParen = seg.slice(parenEnd + 1).trim();
+              if (afterParen){
+                var cleanedAfter = afterParen.replace(/^\.\s*/, "").trim();
+                if (cleanedAfter) footerPart = cleanedAfter + (footerPart ? " " + footerPart : "");
+                seg = seg.slice(0, parenEnd + 1).trim();
+              }
+            } else if (!footerPart){
+              var dotIdx = -1, searchFrom = 0;
+              while (true){
+                var idx = seg.indexOf(". ", searchFrom);
+                if (idx === -1) break;
+                var after = seg.slice(idx + 2).trim();
+                if (after && /^[A-ZÁÉÍÓÚÑ]/.test(after) && after.split(/\s+/).length >= 3){ dotIdx = idx; break; }
+                searchFrom = idx + 2;
+              }
+              if (dotIdx !== -1){ footerPart = seg.slice(dotIdx + 2).trim(); seg = seg.slice(0, dotIdx).trim(); }
+              else if (seg.charAt(seg.length - 1) === ".") seg = seg.slice(0, -1).trim();
+            }
+            if (footerPart) footer = footerPart.replace(/^\.\s*/, "").trim();
+          }
+          seg = seg.replace(/[,;\s]+$/, "").trim();
+          var afterCode = seg.slice(matches[i].code.length).trim().replace(/^[\-–—:\.]\s*/, "").trim();
+          var note = null, name = afterCode;
+          var anyParen = afterCode.match(/\(([^)]*)\)/);
+          if (anyParen){
+            note = anyParen[1].trim();
+            name = (afterCode.slice(0, anyParen.index) + " " + afterCode.slice(anyParen.index + anyParen[0].length)).replace(/\s{2,}/g, " ").trim();
+          }
+          name = name.replace(/[,;]+$/, "").trim();
+          locales.push({ code: matches[i].code, name: name, note: note, raw: seg });
+        }
+        var valid = locales.filter(function(l){ return l.name && l.name.length >= 2; });
+        if (valid.length < 2) return null;
+        return { intro: intro, locales: locales, footer: footer };
+      }
+      function localesListHTML(parsed, label){
+        var out = "";
+        if (parsed.intro) out += '<p class="visit-intro">' + esc(parsed.intro) + "</p>";
+        out += '<div class="locales-list" role="list" aria-label="' + esc(label || "Locales, uno debajo del otro") + '">';
+        parsed.locales.forEach(function(loc){
+          out += '<div class="apertura-item" role="listitem">';
+          out += '<span class="apertura-code"><small>Local</small><strong>' + esc(loc.code) + "</strong></span>";
+          out += '<div class="apertura-main">';
+          if (loc.name) out += '<p class="apertura-name">' + esc(loc.name) + "</p>";
+          else out += '<p class="apertura-text">' + esc(loc.raw) + "</p>";
+          if (loc.note) out += '<p class="apertura-fecha">' + icon("calendar", 13) + "<span>" + esc(loc.note) + "</span></p>";
+          out += "</div></div>";
+        });
+        out += "</div>";
+        if (parsed.footer) out += '<p class="visit-note">' + esc(parsed.footer) + "</p>";
+        return out;
+      }
+      function isVisitDetail(a){
+        var t = String((a && a.title) || ""), d = String((a && a.detail) || "");
+        return /visita|recorrido|ruta\b/i.test(t) || /\blocales?\b/i.test(d);
+      }
+      function renderActivityDetail(a){
+        if (!a || !a.detail) return "";
+        var raw = String(a.detail).trim();
+        if (!raw) return "";
+        if (isVisitDetail(a)){
+          var parsed = parseLocalesDetail(raw);
+          if (parsed) return '<div class="act-detail">' + localesListHTML(parsed, "Locales de la visita, uno debajo del otro") + "</div>";
+        }
+        var nlLines = raw.split(/\r?\n+/).map(function(s){ return s.trim(); }).filter(Boolean);
+        if (nlLines.length > 1){
+          var g = '<div class="act-detail"><div class="topic-lines">';
+          nlLines.forEach(function(l){ g += '<div class="topic-line">' + esc(l) + "</div>"; });
+          return g + "</div></div>";
+        }
+        return '<p class="act-detail-plain">' + esc(raw) + "</p>";
+      }
       function activityCardHTML(a, showDate){
         var m = a.member_id != null ? memberByOrden(a.member_id) : undefined;
         var overdue = a.date < TODAY && a.status !== "completada";
@@ -870,7 +977,7 @@
         if (showDate) h += '<span style="display:inline-flex;align-items:center;gap:.25rem">'+icon("calendar",12)+esc(fmtShort(a.date))+(overdue?" · vencida":"")+'</span>';
         if (overdue) h += icon("alert",13);
         h += "</p>";
-        if (a.detail) h += '<p style="margin-top:.375rem;font-size:.875rem;line-height:1.6;color:rgba(0,0,0,.7)">'+esc(a.detail)+"</p>";
+        if (a.detail) h += renderActivityDetail(a);
         h += '<div class="tags">';
         if (a.place) h += '<span class="tag tag-place">'+icon("pin",12)+esc(a.place)+'</span>';
         if (a.deliverable) h += '<span class="tag tag-deliv">'+icon("box",12)+esc(a.deliverable)+'</span>';
@@ -1136,6 +1243,12 @@
       }
       function renderTopicDetail(t){
         if (!t.detail) return "";
+        /* Visitas / recorridos en temas: mismo formato que en actividades,
+           un local debajo del otro, aunque el detalle venga todo junto. */
+        if (!/apertura/i.test(String(t.title || "")) && (isVisitDetail(t) || /\blocales?\b/i.test(String(t.detail || "")))){
+          var parsedTopic = parseLocalesDetail(String(t.detail).trim());
+          if (parsedTopic) return '<div class="act-detail">' + localesListHTML(parsedTopic, "Locales, uno debajo del otro") + "</div>";
+        }
         var lines = splitTopicLines(t.detail);
         if (lines.length <= 1) return '<p class="topic-detail">' + esc(t.detail) + "</p>";
         if (isAperturasTopic(t, lines)) {
@@ -1180,7 +1293,7 @@
           h += '<div class="grid-2">';
           sorted.forEach(function(t){
             var lines = t.detail ? splitTopicLines(t.detail) : [];
-            var wide = isAperturasTopic(t, lines) && lines.length > 1;
+            var wide = (isAperturasTopic(t, lines) && lines.length > 1) || !!(t.detail && parseLocalesDetail(String(t.detail).trim()));
             h += '<article class="card topic-card'+(t.pinned?" pinned":"")+(wide?" topic-card--wide":"")+'"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem"><h3>'+esc(t.title)+'</h3><span class="topic-actions"><button type="button" class="'+(t.pinned?"pin-on":"")+'" data-topic-pin="'+esc(t.id)+'" aria-label="'+(t.pinned?"Desfijar tema":"Fijar tema")+'" aria-pressed="'+t.pinned+'">'+icon("bookmark",15)+'</button><button type="button" data-topic-edit="'+esc(t.id)+'" aria-label="Editar tema">'+icon("pencil",15)+'</button></span></div>';
             if (t.detail) h += renderTopicDetail(t);
             if (t.pinned) h += '<span class="pinned-tag">'+icon("bookmark",11)+"Fijado</span>";
