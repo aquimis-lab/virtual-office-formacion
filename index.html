@@ -479,7 +479,8 @@
       var MONTHS_SHORT = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
       var DAYS = ["lunes","martes","miércoles","jueves","viernes","sábado","domingo"];
       var DAYS_SHORT = ["lun","mar","mié","jue","vie","sáb","dom"];
-      var HOLIDAYS = { "2026-11-20": { label:"FERIADO", detail:"Descanso obligatorio y no recuperable en todo el país · Decreto Ejecutivo 507 · Festival Internacional de Artes Vivas de Loja" } };
+      /* Sin feriados activos: el feriado del viernes 20 de noviembre ya pasó, por lo que no se muestra en la semana del 23 al 29 de noviembre ni en ninguna otra vista. */
+      var HOLIDAYS = {};
       function holidayOf(s){ return HOLIDAYS[s] || null; }
       function isHoliday(s){ return !!HOLIDAYS[s]; }
       function isoOf(d){var m=String(d.getMonth()+1).padStart(2,"0");var day=String(d.getDate()).padStart(2,"0");return d.getFullYear()+"-"+m+"-"+day;}
