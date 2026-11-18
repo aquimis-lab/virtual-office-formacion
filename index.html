@@ -89,6 +89,32 @@
       .phrase-text{margin-top:2px;font-family:var(--font-display);font-size:15px;font-weight:700;line-height:1.35;color:#000}
       @media(min-width:640px){.phrase-text{font-size:1rem}}
       .phrase-empty{margin-top:2px;font-size:.875rem;font-weight:600;line-height:1.4;color:var(--dim)}
+      .phrase-meta{margin-top:.45rem;display:flex;align-items:center;gap:.45rem;flex-wrap:wrap;font-size:12px;font-weight:700;color:var(--dim)}
+      .phrase-meta .pm-tag{display:inline-flex;align-items:center;gap:.3rem;border-radius:999px;background:#000;color:#fff;padding:3px .6rem;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.07em}
+      .phrase-meta .pm-tag.pending{background:#fff;color:var(--accent-ink);box-shadow:inset 0 0 0 1px #fecdd3}
+      .phrase-month{margin-top:.8rem;padding-top:.75rem;border-top:1px solid #fecdd3}
+      .phrase-month-head{display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap}
+      .phrase-month-head p{margin:0;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.14em;color:var(--accent-ink)}
+      .phrase-month-head span{font-size:12px;font-weight:700;color:var(--dim)}
+      .phrase-weeks{margin-top:.55rem;display:flex;gap:.4rem;flex-wrap:wrap}
+      .phrase-week-chip{display:inline-flex;align-items:center;gap:.45rem;border-radius:999px;background:#fff;box-shadow:inset 0 0 0 1px var(--border-strong);padding:.45rem .7rem;font-size:12.5px;font-weight:800;color:#000;min-height:2.25rem;transition:all .15s;text-align:left}
+      .phrase-week-chip:hover{box-shadow:inset 0 0 0 1px #000}
+      .phrase-week-chip.current{background:#000;color:#fff;box-shadow:none}
+      .phrase-week-chip .pw-dot{width:.55rem;height:.55rem;border-radius:50%;background:var(--accent);flex-shrink:0}
+      .phrase-week-chip.empty .pw-dot{background:#fff;box-shadow:inset 0 0 0 2px var(--border-strong)}
+      .phrase-week-chip .pw-sub{font-weight:600;color:var(--dim);font-size:11.5px}
+      .phrase-week-chip.current .pw-sub{color:rgba(255,255,255,.7)}
+      .phrase-plan-note{border-radius:.75rem;background:var(--accent-soft);box-shadow:inset 0 0 0 1px #fecdd3;padding:.7rem .85rem;font-size:13px;font-weight:600;line-height:1.55;color:rgba(10,10,10,.85)}
+      .phrase-plan-note strong{color:var(--accent-ink)}
+      .phrase-plan-monthnav{display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+      .phrase-plan-monthnav h4{margin:0;font-family:var(--font-display);font-size:1rem;font-weight:900;text-transform:capitalize}
+      .phrase-plan-monthnav .mn-btns{display:flex;gap:.375rem}
+      .phrase-plan-monthnav .mn-btns button{display:flex;width:2.25rem;height:2.25rem;align-items:center;justify-content:center;border-radius:50%;background:#fff;box-shadow:inset 0 0 0 1px var(--border);color:#000}
+      .phrase-plan-monthnav .mn-btns button:hover{background:#000;color:#fff}
+      .phrase-field-head{display:flex;align-items:baseline;justify-content:space-between;gap:.5rem;flex-wrap:wrap;margin-bottom:.375rem}
+      .phrase-field-head .pf-week{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#52525b}
+      .phrase-field-head .pf-state{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.07em;color:var(--accent-ink)}
+      .phrase-field-head .pf-state.ok{color:#000}
       .btn-black{display:inline-flex;flex-shrink:0;align-items:center;gap:.375rem;border-radius:999px;background:#000;color:#fff;padding:.5rem .875rem;font-size:13px;font-weight:800;transition:transform .15s}
       .btn-black:hover{transform:scale(1.03)}
       .tabs{margin-top:1rem;display:flex;gap:.25rem;border-radius:1rem;background:var(--surface-2);padding:.375rem}
@@ -490,11 +516,33 @@
         { docId:"t1", title:"Nueva ruta de inducción para cajeros", detail:"Nueva ruta de inducción para cajeros: revisar contenido y tiempos.", pinned:false }
       ];
       var SEED_PHRASE = "";
+      /* ===== Frases por semana, fijadas por mes =====
+         Regla (Anthony, 2026-11-18): hay UNA sola planificación mensual.
+         El día 1 de cada mes se fijan las frases de TODAS las semanas de ese
+         mes — una frase distinta por semana — y quedan fijas todo el mes.
+         Solo cambia la Frase de la semana; nada más del tablero.
+         La clave de cada frase es el lunes de su semana (ISO, yyyy-mm-dd).
+         Este mapa es el respaldo ya fijado: si Firestore todavía no tiene la
+         frase de una semana, el tablero muestra la de aquí. Lo guardado en
+         Firestore (config/frase → porSemana) siempre manda sobre este mapa. */
+      var FIXED_MONTH_PHRASES = {
+        "2026-11-16": "No tengas miedo de fallar, ten miedo de no intentarlo",
+        "2026-11-23": "No se trata de ser el mejor, se trata de ser mejor que ayer.",
+        "2026-11-30": "La constancia vence al talento cuando el talento no se esfuerza.",
+        "2026-12-07": "El trabajo en equipo divide el esfuerzo y multiplica los resultados.",
+        "2026-12-14": "Los grandes logros nacen de pequeños pasos dados todos los días.",
+        "2026-12-21": "La actitud es la diferencia entre un buen día y un gran día.",
+        "2026-12-28": "Termina el año como quieres empezar el siguiente: con todo."
+      };
 
       /* Estado local: arranca con los datos de ejemplo y Firestore lo reemplaza en vivo */
       function seedState(){
+        var fixedCopy = {};
+        for (var fk in FIXED_MONTH_PHRASES) fixedCopy[fk] = FIXED_MONTH_PHRASES[fk];
         return {
           phrase: SEED_PHRASE,
+          phraseLegacy: SEED_PHRASE,
+          phrasesByWeek: fixedCopy,
           members: SEED_MEMBERS.map(function(m){return {id:m.docId, orden:m.orden, name:m.name, role:m.role, color:m.color};}),
           activities: SEED_ACTIVITIES.map(function(a){var c={};for(var k in a){if(k!=="docId")c[k]=a[k];}c.id=a.docId;return c;}),
           objectives: SEED_OBJECTIVES.map(function(o){var c={};for(var k in o){if(k!=="docId")c[k]=o[k];}c.id=o.docId;return c;}),
@@ -508,6 +556,7 @@
       var memberFilter = null;
       var agendaMonthOffset = 0;
       var selectedDay = TODAY;
+      var phrasePlanMonthOffset = 0; /* mes que se está planificando en el modal de frases */
 
       /* ===== date helpers ===== */
       var MONTHS = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
@@ -578,6 +627,39 @@
       function avatar(m,size){if(!m)return "";return '<span class="avatar" style="background-color:'+m.color+';width:'+size+'px;height:'+size+'px;font-size:'+Math.round(size*0.36)+'px" aria-hidden="true">'+esc(initials(m.name))+'</span>';}
       function monday(){return addDaysISO(mondayOfISO(TODAY),weekOffset*7);}
       function weekActs(){var mo=monday(),su=addDaysISO(mo,6);return state.activities.filter(function(a){return a.date>=mo&&a.date<=su;});}
+      /* ----- Frase de la semana: una por semana, fijada por mes ----- */
+      function phraseForMonday(moISO){
+        if (!moISO) return "";
+        var byWeek = state.phrasesByWeek || {};
+        if (byWeek[moISO] && String(byWeek[moISO]).trim()) return String(byWeek[moISO]).trim();
+        if (FIXED_MONTH_PHRASES[moISO]) return FIXED_MONTH_PHRASES[moISO];
+        /* Compatibilidad: tableros antiguos guardaban una sola frase global
+           (config/frase → texto). Solo se usa para la semana en curso. */
+        if (moISO === mondayOfISO(TODAY) && state.phraseLegacy && String(state.phraseLegacy).trim()) return String(state.phraseLegacy).trim();
+        if (moISO === mondayOfISO(TODAY) && state.phrase && String(state.phrase).trim()) return String(state.phrase).trim();
+        return "";
+      }
+      function currentPhrase(){ return phraseForMonday(monday()); }
+      function phraseIsFixed(moISO){ return !!phraseForMonday(moISO); }
+      /* Lunes cuya fecha cae dentro de un mes (año, mes 0-11): esas son las
+         semanas que la planificación del día 1 debe dejar fijadas. */
+      function mondaysInMonth(year, monthIdx){
+        var out = [];
+        var d = new Date(year, monthIdx, 1);
+        while (d.getMonth() === monthIdx){
+          if (d.getDay() === 1) out.push(isoOf(d));
+          d.setDate(d.getDate() + 1);
+        }
+        return out;
+      }
+      function monthKeyOfMonday(moISO){ var d = parseISO(moISO); return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0"); }
+      function monthLabelOfMonday(moISO){ var d = parseISO(moISO); return MONTHS[d.getMonth()] + " " + d.getFullYear(); }
+      function shortWeekRange(moISO){
+        var st = parseISO(moISO), en = parseISO(addDaysISO(moISO, 6));
+        if (st.getMonth() === en.getMonth()) return st.getDate() + " al " + en.getDate() + " " + MONTHS_SHORT[st.getMonth()];
+        return st.getDate() + " " + MONTHS_SHORT[st.getMonth()] + " al " + en.getDate() + " " + MONTHS_SHORT[en.getMonth()];
+      }
+      function weeksFixedCount(mondays){ return mondays.filter(function(mo){ return phraseIsFixed(mo); }).length; }
       function overdueActs(){return state.activities.filter(function(a){return a.date<TODAY&&a.status!=="completada"&&(memberFilter==null||a.member_id===memberFilter);});}
       function activityById(id){for(var i=0;i<state.activities.length;i++)if(String(state.activities[i].id)===String(id))return state.activities[i];return undefined;}
       function objectiveById(id){for(var i=0;i<state.objectives.length;i++)if(String(state.objectives[i].id)===String(id))return state.objectives[i];return undefined;}
@@ -735,10 +817,28 @@
 
           db.collection("config").doc("frase").onSnapshot(function(docSnap){
             if (!docSnap.exists) {
-              if (!seedAttempted["frase"] && db) { seedAttempted["frase"]=true; db.collection("config").doc("frase").set({ texto: SEED_PHRASE }).catch(function(){}); }
+              if (!seedAttempted["frase"] && db) {
+                seedAttempted["frase"]=true;
+                var seedMap = {};
+                for (var sk in FIXED_MONTH_PHRASES) seedMap[sk] = FIXED_MONTH_PHRASES[sk];
+                db.collection("config").doc("frase").set({ texto: phraseForMonday(mondayOfISO(TODAY)), porSemana: seedMap }).catch(function(){});
+              }
+              state.phraseLegacy = SEED_PHRASE;
               state.phrase = SEED_PHRASE;
             } else {
-              var v = docSnap.data(); state.phrase = (v && v.texto) ? v.texto : "";
+              var v = docSnap.data() || {};
+              /* Formato nuevo: porSemana = { "yyyy-mm-dd" (lunes): "frase" }.
+                 Formato antiguo: solo texto (una frase global) — se conserva
+                 como respaldo de la semana en curso, sin borrarlo. */
+              var map = v.porSemana || v.semanas || v.por_semana || null;
+              if (map && typeof map === "object") {
+                var merged = {};
+                for (var fk2 in FIXED_MONTH_PHRASES) merged[fk2] = FIXED_MONTH_PHRASES[fk2];
+                for (var mk in map) { if (map[mk] != null && String(map[mk]).trim()) merged[mk] = String(map[mk]); }
+                state.phrasesByWeek = merged;
+              }
+              state.phraseLegacy = v.texto ? String(v.texto) : "";
+              state.phrase = state.phraseLegacy;
             }
             render();
           }, function(err){ console.error(err); });
@@ -779,10 +879,38 @@
       }
       function fsDeleteTopic(id){ if (!guardEdit()) return; if (!requireDb()) return; db.collection("temas").doc(String(id)).delete().then(function(){ toast("Tema eliminado"); closeModal(); }).catch(writeError); }
       function fsTogglePin(id, pinned){ if (!guardEdit()) return; if (!requireDb()) return; db.collection("temas").doc(String(id)).update({ pinned: pinned }).catch(writeError); }
-      function fsSavePhrase(texto){
+      function buildPhraseMapWith(updates){
+        var map = {};
+        var current = state.phrasesByWeek || {};
+        for (var k in FIXED_MONTH_PHRASES) map[k] = FIXED_MONTH_PHRASES[k];
+        for (var k2 in current) { if (current[k2] != null && String(current[k2]).trim()) map[k2] = String(current[k2]); }
+        for (var k3 in updates) {
+          var val = updates[k3] == null ? "" : String(updates[k3]).trim();
+          if (val) map[k3] = val; else delete map[k3];
+        }
+        return map;
+      }
+      function fsSavePhrasesByWeek(updates){
         if (!guardEdit()) return Promise.reject(new Error("locked"));
         if (!requireDb()) return Promise.reject(new Error("no-db"));
-        return db.collection("config").doc("frase").set({ texto: texto }, { merge:true });
+        var map = buildPhraseMapWith(updates);
+        /* texto se mantiene sincronizado con la frase de la semana en curso
+           para que cualquier vista antigua siga mostrando algo correcto. */
+        var currentMonday = mondayOfISO(TODAY);
+        var payload = { porSemana: map, texto: map[currentMonday] || "", actualizado: new Date().toISOString() };
+        return db.collection("config").doc("frase").set(payload, { merge:true }).then(function(){
+          state.phrasesByWeek = map;
+          state.phraseLegacy = payload.texto;
+          state.phrase = payload.texto;
+        });
+      }
+      function fsSavePhrase(texto){
+        /* Compatibilidad: guardar la frase de la semana que se está viendo. */
+        var patch = {}; patch[monday()] = texto;
+        return fsSavePhrasesByWeek(patch);
+      }
+      function fsSaveMonthPhrases(mondays, valuesByMonday){
+        return fsSavePhrasesByWeek(valuesByMonday || {});
       }
 
       /* ---------- header / phrase / tabs ---------- */
@@ -807,11 +935,40 @@
       }
       function renderPhrase(){
         var box = $("phraseBox");
-        var inner = state.phrase
-          ? '<p class="phrase-text">&ldquo;'+esc(state.phrase)+'&rdquo;</p>'
-          : '<p class="phrase-empty">Todavía no hay frase cargada para esta semana.</p>';
-        box.innerHTML = '<div class="phrase-row"><span class="phrase-ico">'+icon("quote",18)+'</span><div class="phrase-body"><p class="phrase-kicker">Frase de la semana</p>'+inner+'</div><button type="button" class="btn-black" id="phraseEditBtn">'+icon("pencil",13)+' Editar frase</button></div>';
-        $("phraseEditBtn").addEventListener("click", openPhraseModal);
+        var mo = monday();
+        var phrase = phraseForMonday(mo);
+        var fixed = !!phrase;
+        var inner = fixed
+          ? '<p class="phrase-text">&ldquo;'+esc(phrase)+'&rdquo;</p>'
+          : '<p class="phrase-empty">Esta semana todavía no tiene frase fijada. Se fija el día 1 en la planificación del mes.</p>';
+        var meta = '<div class="phrase-meta"><span class="pm-tag'+(fixed?"":" pending")+'">'+(fixed?"Fijada por mes":"Pendiente del mes")+'</span><span>Semana del '+esc(shortWeekRange(mo))+' · una frase distinta cada semana, fijada el día 1 para todo el mes</span></div>';
+        /* Franjas del mes de la semana que se está viendo: todas sus semanas,
+           cada una con su propia frase. Tocar una semana navega hasta ella. */
+        var d = parseISO(mo);
+        var monthMondays = mondaysInMonth(d.getFullYear(), d.getMonth());
+        var fixedCount = weeksFixedCount(monthMondays);
+        var monthHTML = "";
+        if (monthMondays.length > 0) {
+          monthHTML = '<div class="phrase-month"><div class="phrase-month-head"><p>Frases de '+esc(monthLabelOfMonday(mo))+'</p><span>'+fixedCount+' de '+monthMondays.length+' semanas fijadas</span></div><div class="phrase-weeks" role="group" aria-label="Semanas de '+esc(monthLabelOfMonday(mo))+'">';
+          monthMondays.forEach(function(mISO){
+            var isCurrent = mISO === mo;
+            var has = phraseIsFixed(mISO);
+            monthHTML += '<button type="button" class="phrase-week-chip'+(isCurrent?" current":"")+(has?"":" empty")+'" data-phrase-week="'+mISO+'" aria-pressed="'+isCurrent+'" aria-label="Ver semana del '+esc(shortWeekRange(mISO))+(has?": "+esc(phraseForMonday(mISO)):", sin frase fijada")+'"><span class="pw-dot" aria-hidden="true"></span><span>Lun '+parseISO(mISO).getDate()+'<span class="pw-sub"> · '+esc(shortWeekRange(mISO))+'</span></span></button>';
+          });
+          monthHTML += "</div></div>";
+        }
+        box.innerHTML = '<div class="phrase-row"><span class="phrase-ico">'+icon("quote",18)+'</span><div class="phrase-body"><p class="phrase-kicker">Frase de la semana</p>'+inner+meta+'</div><button type="button" class="btn-black" id="phraseEditBtn">'+icon("calendar",13)+' Plan del mes</button></div>' + monthHTML;
+        $("phraseEditBtn").addEventListener("click", function(){ phrasePlanMonthOffset = 0; openPhraseModal(); });
+        var chips = box.querySelectorAll("[data-phrase-week]");
+        for (var ci=0; ci<chips.length; ci++) chips[ci].addEventListener("click", function(){
+          var target = this.getAttribute("data-phrase-week");
+          var base = mondayOfISO(TODAY);
+          var diffDays = Math.round((parseISO(target) - parseISO(base)) / 86400000);
+          weekOffset = Math.round(diffDays / 7);
+          view = "semana";
+          render();
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        });
       }
       function renderTabs(){
         var monthKey = agendaMonthKey();
@@ -1434,17 +1591,51 @@
         else openUnlockModal();
       }
 
+      function phrasePlanAnchorMonday(){
+        var base = parseISO(monday());
+        return new Date(base.getFullYear(), base.getMonth() + phrasePlanMonthOffset, 1);
+      }
       function openPhraseModal(){
         if (!guardEdit()) return;
-        var body = '<form class="form" id="phraseForm"><div><label class="flabel" for="fPhrase">Frase de la semana</label><textarea class="input" id="fPhrase" placeholder="Escribe la frase con la que el equipo empieza la semana…">' + esc(state.phrase) + '</textarea><p class="form-note">Al guardarla se actualiza en Firestore y todo el equipo la ve al instante, sin recargar.</p></div><div class="form-error" id="formError"></div><div class="form-actions"><button type="submit" class="btn-save" id="saveBtn">Guardar frase en vivo</button></div></form>';
-        openModal("Frase de la semana", body);
+        var anchor = phrasePlanAnchorMonday();
+        var year = anchor.getFullYear(), monthIdx = anchor.getMonth();
+        var mondays = mondaysInMonth(year, monthIdx);
+        var monthName = MONTHS[monthIdx] + " " + year;
+        var monthCap = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+        var viewedMonday = monday();
+        var fields = "";
+        mondays.forEach(function(mISO, idx){
+          var val = phraseForMonday(mISO);
+          var isViewed = mISO === viewedMonday;
+          fields += '<div><div class="phrase-field-head"><label class="pf-week" for="fp-' + mISO + '">Semana del ' + esc(shortWeekRange(mISO)) + (isViewed ? " · estás viendo esta" : "") + '</label><span class="pf-state' + (val ? " ok" : "") + '">' + (val ? "Fijada" : "Sin fijar") + '</span></div>'
+            + '<textarea class="input" id="fp-' + mISO + '" data-phrase-monday="' + mISO + '" placeholder="Frase motivadora de esta semana…" rows="2">' + esc(val) + '</textarea></div>';
+        });
+        if (!mondays.length) fields = '<p class="form-note">Este mes no tiene lunes para planificar.</p>';
+        var fixedCount = weeksFixedCount(mondays);
+        var body = '<form class="form" id="phraseForm">'
+          + '<div class="phrase-plan-note"><strong>Una sola planificación mensual.</strong> El día 1 se fijan aquí las frases de <strong>todas las semanas del mes</strong>, una distinta por semana, y quedan fijas todo el mes. Solo cambia la Frase de la semana: cada lunes el tablero muestra sola la que toca.</div>'
+          + '<div class="phrase-plan-monthnav"><h4>' + esc(monthCap) + '</h4><span class="mn-btns"><button type="button" id="phraseMonthPrev" aria-label="Mes anterior">' + icon("chevL",16) + '</button><button type="button" id="phraseMonthNext" aria-label="Mes siguiente">' + icon("chevR",16) + '</button></span></div>'
+          + '<p class="form-note" style="margin-top:-.5rem">' + fixedCount + ' de ' + mondays.length + ' semanas de ' + esc(monthName) + ' ya tienen frase fijada. Las que dejes en blanco quedan pendientes, sin inventar ninguna.</p>'
+          + fields
+          + '<div class="form-error" id="formError"></div>'
+          + '<div class="form-actions"><button type="submit" class="btn-save" id="saveBtn">Guardar frases de ' + esc(monthName) + '</button></div>'
+          + '<p class="form-note">Al guardar, todo el mes queda fijo en Firestore y el equipo lo ve al instante. No hace falta tocarlo semana a semana: la siguiente planificación es el día 1 del mes siguiente.</p>'
+          + '</form>';
+        openModal("Frases del mes — solo Frase de la semana", body);
+        $("phraseMonthPrev").addEventListener("click", function(){ phrasePlanMonthOffset--; openPhraseModal(); });
+        $("phraseMonthNext").addEventListener("click", function(){ phrasePlanMonthOffset++; openPhraseModal(); });
         $("phraseForm").addEventListener("submit", function(ev){
           ev.preventDefault();
-          var texto = $("fPhrase").value.trim();
-          var btn = $("saveBtn"); btn.disabled = true; btn.textContent = "Guardando…";
-          fsSavePhrase(texto).then(function(){ toast(texto ? "Frase actualizada para todo el equipo" : "Frase borrada"); closeModal(); }).catch(function(err){ writeError(err); btn.disabled = false; btn.textContent = "Guardar frase en vivo"; });
+          var updates = {};
+          var inputs = document.querySelectorAll("[data-phrase-monday]");
+          for (var i=0;i<inputs.length;i++) updates[inputs[i].getAttribute("data-phrase-monday")] = inputs[i].value.trim();
+          var btn = $("saveBtn"); btn.disabled = true; btn.textContent = "Guardando el mes…";
+          fsSaveMonthPhrases(mondays, updates).then(function(){
+            toast("Frases de " + monthName + " fijadas para todo el mes");
+            closeModal(); render();
+          }).catch(function(err){ writeError(err); btn.disabled = false; btn.textContent = "Guardar frases de " + monthName; });
         });
-        setTimeout(function(){ var f = $("fPhrase"); if (f) f.focus(); }, 50);
+        setTimeout(function(){ var f = document.querySelector("[data-phrase-monday]"); if (f) f.focus(); }, 50);
       }
 
       function openActivityModal(a, presetDate){
