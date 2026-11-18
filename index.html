@@ -929,8 +929,7 @@
         var inner = fixed
           ? '<p class="phrase-text">&ldquo;'+esc(phrase)+'&rdquo;</p>'
           : '<p class="phrase-empty">Esta semana todavía no tiene frase fijada. Se fija el día 1 en la planificación del mes.</p>';
-        var meta = '<div class="phrase-meta"><span class="pm-tag'+(fixed?"":" pending")+'">'+(fixed?"Fijada por mes":"Pendiente del mes")+'</span><span>Semana del '+esc(shortWeekRange(mo))+' · una frase distinta cada semana, fijada el día 1 para todo el mes</span></div>';
-        box.innerHTML = '<div class="phrase-row"><span class="phrase-ico">'+icon("quote",18)+'</span><div class="phrase-body"><p class="phrase-kicker">Frase de la semana</p>'+inner+meta+'</div><button type="button" class="btn-black" id="phraseEditBtn">'+icon("calendar",13)+' Plan del mes</button></div>';
+        box.innerHTML = '<div class="phrase-row"><span class="phrase-ico">'+icon("quote",18)+'</span><div class="phrase-body"><p class="phrase-kicker">Frase de la semana</p>'+inner+'</div><button type="button" class="btn-black" id="phraseEditBtn">'+icon("calendar",13)+' Plan del mes</button></div>';
         $("phraseEditBtn").addEventListener("click", function(){ phrasePlanMonthOffset = 0; openPhraseModal(); });
       }
       function renderTabs(){
