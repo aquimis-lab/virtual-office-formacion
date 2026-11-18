@@ -233,6 +233,25 @@
       .topic-card.pinned::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:var(--accent)}
       .topic-card h3{margin:0;font-family:var(--font-display);font-size:1rem;font-weight:700;line-height:1.4}
       .topic-detail{margin-top:.375rem;font-size:.875rem;line-height:1.6;color:rgba(10,10,10,.85);white-space:pre-line}
+      .topic-card--wide{grid-column:1/-1}
+      .topic-lines{margin-top:.5rem;display:flex;flex-direction:column}
+      .topic-line{padding:.6rem 0;border-top:1px solid var(--border);font-size:.875rem;line-height:1.55;color:rgba(10,10,10,.85)}
+      .topic-line:first-child{border-top:none;padding-top:.15rem}
+      .topic-line:last-child{padding-bottom:0}
+      .aperturas-intro{margin-top:.375rem;font-size:.875rem;line-height:1.6;color:rgba(10,10,10,.85)}
+      .aperturas-list{margin-top:.85rem;display:flex;flex-direction:column;border-top:1px solid var(--border)}
+      .apertura-item{display:flex;gap:.85rem;padding:.85rem 0;border-bottom:1px solid var(--border);align-items:flex-start}
+      .apertura-item:last-child{border-bottom:none;padding-bottom:.1rem}
+      .apertura-code{flex-shrink:0;min-width:3.75rem;text-align:center;background:#000;color:#fff;border-radius:.65rem;padding:.55rem .45rem}
+      .apertura-code small{display:block;font-size:9px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.65);line-height:1;margin-bottom:4px}
+      .apertura-code strong{display:block;font-family:var(--font-display);font-size:1.05rem;font-weight:900;line-height:1}
+      .apertura-code--idx{background:var(--surface-2);color:#000;min-width:2.25rem;padding:.5rem .35rem}
+      .apertura-code--idx strong{font-size:.95rem}
+      .apertura-main{flex:1;min-width:0;padding-top:.1rem}
+      .apertura-name{margin:0;font-size:.925rem;font-weight:700;line-height:1.45;color:#0a0a0a;overflow-wrap:break-word}
+      .apertura-text{margin:0;font-size:.875rem;line-height:1.55;color:rgba(10,10,10,.85);overflow-wrap:break-word}
+      .apertura-fecha{margin:.4rem 0 0;display:inline-flex;align-items:center;gap:.35rem;font-size:.8rem;font-weight:700;line-height:1.3;color:var(--accent-ink);background:var(--accent-soft);border-radius:999px;padding:.3rem .65rem}
+      .apertura-fecha svg{flex-shrink:0}
       .topic-actions{display:flex;flex-shrink:0;gap:.25rem}
       .topic-actions button{display:flex;width:2.25rem;height:2.25rem;align-items:center;justify-content:center;border-radius:50%;color:var(--dim)}
       .topic-actions button:hover{background:var(--surface-2);color:var(--text)}
@@ -1049,6 +1068,95 @@
       }
 
       /* ---------- view: Temas ---------- */
+      function splitTopicLines(detail){
+        var raw = String(detail == null ? "" : detail).trim();
+        if (!raw) return [];
+        var lines = raw.split(/\r?\n+/).map(function(s){ return s.trim(); }).filter(Boolean);
+        if (lines.length > 1) return lines;
+        var single = lines[0] || raw;
+        var bySemi = single.split(/\s*;\s*/).map(function(s){ return s.trim(); }).filter(Boolean);
+        if (bySemi.length > 1) return bySemi;
+        var marked = single.replace(/\s+(?=(?:local(?:es)?\s+)?\d{3,4}\s*[\-–—:])/gi, "\n");
+        var byLocal = marked.split(/\r?\n+/).map(function(s){ return s.trim(); }).filter(Boolean);
+        if (byLocal.length > 1) return byLocal;
+        var marked2 = single.replace(/\.\s+(?=(?:local(?:es)?\s+)?\d{3,4}\b)/gi, ".\n");
+        var byLocal2 = marked2.split(/\r?\n+/).map(function(s){ return s.trim(); }).filter(Boolean);
+        if (byLocal2.length > 1) return byLocal2;
+        var marked3 = single.replace(/\s+(?=(?:local(?:es)?\s+)\d{3,4}\b)/gi, "\n");
+        var byLocal3 = marked3.split(/\r?\n+/).map(function(s){ return s.trim(); }).filter(Boolean);
+        if (byLocal3.length > 1) return byLocal3;
+        return lines;
+      }
+      function parseAperturaLine(line){
+        var codeMatch = line.match(/(?:local(?:es)?\s*)?(\d{3,4})\b/i);
+        var code = codeMatch ? codeMatch[1] : null;
+        var rest = line;
+        if (codeMatch) {
+          rest = line.replace(/(?:local(?:es)?\s*)?\d{3,4}\b\s*[:\-–—\.]?\s*/i, "").trim();
+          rest = rest.replace(/^[\-\–—:\|·•\s]+/, "").trim();
+        }
+        var fecha = null;
+        var fechaMatch = rest.match(/(?:fecha\s+de\s+apertura|fecha\s+apertura|apertura|fecha)\s*[:\-–—]?\s*(\d{1,2}\s+de\s+[a-záéíóúñ]+(?:\s+de\s+\d{4})?|\d{1,2}\s+(?:de\s+)?[a-záéíóúñ]{3,}(?:\s+de\s+\d{4}|\s+\d{4})?|\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?)/i);
+        if (fechaMatch) {
+          fecha = fechaMatch[1].trim();
+          var name = rest.replace(fechaMatch[0], " ").replace(/\s{2,}/g, " ").trim();
+          name = name.replace(/^[\-\–—:\|·•,;]+\s*/, "").replace(/[\-\–—:\|·•,;]+\s*$/, "").trim();
+          return { code: code, name: name, fecha: fecha, raw: line };
+        }
+        var dateMatch = rest.match(/(\d{1,2}\s+de\s+[a-záéíóúñ]+(?:\s+de\s+\d{4})?|\d{1,2}\s+(?:de\s+)?[a-záéíóúñ]{3,}(?:\s+\d{4})?|\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?)\s*\.?\s*$/i);
+        if (dateMatch) {
+          fecha = dateMatch[1].trim();
+          var name2 = rest.slice(0, dateMatch.index).trim().replace(/[\-\–—:\|·•,;]+\s*$/, "").trim();
+          return { code: code, name: name2, fecha: fecha, raw: line };
+        }
+        return { code: code, name: rest, fecha: null, raw: line };
+      }
+      function isAperturasTopic(t, lines){
+        if (/apertura/i.test(String(t.title || ""))) return true;
+        if (lines.length >= 2) {
+          var withCode = lines.filter(function(l){ return /\d{3,4}/.test(l); }).length;
+          var withApertura = lines.filter(function(l){ return /apertura/i.test(l); }).length;
+          if (withCode >= 2 && withApertura >= 1) return true;
+        }
+        return false;
+      }
+      function renderTopicDetail(t){
+        if (!t.detail) return "";
+        var lines = splitTopicLines(t.detail);
+        if (lines.length <= 1) return '<p class="topic-detail">' + esc(t.detail) + "</p>";
+        if (isAperturasTopic(t, lines)) {
+          var intro = [], items = [], seen = false;
+          lines.forEach(function(l){
+            if (/\d{3,4}/.test(l)) { items.push(l); seen = true; }
+            else if (!seen) intro.push(l);
+            else items.push(l);
+          });
+          if (items.length === 0) items = lines.slice(), intro = [];
+          var out = "";
+          intro.forEach(function(l){ out += '<p class="aperturas-intro">' + esc(l) + "</p>"; });
+          out += '<div class="aperturas-list" role="list" aria-label="Locales por aperturar, uno debajo del otro">';
+          items.forEach(function(l, idx){
+            var p = parseAperturaLine(l);
+            out += '<div class="apertura-item" role="listitem">';
+            if (p.code) out += '<span class="apertura-code"><small>Local</small><strong>' + esc(p.code) + "</strong></span>";
+            else out += '<span class="apertura-code apertura-code--idx"><strong>' + (idx + 1) + "</strong></span>";
+            out += '<div class="apertura-main">';
+            if (p.name) out += '<p class="apertura-name">' + esc(p.name) + "</p>";
+            if (!p.name && !p.fecha) out += '<p class="apertura-text">' + esc(p.raw) + "</p>";
+            if (p.fecha) {
+              var f = p.fecha.charAt(0).toUpperCase() + p.fecha.slice(1);
+              out += '<p class="apertura-fecha">' + icon("calendar", 13) + "<span>Fecha de apertura: " + esc(f) + "</span></p>";
+            }
+            out += "</div></div>";
+          });
+          out += "</div>";
+          return out;
+        }
+        var g = '<div class="topic-lines">';
+        lines.forEach(function(l){ g += '<div class="topic-line">' + esc(l) + "</div>"; });
+        g += "</div>";
+        return g;
+      }
       function renderTemas(main){
         var h = '<section aria-label="Temas importantes"><div class="sec-head"><h2>' + secBadge("bell", true) + 'Temas importantes</h2><button type="button" class="btn-red" id="topicNew">' + icon("plus",15,2.5) + ' Nuevo tema</button></div>';
         if (state.topics.length === 0) {
@@ -1057,8 +1165,10 @@
           var sorted = state.topics.slice().sort(function(a,b){ return (b.pinned?1:0)-(a.pinned?1:0); });
           h += '<div class="grid-2">';
           sorted.forEach(function(t){
-            h += '<article class="card topic-card'+(t.pinned?" pinned":"")+'"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem"><h3>'+esc(t.title)+'</h3><span class="topic-actions"><button type="button" class="'+(t.pinned?"pin-on":"")+'" data-topic-pin="'+esc(t.id)+'" aria-label="'+(t.pinned?"Desfijar tema":"Fijar tema")+'" aria-pressed="'+t.pinned+'">'+icon("bookmark",15)+'</button><button type="button" data-topic-edit="'+esc(t.id)+'" aria-label="Editar tema">'+icon("pencil",15)+'</button></span></div>';
-            if (t.detail) h += '<p class="topic-detail">'+esc(t.detail)+"</p>";
+            var lines = t.detail ? splitTopicLines(t.detail) : [];
+            var wide = isAperturasTopic(t, lines) && lines.length > 1;
+            h += '<article class="card topic-card'+(t.pinned?" pinned":"")+(wide?" topic-card--wide":"")+'"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem"><h3>'+esc(t.title)+'</h3><span class="topic-actions"><button type="button" class="'+(t.pinned?"pin-on":"")+'" data-topic-pin="'+esc(t.id)+'" aria-label="'+(t.pinned?"Desfijar tema":"Fijar tema")+'" aria-pressed="'+t.pinned+'">'+icon("bookmark",15)+'</button><button type="button" data-topic-edit="'+esc(t.id)+'" aria-label="Editar tema">'+icon("pencil",15)+'</button></span></div>';
+            if (t.detail) h += renderTopicDetail(t);
             if (t.pinned) h += '<span class="pinned-tag">'+icon("bookmark",11)+"Fijado</span>";
             h += "</article>";
           });
