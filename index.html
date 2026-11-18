@@ -161,6 +161,14 @@
       .holiday-banner{margin:-.25rem 0 .85rem;display:flex;align-items:flex-start;gap:.6rem;border-radius:12px;background:var(--accent-soft);box-shadow:inset 0 0 0 1px #fecdd3;padding:.7rem .85rem}
       .holiday-banner strong{font-family:var(--font-display);font-size:13px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-ink);white-space:nowrap}
       .holiday-banner span{font-size:13px;font-weight:600;line-height:1.45;color:rgba(10,10,10,.8)}
+      .rest-badge{display:inline-flex;align-items:center;gap:.3rem;border-radius:999px;background:var(--surface-2);padding:3px .6rem;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:#000;white-space:nowrap}
+      .rest-badge svg{color:var(--accent)}
+      .rest-banner{margin:-.25rem 0 .85rem;display:flex;align-items:center;gap:.75rem;border-radius:12px;background:#0a0a0a;padding:.8rem .9rem}
+      .rest-banner .rb-ico{display:flex;width:2.25rem;height:2.25rem;flex-shrink:0;align-items:center;justify-content:center;border-radius:.65rem;background:var(--accent);color:#fff}
+      .rest-banner strong{display:block;font-family:var(--font-display);font-size:14px;font-weight:900;color:#fff}
+      .rest-banner span{display:block;font-size:13px;font-weight:600;line-height:1.45;color:rgba(255,255,255,.75)}
+      .dp-card.rest{background:var(--surface-3)}
+      .dp-card.rest .dp-count{color:var(--accent-ink);font-weight:800}
       .day-sub{font-size:13px;font-weight:600;color:var(--dim)}
       .day-line{margin-left:auto;height:1px;flex:1;background:var(--border);display:none}
       @media(min-width:640px){.day-line{display:block}}
@@ -527,6 +535,7 @@
         calendar:["M8 2v4","M16 2v4","M3 8h18","M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"],
         agenda:["M8 2v4","M16 2v4","M3 8h18","M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z","M8 12h.01","M12 12h.01","M16 12h.01","M8 16h.01","M12 16h.01","M16 16h.01"],
         clock:["M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z","M12 6v6l4 2"],
+        sun:["M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z","M12 1v2","M12 21v2","M4.22 4.22l1.42 1.42","M18.36 18.36l1.42 1.42","M1 12h2","M21 12h2","M4.22 19.78l1.42-1.42","M18.36 5.64l1.42-1.42"],
         users:["M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2","M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z","M22 21v-2a4 4 0 0 0-3-3.87","M16 3.13a4 4 0 0 1 0 7.75"],
         bell:["M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9","M10.3 21a1.94 1.94 0 0 0 3.4 0"],
         flag:["M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z","M4 22v-7"],
@@ -904,7 +913,8 @@
             var dPct = dActs.length ? Math.round(dDone/dActs.length*100) : 0;
             var dToday = dISO === TODAY;
             var dHol = holidayOf(dISO);
-            h += '<article class="dp-card'+(dToday?" today":"")+(dHol?" holiday":"")+(dActs.length&&dPct===100?" full":"")+'" aria-label="Avance del '+dayName+' '+fmtShort(dISO)+': '+dPct+' por ciento'+(dHol?". Es feriado":"")+'"><p class="dp-day">'+DAYS_SHORT[i]+(dToday?" · Hoy":"")+(dHol?" · Feriado":"")+'</p><p class="dp-date">'+parseISO(dISO).getDate()+" "+MONTHS_SHORT[parseISO(dISO).getMonth()]+'</p>'+(dHol?'<span class="dp-holiday-tag">Feriado</span>':"")+'<p class="dp-pct">'+dPct+'<span>%</span></p><p class="dp-count">'+(dActs.length ? dDone+"/"+dActs.length+" hechas" : "Sin actividades")+'</p><div class="dp-bar"><div class="'+(dPct===100?"full":dActs.length===0?"empty":"")+'" style="width:'+dPct+'%"></div></div></article>';
+            var dRest = !dHol && dActs.length===0;
+            h += '<article class="dp-card'+(dToday?" today":"")+(dHol?" holiday":"")+(dRest?" rest":"")+(dActs.length&&dPct===100?" full":"")+'" aria-label="Avance del '+dayName+' '+fmtShort(dISO)+': '+dPct+' por ciento'+(dHol?". Es feriado":dRest?". Día de descanso":"")+'"><p class="dp-day">'+DAYS_SHORT[i]+(dToday?" · Hoy":"")+(dHol?" · Feriado":dRest?" · Descanso":"")+'</p><p class="dp-date">'+parseISO(dISO).getDate()+" "+MONTHS_SHORT[parseISO(dISO).getMonth()]+'</p>'+(dHol?'<span class="dp-holiday-tag">Feriado</span>':"")+'<p class="dp-pct">'+dPct+'<span>%</span></p><p class="dp-count">'+(dActs.length ? dDone+"/"+dActs.length+" hechas" : dRest ? "Día de descanso" : "Sin actividades")+'</p><div class="dp-bar"><div class="'+(dPct===100?"full":dActs.length===0?"empty":"")+'" style="width:'+dPct+'%"></div></div></article>';
           });
           h += "</div></section>";
         }
@@ -924,11 +934,15 @@
             var pillCls = isToday ? "today" : hol ? "holiday" : dayActs.length > 0 ? "has" : "";
             var dayDone = dayActs.filter(function(a){return a.status==="completada";}).length;
             var dayPct = dayActs.length ? Math.round(dayDone/dayActs.length*100) : 0;
+            var isRest = !hol && dayActs.length===0;
             var dayProg = dayActs.length
               ? '<div class="day-progress-inline"><span class="dp-bar"><div class="'+(dayPct===100?"full":"")+'" style="width:'+dayPct+'%"></div></span><span class="dp-inline-txt">Avance del día: '+dayPct+'% · '+dayDone+'/'+dayActs.length+' hechas</span></div>'
-              : '<div class="day-progress-inline"><span class="dp-inline-txt muted">Avance del día: sin actividades</span></div>';
-            h += '<section class="day-section'+(hol?" holiday":"")+'" aria-label="'+dayName+" "+fmtShort(dateISO)+(hol?". Feriado":"")+'"><div class="day-head"><span class="day-pill '+pillCls+'" aria-hidden="true"><span class="dnum">'+parseISO(dateISO).getDate()+'</span></span><div><h2>'+dayName+(isToday?'<span class="today-badge">Hoy</span>':"")+(hol?'<span class="holiday-badge">Feriado</span>':"")+'</h2><p class="day-sub">'+fmtShort(dateISO)+(hol?" · Feriado · ":" · ")+(dayActs.length>0 ? dayActs.length+(dayActs.length===1?" actividad":" actividades") : "sin actividades")+'</p>'+dayProg+'</div><span class="day-line" aria-hidden="true"></span><button type="button" class="day-add" data-add-day="'+dateISO+'">'+icon("plus",13,2.6)+' Agregar</button></div>';
+              : isRest
+                ? '<div class="day-progress-inline"><span class="dp-inline-txt muted">Hoy no hay avance que medir: ¡a descansar!</span></div>'
+                : '<div class="day-progress-inline"><span class="dp-inline-txt muted">Avance del día: sin actividades</span></div>';
+            h += '<section class="day-section'+(hol?" holiday":"")+(isRest?" rest":"")+'" aria-label="'+dayName+" "+fmtShort(dateISO)+(hol?". Feriado":isRest?". Día de descanso":"")+'"><div class="day-head"><span class="day-pill '+pillCls+'" aria-hidden="true"><span class="dnum">'+parseISO(dateISO).getDate()+'</span></span><div><h2>'+dayName+(isToday?'<span class="today-badge">Hoy</span>':"")+(hol?'<span class="holiday-badge">Feriado</span>':"")+(isRest?'<span class="rest-badge">'+icon("sun",11,2.4)+'Día de descanso</span>':"")+'</h2><p class="day-sub">'+fmtShort(dateISO)+(hol?" · Feriado · ":" · ")+(dayActs.length>0 ? dayActs.length+(dayActs.length===1?" actividad":" actividades") : isRest ? "día de descanso" : "sin actividades")+'</p>'+dayProg+'</div><span class="day-line" aria-hidden="true"></span><button type="button" class="day-add" data-add-day="'+dateISO+'">'+icon("plus",13,2.6)+' Agregar</button></div>';
             if (hol) h += '<div class="holiday-banner" role="note"><strong>Feriado</strong><span>'+esc(hol.detail)+'</span></div>';
+            if (isRest) h += '<div class="rest-banner" role="note"><span class="rb-ico" aria-hidden="true">'+icon("sun",19,2.1)+'</span><div><strong>¡Día de descanso!</strong><span>Hoy no hay actividades programadas. A descansar, recargar energías y disfrutar — mañana seguimos con todo.</span></div></div>';
             if (dayActs.length > 0) {
               h += '<div class="grid-2">';
               dayActs.forEach(function(a){ h += activityCardHTML(a, false); });
