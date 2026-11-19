@@ -274,6 +274,10 @@
       .apertura-text{margin:0;font-size:.875rem;line-height:1.55;color:rgba(10,10,10,.85);overflow-wrap:break-word}
       .apertura-fecha{margin:.4rem 0 0;display:inline-flex;align-items:center;gap:.35rem;font-size:.8rem;font-weight:700;line-height:1.3;color:var(--accent-ink);background:var(--accent-soft);border-radius:999px;padding:.3rem .65rem}
       .apertura-fecha svg{flex-shrink:0}
+      .apertura-item--line{display:block;padding:.7rem 0}
+      .apertura-line{margin:0;font-size:.925rem;line-height:1.55;color:rgba(10,10,10,.88);overflow-wrap:break-word}
+      .apertura-loc{font-family:var(--font-display);font-weight:800;color:#0a0a0a}
+      .apertura-fecha-txt{color:var(--accent);font-weight:800;white-space:nowrap}
       .act-detail{margin-top:.5rem}
       .act-detail-plain{margin-top:.375rem;font-size:.875rem;line-height:1.6;color:rgba(0,0,0,.7);white-space:pre-line;overflow-wrap:break-word}
       .visit-intro{margin:0;font-size:.85rem;font-weight:700;line-height:1.5;color:#0a0a0a}
@@ -1339,19 +1343,17 @@
           rest = line.replace(/(?:local(?:es)?\s*)?\d{3,4}\b\s*[:\-–—\.]?\s*/i, "").trim();
           rest = rest.replace(/^[\-\–—:\|·•\s]+/, "").trim();
         }
-        var fecha = null;
-        var fechaMatch = rest.match(/(?:fecha\s+de\s+apertura|fecha\s+apertura|apertura|fecha)\s*[:\-–—]?\s*(\d{1,2}\s+de\s+[a-záéíóúñ]+(?:\s+de\s+\d{4})?|\d{1,2}\s+(?:de\s+)?[a-záéíóúñ]{3,}(?:\s+de\s+\d{4}|\s+\d{4})?|\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?)/i);
-        if (fechaMatch) {
-          fecha = fechaMatch[1].trim();
-          var name = rest.replace(fechaMatch[0], " ").replace(/\s{2,}/g, " ").trim();
-          name = name.replace(/^[\-\–—:\|·•,;]+\s*/, "").replace(/[\-\–—:\|·•,;]+\s*$/, "").trim();
-          return { code: code, name: name, fecha: fecha, raw: line };
-        }
-        var dateMatch = rest.match(/(\d{1,2}\s+de\s+[a-záéíóúñ]+(?:\s+de\s+\d{4})?|\d{1,2}\s+(?:de\s+)?[a-záéíóúñ]{3,}(?:\s+\d{4})?|\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?)\s*\.?\s*$/i);
-        if (dateMatch) {
-          fecha = dateMatch[1].trim();
-          var name2 = rest.slice(0, dateMatch.index).trim().replace(/[\-\–—:\|·•,;]+\s*$/, "").trim();
-          return { code: code, name: name2, fecha: fecha, raw: line };
+        /* La fecha de apertura se toma SOLO de lo que sigue a la etiqueta
+           «Fecha de apertura:». Nunca se interpreta como fecha ninguna otra
+           parte del nombre del local: p. ej. en «Cuenca y 6 de Marzo» el
+           «6 de Marzo» es parte del nombre del local 855, no su fecha
+           (su fecha es la que diga la etiqueta: 4 dic). Sin etiqueta, el
+           local se muestra sin fecha y con el nombre completo. */
+        var labelMatch = rest.match(/fecha\s+de\s+apertura\s*:\s*(.+)$/i);
+        if (labelMatch) {
+          var fecha = labelMatch[1].trim().replace(/[\s·•,;.]+$/, "").trim();
+          var name = rest.slice(0, labelMatch.index).replace(/[\s·•\-–—:;,]+$/, "").trim();
+          return { code: code, name: name, fecha: fecha || null, raw: line };
         }
         return { code: code, name: rest, fecha: null, raw: line };
       }
@@ -1387,17 +1389,16 @@
           out += '<div class="aperturas-list" role="list" aria-label="Locales por aperturar, uno debajo del otro">';
           items.forEach(function(l, idx){
             var p = parseAperturaLine(l);
-            out += '<div class="apertura-item" role="listitem">';
-            if (p.code) out += '<span class="apertura-code"><small>Local</small><strong>' + esc(p.code) + "</strong></span>";
-            else out += '<span class="apertura-code apertura-code--idx"><strong>' + (idx + 1) + "</strong></span>";
-            out += '<div class="apertura-main">';
-            if (p.name) out += '<p class="apertura-name">' + esc(p.name) + "</p>";
-            if (!p.name && !p.fecha) out += '<p class="apertura-text">' + esc(p.raw) + "</p>";
-            if (p.fecha) {
-              var f = p.fecha.charAt(0).toUpperCase() + p.fecha.slice(1);
-              out += '<p class="apertura-fecha">' + icon("calendar", 13) + "<span>Fecha de apertura: " + esc(f) + "</span></p>";
-            }
-            out += "</div></div>";
+            /* Un local por línea: «Local NNN — nombre · Fecha de apertura: fecha»,
+               con la fecha en rojo. La fecha sale solo de la etiqueta
+               «Fecha de apertura:» (ver parseAperturaLine). */
+            out += '<div class="apertura-item apertura-item--line" role="listitem">';
+            out += '<p class="apertura-line">';
+            if (p.code) out += '<span class="apertura-loc">Local ' + esc(p.code) + "</span> — ";
+            var lineName = p.name || (!p.fecha ? p.raw : "");
+            out += esc(lineName);
+            if (p.fecha) out += ' · <span class="apertura-fecha-txt">Fecha de apertura: ' + esc(p.fecha) + "</span>";
+            out += "</p></div>";
           });
           out += "</div>";
           return out;
