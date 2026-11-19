@@ -1075,9 +1075,9 @@
         if (!raw) return null;
         var re = /\b\d{3,4}\b/g, matches = [], mm;
         while ((mm = re.exec(raw)) !== null) matches.push({ code: mm[0], index: mm.index });
-        if (matches.length < 2) return null;
+        if (matches.length < 1) return null;
         var introRaw = raw.slice(0, matches[0].index).trim();
-        var intro = introRaw.replace(/^[-•·\s]+/, "").replace(/locales?\s*[:\-–—]?\s*$/i, "").replace(/[:\-–—\s]+$/, "").trim();
+        var intro = introRaw.replace(/^[-•·\s]+/, "").replace(/locales?\s*[:\-–—]?\s*$/i, "").replace(/[:\-–—\s]+$/, "").replace(/[•·,;\n]\s*local\s*$/i, "").replace(/[•·\s]+$/, "").trim();
         if (/^local(es)?$/i.test(intro)) intro = "";
         var locales = [], footer = "";
         for (var i = 0; i < matches.length; i++){
@@ -1134,16 +1134,35 @@
           /* Al cortar el detalle por el código del siguiente local, el inicio
              de su línea («• Local») puede quedar pegado al final de este
              nombre; se quita para que el nombre del local quede limpio. */
-          name = name.replace(/[\n,;]\s*[•·]?\s*local\s*$/i, "").replace(/[•·\-–—\s]+$/, "").trim();
+          name = name.replace(/[\n,;]\s*[•·]?\s*local\s*$/i, "").replace(/\s*[•·]\s*local\s*$/i, "").replace(/[,;]\s*local\s*$/i, "").replace(/[•·\-–—\s]+$/, "").trim();
           locales.push({ code: matches[i].code, name: name, note: note, fecha: fecha, raw: seg });
         }
         var valid = locales.filter(function(l){ return l.name && l.name.length >= 2; });
-        if (valid.length < 2) return null;
+        if (matches.length === 1){
+          /* Un solo local mencionado: también se muestra con su cuadro
+             negro LOCAL + número (p. ej. «Visita en locales por aperturar»
+             o «Apoyo por apertura» con un único local), siempre que el
+             número venga precedido de la palabra «Local»; así un número
+             suelto cualquiera no se convierte en local. */
+          var beforeCode = raw.slice(0, matches[0].index).replace(/[•·\s]+$/, "");
+          if (!/\blocal$/i.test(beforeCode) || valid.length < 1) return null;
+        } else if (valid.length < 2) return null;
         return { intro: intro, locales: locales, footer: footer };
       }
       function localesListHTML(parsed, label){
         var out = "";
-        if (parsed.intro) out += '<p class="visit-intro">' + esc(parsed.intro) + "</p>";
+        var intro = parsed.intro || "";
+        /* La parte «Instalación: …» de la cabecera se separa y se muestra
+           en su propia línea, pequeña y roja, debajo del Distrito / Zona,
+           igual que la «Fecha de apertura:» de cada local. */
+        var instLine = "";
+        var im = intro.match(/instalaci[oó]n\s*:[^\n]*/i);
+        if (im){
+          instLine = im[0].trim();
+          intro = (intro.slice(0, im.index) + " " + intro.slice(im.index + im[0].length)).replace(/\s{2,}/g, " ").replace(/[•·\s]+$/, "").trim();
+        }
+        if (intro) out += '<p class="visit-intro">' + esc(intro) + "</p>";
+        if (instLine) out += '<p class="apertura-fecha-line">' + esc(instLine) + "</p>";
         out += '<div class="locales-list" role="list" aria-label="' + esc(label || "Locales, uno debajo del otro") + '">';
         parsed.locales.forEach(function(loc){
           out += '<div class="apertura-item" role="listitem">';
