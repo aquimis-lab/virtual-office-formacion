@@ -1177,12 +1177,21 @@
           nlLines.forEach(function(l){
             /* La línea «Fecha de apertura: …» va pegada debajo del local al
                que pertenece, en letra pequeña y roja, igual que en Próximas
-               aperturas; si viene al final de la línea del local, se separa. */
+               aperturas; si viene al final de la línea del local, se separa.
+               La línea «Instalación: …» de las visitas de huella recibe el
+               mismo tratamiento: pequeña y roja, debajo de su línea de
+               Distrito / Zona, para que la fecha de instalación se note. */
             var im = l.match(/^([\s\S]*?)\s*[·•]\s*(fecha\s+de\s+apertura\s*:\s*.+)$/i);
+            var ii = l.match(/^([\s\S]*?)\s*[·•]\s*(instalaci[oó]n\s*:\s*.+)$/i);
             if (im && /\d{3,4}/.test(im[1])){
               g += '<div class="topic-line">' + esc(im[1].trim()) + "</div>";
               g += '<div class="topic-line act-fecha-line">' + esc(im[2].trim()) + "</div>";
             } else if (/^fecha\s+de\s+apertura\s*:/i.test(l)){
+              g += '<div class="topic-line act-fecha-line">' + esc(l) + "</div>";
+            } else if (ii && ii[1].trim()){
+              g += '<div class="topic-line">' + esc(ii[1].trim()) + "</div>";
+              g += '<div class="topic-line act-fecha-line">' + esc(ii[2].trim()) + "</div>";
+            } else if (/^instalaci[oó]n\s*:/i.test(l)){
               g += '<div class="topic-line act-fecha-line">' + esc(l) + "</div>";
             } else {
               g += '<div class="topic-line">' + esc(l) + "</div>";
@@ -1194,6 +1203,17 @@
         if (sf && (raw.match(/\b\d{3,4}\b/g) || []).length === 1){
           var sfFecha = sf[2].trim().replace(/[\s·•,;.]+$/, "");
           return '<div class="act-detail"><p class="act-detail-plain">' + esc(sf[1].trim()) + '</p><p class="apertura-fecha-line">Fecha de apertura: ' + esc(sfFecha) + "</p></div>";
+        }
+        /* Visita de huella en una sola línea: la parte «Instalación: …» se
+           separa y se muestra debajo, pequeña y roja, igual que la fecha
+           de apertura. */
+        var si = raw.match(/^([\s\S]*?)[\s·•\-–—]*instalaci[oó]n\s*:\s*(.+)$/i);
+        if (si){
+          var siHead = si[1].trim();
+          var siFecha = si[2].trim().replace(/[\s·•,;.]+$/, "");
+          if (siFecha){
+            return '<div class="act-detail">' + (siHead ? '<p class="act-detail-plain">' + esc(siHead) + "</p>" : "") + '<p class="apertura-fecha-line">Instalación: ' + esc(siFecha) + "</p></div>";
+          }
         }
         return '<p class="act-detail-plain">' + esc(raw) + "</p>";
       }
