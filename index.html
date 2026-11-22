@@ -141,6 +141,8 @@
       .tags{margin-top:.625rem;display:flex;flex-wrap:wrap;gap:.375rem}
       .tag{display:inline-flex;align-items:center;gap:.375rem;border-radius:999px;padding:.25rem .625rem;font-size:.75rem;font-weight:700}
       .tag-place{background:var(--accent-soft);color:var(--accent-ink)}
+      .tag-days{background:#000;color:#fff}
+      .meta-days{display:inline-flex;align-items:center;gap:.3rem;border-radius:999px;background:#000;color:#fff;padding:.2rem .55rem;font-size:11px;font-weight:800}
       .tag-deliv{background:var(--surface-2);color:rgba(0,0,0,.75)}
       .tag-prio{font-weight:800;text-transform:uppercase;letter-spacing:.05em;gap:.25rem}
       .tag-prio.alta{background:var(--accent);color:#fff}
@@ -1236,6 +1238,29 @@
         }
         return '<p class="act-detail-plain">' + esc(raw) + "</p>";
       }
+      /* Grupo de varios días: los documentos cuyo id termina en «-DD»
+         (sufijo de dos dígitos) y comparten id base, member_id y title
+         forman un grupo. La pastilla negra muestra «Día X de N · rango»,
+         con X = posición del documento en su grupo ordenado por fecha y
+         el rango = primera y última fecha del grupo. Si el id no tiene
+         sufijo o el grupo tiene un solo documento, no hay pastilla. */
+      function dayRangeInfo(a){
+        if (!a || a.id == null) return null;
+        var m = String(a.id).match(/^(.*)-\d{2}$/);
+        if (!m) return null;
+        var base = m[1];
+        var group = state.activities.filter(function(b){
+          if (b.id == null) return false;
+          var bm = String(b.id).match(/^(.*)-\d{2}$/);
+          return bm && bm[1] === base && String(b.member_id) === String(a.member_id) && b.title === a.title;
+        });
+        if (group.length < 2) return null;
+        group.sort(function(x,y){ return x.date < y.date ? -1 : x.date > y.date ? 1 : (String(x.id) < String(y.id) ? -1 : 1); });
+        var idx = -1;
+        for (var i=0;i<group.length;i++) if (String(group[i].id) === String(a.id)) { idx = i; break; }
+        if (idx < 0) return null;
+        return { x: idx+1, n: group.length, label: "Día " + (idx+1) + " de " + group.length + " · " + fmtShort(group[0].date) + "–" + fmtShort(group[group.length-1].date) };
+      }
       function activityCardHTML(a, showDate){
         var m = a.member_id != null ? memberByOrden(a.member_id) : undefined;
         var overdue = a.date < TODAY && a.status !== "completada";
@@ -1251,6 +1276,8 @@
         if (a.detail) h += renderActivityDetail(a);
         h += '<div class="tags">';
         if (a.place) h += '<span class="tag tag-place">'+icon("pin",12)+esc(a.place)+'</span>';
+        var _dri = dayRangeInfo(a);
+        if (_dri) h += '<span class="tag tag-days">'+icon("calendar",11,2.4)+esc(_dri.label)+'</span>';
         if (a.deliverable) h += '<span class="tag tag-deliv">'+icon("box",12)+esc(a.deliverable)+'</span>';
         if (hasPriority(a.priority)) { var _prio = normPriority(a.priority); h += '<span class="tag tag-prio '+_prio+'">'+icon("flag",11,2.4)+PRIORITY_LABEL[_prio]+'</span>'; }
         h += '</div>';
@@ -1398,6 +1425,8 @@
             var pillCls = done ? "done" : a.status === "en_curso" ? "curso" : "";
             h += '<article class="agenda-row'+(overdue?" overdue":"")+'"><span class="agenda-ico '+icoCls+'" aria-hidden="true">'+ico+'</span><div class="agenda-row-main"><button type="button" class="agenda-row-title" data-act-edit="'+esc(a.id)+'"><span class="'+(done?"done":"")+'">'+esc(a.title)+'</span></button><p class="agenda-meta"><span class="who">'+(m?avatar(m,18):"")+esc(m?m.name:"Sin asignar")+"</span>";
             if (a.place) h += '<span style="display:inline-flex;align-items:center;gap:.25rem">'+icon("pin",12)+esc(a.place)+"</span>";
+            var _driA = dayRangeInfo(a);
+            if (_driA) h += '<span class="meta-days">'+icon("calendar",11,2.4)+esc(_driA.label)+"</span>";
             if (a.deliverable) h += '<span style="display:inline-flex;align-items:center;gap:.25rem">'+icon("box",12)+esc(a.deliverable)+"</span>";
             if (overdue) h += '<span class="venc">'+icon("alert",12)+"Vencida</span>";
             h += '</p></div><button type="button" class="icon-btn" data-act-edit="'+esc(a.id)+'" aria-label="Editar '+esc(a.title)+'">'+icon("pencil",15)+'</button><button type="button" class="status-pill '+pillCls+'" data-act-cycle="'+esc(a.id)+'" aria-label="Cambiar estado de '+esc(a.title)+", ahora "+STATUS_LABEL[a.status]+'">'+STATUS_LABEL[a.status]+"</button></article>";
