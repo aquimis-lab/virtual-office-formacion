@@ -153,6 +153,8 @@
       .status-group button.on-pendiente{background:#fff;color:#000;box-shadow:inset 0 0 0 1px rgba(0,0,0,.1),0 1px 3px rgba(0,0,0,.1)}
       .status-group button.on-curso{background:var(--accent);color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2)}
       .status-group button.on-completada{background:#000;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+      .status-group .status-static{flex:1;display:flex;align-items:center;justify-content:center;gap:.25rem;border-radius:999px;padding:.375rem .5rem;font-size:.75rem;font-weight:800;min-height:2rem}
+      .status-group .status-static.on-nocompletado{background:var(--accent-soft);color:var(--accent-ink);box-shadow:inset 0 0 0 1.5px var(--accent)}
       .overdue-box{margin-bottom:2rem;border-radius:var(--radius);background:var(--accent-soft);padding:1rem;box-shadow:inset 0 0 0 1px #fecdd3}
       .overdue-box h2{margin:0 0 .75rem;display:flex;align-items:center;gap:.625rem;font-family:var(--font-display);font-size:1rem;font-weight:800;color:var(--accent-ink)}
       .overdue-box h2 .ob-ico{display:flex;width:2rem;height:2rem;align-items:center;justify-content:center;border-radius:.5rem;background:var(--accent);color:#fff}
@@ -386,6 +388,8 @@
       .status-pill:hover{box-shadow:inset 0 0 0 1px rgba(0,0,0,.25)}
       .status-pill.curso{background:var(--accent);color:#fff}
       .status-pill.done{background:#000;color:#fff}
+      .status-pill.nocompletado{background:var(--accent-soft);color:var(--accent-ink);box-shadow:inset 0 0 0 1.5px var(--accent)}
+      .agenda-ico.nocompletado{background:var(--accent-soft);color:var(--accent-ink);box-shadow:inset 0 0 0 1.5px rgba(227,6,19,.45)}
       .fab{position:fixed;bottom:max(1.25rem,env(safe-area-inset-bottom));right:1rem;z-index:40;display:flex;align-items:center;gap:.5rem;border-radius:999px;background:var(--accent);padding:1rem 1.5rem;font-family:var(--font-display);font-size:1rem;font-weight:800;color:#fff;box-shadow:0 16px 32px -8px rgba(227,6,19,.65),0 0 0 4px #fff;transition:transform .15s}
       .fab:hover{transform:scale(1.03)}
       .fab:active{transform:scale(.95)}
@@ -631,7 +635,13 @@
         var ps=(PATHS[name]||[]).map(function(p){return '<path d="'+p+'"/>';}).join("");
         return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="'+sw+'" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+ps+'</svg>';
       }
-      var STATUS_LABEL={pendiente:"Pendiente",en_curso:"En curso",completada:"Completada"};
+      var STATUS_LABEL={pendiente:"Pendiente",en_curso:"En curso",completada:"Completada",no_completado:"No Completado"};
+      /* "No Completado" solo se muestra: llega desde Firestore (lo marca el
+         tablero Muse) y en esta página no existe ninguna opción para
+         ponerlo. No forma parte del flujo de tres estados de arriba. */
+      function normActStatus(s){var v=String(s==null?"":s).toLowerCase().trim().replace(/[\s-]+/g,"_");if(v==="no_completada")v="no_completado";return v;}
+      function isNoCompletado(a){return !!a&&a.status==="no_completado";}
+      function isClosedAct(a){return !!a&&(a.status==="completada"||a.status==="no_completado");}
       var PRIORITY_LABEL={alta:"Alta",media:"Media",baja:"Baja",ninguna:"Sin prioridad"};
       function normPriority(p){return String(p==null?"":p).toLowerCase().trim();}
       function hasPriority(p){var n=normPriority(p);return n==="alta"||n==="media"||n==="baja";}
@@ -675,7 +685,7 @@
         return st.getDate() + " " + MONTHS_SHORT[st.getMonth()] + " al " + en.getDate() + " " + MONTHS_SHORT[en.getMonth()];
       }
       function weeksFixedCount(mondays){ return mondays.filter(function(mo){ return phraseIsFixed(mo); }).length; }
-      function overdueActs(){return state.activities.filter(function(a){return a.date<TODAY&&a.status!=="completada"&&(memberFilter==null||a.member_id===memberFilter);});}
+      function overdueActs(){return state.activities.filter(function(a){return a.date<TODAY&&!isClosedAct(a)&&(memberFilter==null||a.member_id===memberFilter);});}
       function activityById(id){for(var i=0;i<state.activities.length;i++)if(String(state.activities[i].id)===String(id))return state.activities[i];return undefined;}
       function objectiveById(id){for(var i=0;i<state.objectives.length;i++)if(String(state.objectives[i].id)===String(id))return state.objectives[i];return undefined;}
       /* ===== Objetivos por proyecto y cierre de semana =====
@@ -843,7 +853,7 @@
               seedCollection("actividades", SEED_ACTIVITIES, function(s){ return { title:s.title, detail:s.detail, member_id:s.member_id, date:s.date, place:s.place, deliverable:s.deliverable, status:s.status, priority:s.priority }; });
             } else {
               var arr = [];
-              snap.forEach(function(d){ var v=d.data(); arr.push({ id:d.id, title:v.title||"", detail:v.detail||"", member_id:v.member_id!=null?Number(v.member_id):null, date:v.date||TODAY, place:v.place||"", deliverable:v.deliverable||"", status:v.status||"pendiente", priority:v.priority!=null?String(v.priority).toLowerCase().trim():"" }); });
+              snap.forEach(function(d){ var v=d.data(); arr.push({ id:d.id, title:v.title||"", detail:v.detail||"", member_id:v.member_id!=null?Number(v.member_id):null, date:v.date||TODAY, place:v.place||"", deliverable:v.deliverable||"", status:normActStatus(v.status)||"pendiente", priority:v.priority!=null?String(v.priority).toLowerCase().trim():"" }); });
               arr.sort(function(a,b){ return a.date<b.date?-1:a.date>b.date?1:(a.title<b.title?-1:1); });
               state.activities = arr;
             }
@@ -918,6 +928,7 @@
       /* ================= ESCRITURAS (CRUD) ================= */
       function fsSetStatus(actId, status){
         if (!guardEdit()) return;
+        if (status === "no_completado") return; /* En esta página nunca se marca "No Completado": solo se muestra. */
         if (!requireDb()) return;
         db.collection("actividades").doc(String(actId)).update({ status: status }).then(function(){ toast("Estado actualizado · "+STATUS_LABEL[status]); }).catch(writeError);
       }
@@ -994,7 +1005,7 @@
         $("ringWrap").setAttribute("aria-label", "Avance de la semana: " + pct + " por ciento");
         $("statTotal").textContent = wa.length;
         $("statDone").textContent = done;
-        var ov = state.activities.filter(function(a){return a.date<TODAY&&a.status!=="completada";});
+        var ov = state.activities.filter(function(a){return a.date<TODAY&&!isClosedAct(a);});
         $("statOver").textContent = ov.length;
         $("statOverBox").classList.toggle("red", ov.length > 0);
       }
@@ -1263,9 +1274,10 @@
       }
       function activityCardHTML(a, showDate){
         var m = a.member_id != null ? memberByOrden(a.member_id) : undefined;
-        var overdue = a.date < TODAY && a.status !== "completada";
+        var overdue = a.date < TODAY && !isClosedAct(a);
         var done = a.status === "completada";
-        var barColor = overdue ? "var(--accent)" : done ? "#000" : normPriority(a.priority) === "alta" ? "var(--accent)" : "#e4e4e7";
+        var noComp = isNoCompletado(a);
+        var barColor = noComp ? "var(--accent-ink)" : overdue ? "var(--accent)" : done ? "#000" : normPriority(a.priority) === "alta" ? "var(--accent)" : "#e4e4e7";
         var h = '<article class="card'+(overdue?" overdue":"")+'"><span class="bar" style="background:'+barColor+'" aria-hidden="true"></span><div class="card-top">';
         h += m ? avatar(m,40) : '<span class="agenda-ico">'+icon("users",16)+'</span>';
         h += '<div class="card-main"><div class="card-title-row"><h4 class="'+(done?"done":"")+'">'+esc(a.title)+'</h4><button type="button" class="icon-btn" data-act-edit="'+esc(a.id)+'" aria-label="Editar '+esc(a.title)+'">'+icon("pencil",15)+'</button></div>';
@@ -1284,6 +1296,12 @@
         h += "</div></div>";
         h += '<div class="status-group" role="group" aria-label="Cambiar estado de '+esc(a.title)+'">';
         ["pendiente","en_curso","completada"].forEach(function(st){
+          if (st === "completada" && noComp) {
+            /* La etiqueta «Completada» se reescribe por «No Completado»:
+               es solo lectura, no un botón para marcar ese estado. */
+            h += '<span class="status-static on-nocompletado" aria-current="true">'+icon("x",12,3)+STATUS_LABEL.no_completado+'</span>';
+            return;
+          }
           var cls = a.status===st ? (st==="completada"?"on-completada":st==="en_curso"?"on-curso":"on-pendiente") : "";
           var ic = st==="completada" ? icon("check",12,3) : st==="en_curso" ? icon("clock",12) : icon("dot",12,2.6);
           h += '<button type="button" class="'+cls+'" data-act-id="'+esc(a.id)+'" data-act-status="'+st+'" aria-pressed="'+(a.status===st)+'">'+ic+STATUS_LABEL[st]+'</button>';
@@ -1391,7 +1409,7 @@
           var isSel = dateISO === selectedDay;
           var hol = holidayOf(dateISO);
           var allDone = acts.length > 0 && acts.every(function(a){return a.status==="completada";});
-          var hasOver = dateISO < TODAY && acts.some(function(a){return a.status!=="completada";});
+          var hasOver = dateISO < TODAY && acts.some(function(a){return !isClosedAct(a);});
           h += '<button type="button" class="cal-day'+(inMonth?"":" out")+(isSel?" selected":"")+(hol&&inMonth?" holiday":"")+'" data-day="'+dateISO+'" aria-pressed="'+isSel+'" aria-label="'+esc(fmtFull(dateISO))+(hol?". Feriado. ":"")+": "+acts.length+(acts.length===1?" actividad":" actividades")+'"><span class="cal-num'+(isToday?" today":hasOver&&inMonth?" over":"")+'">'+d.getDate()+"</span>"+(hol&&inMonth?'<span class="cal-holiday-tag">Feriado</span>':"");
           if (acts.length > 0) {
             h += '<span class="cal-dots">';
@@ -1418,10 +1436,11 @@
         } else {
           selActs.forEach(function(a){
             var m = a.member_id != null ? memberByOrden(a.member_id) : undefined;
-            var overdue = a.date < TODAY && a.status !== "completada";
+            var overdue = a.date < TODAY && !isClosedAct(a);
             var done = a.status === "completada";
-            var icoCls = done ? "done" : a.status === "en_curso" ? "curso" : "";
-            var ico = done ? icon("check",16,2.6) : a.status === "en_curso" ? icon("clock",15,2.6) : icon("dot",15,2.6);
+            var noComp = isNoCompletado(a);
+            var icoCls = done ? "done" : noComp ? "nocompletado" : a.status === "en_curso" ? "curso" : "";
+            var ico = done ? icon("check",16,2.6) : noComp ? icon("x",15,2.6) : a.status === "en_curso" ? icon("clock",15,2.6) : icon("dot",15,2.6);
             var pillCls = done ? "done" : a.status === "en_curso" ? "curso" : "";
             h += '<article class="agenda-row'+(overdue?" overdue":"")+'"><span class="agenda-ico '+icoCls+'" aria-hidden="true">'+ico+'</span><div class="agenda-row-main"><button type="button" class="agenda-row-title" data-act-edit="'+esc(a.id)+'"><span class="'+(done?"done":"")+'">'+esc(a.title)+'</span></button><p class="agenda-meta"><span class="who">'+(m?avatar(m,18):"")+esc(m?m.name:"Sin asignar")+"</span>";
             if (a.place) h += '<span style="display:inline-flex;align-items:center;gap:.25rem">'+icon("pin",12)+esc(a.place)+"</span>";
@@ -1429,7 +1448,15 @@
             if (_driA) h += '<span class="meta-days">'+icon("calendar",11,2.4)+esc(_driA.label)+"</span>";
             if (a.deliverable) h += '<span style="display:inline-flex;align-items:center;gap:.25rem">'+icon("box",12)+esc(a.deliverable)+"</span>";
             if (overdue) h += '<span class="venc">'+icon("alert",12)+"Vencida</span>";
-            h += '</p></div><button type="button" class="icon-btn" data-act-edit="'+esc(a.id)+'" aria-label="Editar '+esc(a.title)+'">'+icon("pencil",15)+'</button><button type="button" class="status-pill '+pillCls+'" data-act-cycle="'+esc(a.id)+'" aria-label="Cambiar estado de '+esc(a.title)+", ahora "+STATUS_LABEL[a.status]+'">'+STATUS_LABEL[a.status]+"</button></article>";
+            h += '</p></div><button type="button" class="icon-btn" data-act-edit="'+esc(a.id)+'" aria-label="Editar '+esc(a.title)+'">'+icon("pencil",15)+'</button>';
+            if (noComp) {
+              /* Solo lectura: la píldora muestra «No Completado» y no cambia
+                 de estado al tocarla (ese estado no se marca en esta página). */
+              h += '<span class="status-pill nocompletado" aria-label="Estado de '+esc(a.title)+": "+STATUS_LABEL.no_completado+'">'+STATUS_LABEL.no_completado+"</span>";
+            } else {
+              h += '<button type="button" class="status-pill '+pillCls+'" data-act-cycle="'+esc(a.id)+'" aria-label="Cambiar estado de '+esc(a.title)+", ahora "+STATUS_LABEL[a.status]+'">'+STATUS_LABEL[a.status]+"</button>";
+            }
+            h += "</article>";
           });
         }
         h += "</div></section>";
@@ -1835,7 +1862,7 @@
           + '<div><label class="flabel" for="fDate">Fecha *</label><input class="input" id="fDate" type="date" value="' + esc(a.date) + '"></div></div>'
           + '<div class="form-2"><div><label class="flabel" for="fPlace">Lugar</label><input class="input" id="fPlace" type="text" placeholder="Ej.: Valco, Santa Elena…" value="' + esc(a.place) + '"></div>'
           + '<div><label class="flabel" for="fDeliv">Entregable</label><input class="input" id="fDeliv" type="text" placeholder="Ej.: Reporte de visita" value="' + esc(a.deliverable) + '"></div></div>'
-          + '<div class="form-2"><div><label class="flabel" for="fStatus">Estado</label><select class="input" id="fStatus">' + statusOptions(a.status) + '</select></div>'
+          + '<div class="form-2"><div><label class="flabel" for="fStatus">Estado</label>' + (isNoCompletado(a) ? '<div class="input" style="display:flex;align-items:center"><span class="status-pill nocompletado">' + STATUS_LABEL.no_completado + '</span></div><input type="hidden" id="fStatus" value="no_completado">' : '<select class="input" id="fStatus">' + statusOptions(a.status) + '</select>') + '</div>'
           + '<div><label class="flabel" for="fPrio">Prioridad</label><select class="input" id="fPrio">' + priorityOptions(a.priority) + '</select></div></div>'
           + '<div class="form-error" id="formError"></div>'
           + '<div class="form-actions"><button type="submit" class="btn-save" id="saveBtn">' + (isEdit ? "Guardar cambios" : "Agregar actividad") + '</button></div></form>'
