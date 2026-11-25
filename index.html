@@ -163,6 +163,12 @@
       .status-group button.on-completada{background:#000;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2)}
       .status-group .status-static{flex:1;display:flex;align-items:center;justify-content:center;gap:.25rem;border-radius:999px;padding:.375rem .5rem;font-size:.75rem;font-weight:800;min-height:2rem}
       .status-group .status-static.on-nocompletado{background:var(--accent-soft);color:var(--accent-ink);box-shadow:inset 0 0 0 1.5px var(--accent)}
+      .status-group .status-static.on-pendiente{background:#fff;color:#000;box-shadow:inset 0 0 0 1px rgba(0,0,0,.1),0 1px 3px rgba(0,0,0,.1)}
+      .status-group .status-static.on-curso{background:var(--accent);color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+      .status-group .status-static.on-completada{background:#000;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+      .nocomp-motivo{margin:.5rem 0 0 .375rem;border-radius:.75rem;background:var(--accent-soft);box-shadow:inset 0 0 0 1px #fecdd3;padding:.6rem .75rem;font-size:12.5px;font-weight:600;line-height:1.5;color:rgba(10,10,10,.85)}
+      .nocomp-motivo strong{color:var(--accent-ink)}
+      .week-closed-note{margin:.55rem 0 0 .375rem;display:flex;align-items:center;gap:.35rem;font-size:12px;font-weight:800;color:var(--dim)}
       .nocomp-row{margin:.5rem 0 0 .375rem;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
       .nocomp-btn{display:inline-flex;align-items:center;gap:.35rem;border-radius:999px;padding:.45rem .8rem;font-size:12px;font-weight:800;background:#fff;color:var(--accent-ink);box-shadow:inset 0 0 0 1px #fecdd3;min-height:2rem;transition:all .15s}
       .nocomp-btn:hover{background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
@@ -469,6 +475,29 @@
       body.locked .agenda-row-title{pointer-events:none;cursor:default}
       body.locked .nocomp-row{display:none !important}
       body.locked .agenda-nocomp-btn{display:none !important}
+      /* Marcado del equipo: en SUS actividades cada persona solo elige
+         Completado o No Completado (Pendiente y En curso son automáticos).
+         Estos controles no los bloquea el modo solo lectura del tablero. */
+      .team-mark{margin:.875rem 0 0 .375rem}
+      .team-mark-state{margin:0 0 .5rem;display:flex;align-items:center;gap:.35rem;font-size:12px;font-weight:700;color:var(--dim)}
+      .team-mark-state strong{color:#000}
+      .team-mark-btns{display:flex;gap:.5rem;flex-wrap:wrap}
+      .mark-btn{display:inline-flex;align-items:center;gap:.35rem;border-radius:999px;padding:.55rem .95rem;font-size:12.5px;font-weight:800;min-height:2.25rem;background:#fff;color:#000;box-shadow:inset 0 0 0 1px var(--border-strong);transition:all .15s}
+      .mark-btn:hover{box-shadow:inset 0 0 0 1px #000}
+      .mark-btn.ok.on{background:#000;color:#fff;box-shadow:none}
+      .mark-btn.no{color:var(--accent-ink);box-shadow:inset 0 0 0 1px #fecdd3}
+      .mark-btn.no:hover{box-shadow:inset 0 0 0 1px var(--accent)}
+      .mark-btn.no.on{background:var(--accent);color:#fff;box-shadow:none}
+      .mark-btn.sm{padding:.4rem .7rem;font-size:11.5px;min-height:2rem;flex-shrink:0}
+      .tag-sinmarcar{background:var(--accent-soft);color:var(--accent-ink);box-shadow:inset 0 0 0 1px var(--accent)}
+      .card.unmarked{border-color:#fda4af}
+      .sinmarcar-tag{display:inline-flex;align-items:center;gap:.25rem;border-radius:999px;background:var(--accent-soft);color:var(--accent-ink);box-shadow:inset 0 0 0 1px var(--accent);padding:.12rem .55rem;font-size:11px;font-weight:800}
+      .reminder-banner{margin-bottom:1rem;display:flex;gap:.75rem;align-items:flex-start;border-radius:var(--radius);border:1px solid #fecdd3;background:var(--accent-soft);padding:.875rem 1rem}
+      .reminder-banner .rb-ico{display:flex;width:2.25rem;height:2.25rem;flex-shrink:0;align-items:center;justify-content:center;border-radius:.65rem;background:var(--accent);color:#fff}
+      .reminder-banner .rb-body{flex:1;min-width:0}
+      .reminder-banner .rb-title{margin:0;font-family:var(--font-display);font-size:14.5px;font-weight:800;color:#000}
+      .reminder-banner .rb-text{margin:.2rem 0 0;font-size:12.5px;font-weight:600;line-height:1.5;color:rgba(10,10,10,.75)}
+      .reminder-banner .rb-count{flex-shrink:0;border-radius:999px;background:#000;color:#fff;padding:.3rem .7rem;font-family:var(--font-display);font-size:13px;font-weight:900}
 
       .login-gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.25rem .75rem;background:var(--surface-3)}
       .login-card{width:100%;max-width:26rem;border-radius:28px;background:#0a0a0a;color:#fff;padding:1.75rem 1.5rem;box-shadow:0 24px 48px -20px rgba(0,0,0,.45);position:relative;overflow:hidden}
@@ -1144,7 +1173,7 @@
                 }
               } else {
                 var arr = [];
-                snap.forEach(function(d){ var v=d.data(); arr.push({ id:d.id, title:v.title||"", detail:v.detail||"", member_id:v.member_id!=null?Number(v.member_id):null, date:v.date||TODAY, place:v.place||"", deliverable:v.deliverable||"", status:normActStatus(v.status)||"pendiente", priority:v.priority!=null?String(v.priority).toLowerCase().trim():"" }); });
+                snap.forEach(function(d){ var v=d.data(); arr.push({ id:d.id, title:v.title||"", detail:v.detail||"", member_id:v.member_id!=null?Number(v.member_id):null, date:v.date||TODAY, place:v.place||"", deliverable:v.deliverable||"", status:normActStatus(v.status)||"pendiente", priority:v.priority!=null?String(v.priority).toLowerCase().trim():"", no_completado_motivo:v.no_completado_motivo||"" }); });
                 arr.sort(function(a,b){ return a.date<b.date?-1:a.date>b.date?1:(a.title<b.title?-1:1); });
                 state.activities = arr;
               }
@@ -1250,7 +1279,57 @@
         if (!guardEdit()) return;
         if (!STATUS_LABEL[status]) return;
         if (!requireDb()) return;
-        db.collection("actividades").doc(String(actId)).update({ status: status }).then(function(){ toast("Estado actualizado · "+STATUS_LABEL[status]); }).catch(writeError);
+        var patch = { status: status };
+        /* Al salir de No Completado, el motivo (novedad) se limpia. */
+        if (status !== "no_completado") patch.no_completado_motivo = "";
+        db.collection("actividades").doc(String(actId)).update(patch).then(function(){ toast("Estado actualizado · "+STATUS_LABEL[status]); }).catch(writeError);
+      }
+      /* ---------- Marcado del equipo (solo sus actividades) ----------
+         Pendiente y En curso son AUTOMÁTICOS (flujo por fecha): el equipo
+         NO los elige. Cada persona solo marca SUS propias actividades
+         como Completado o No Completado, y solo mientras la semana de la
+         actividad no haya terminado: la semana corre de lunes a domingo
+         y se cierra el domingo 23:59. Pasado ese domingo, el estado queda
+         fijo para el equipo («Semana cerrada»); los admins pueden editar
+         siempre. Marcar No Completado exige escribir la novedad (por qué
+         no se cumplió), que se guarda en no_completado_motivo y se ve en
+         la tarjeta; al marcar Completado, el motivo se limpia. */
+      function actWeekSunday(a){ return addDaysISO(mondayOfISO(a.date), 6); }
+      function actWeekOpen(a){ return !!a && TODAY <= actWeekSunday(a); }
+      function isOwnActivity(a){ return !!a && currentProfile && String(a.member_id) === String(myMemberOrden()); }
+      function handleSetStatus(actId, status){
+        if (isAdmin()) { fsSetStatus(actId, status); return; }
+        var a = activityById(actId);
+        if (a) teamSetStatus(a, status);
+      }
+      function teamSetStatus(a, status){
+        if (!currentProfile) return;
+        if (!STATUS_LABEL[status]) return;
+        /* El equipo solo escribe completada / no_completado (y el motivo);
+           Pendiente y En curso son automáticos y no se pueden elegir. */
+        if (status !== "completada" && status !== "no_completado") { toast("Pendiente y En curso son automáticos. Solo puedes marcar tu actividad como Completado o No Completado.", true); return; }
+        if (!isOwnActivity(a)) { toast("Solo puedes marcar tus propias actividades.", true); return; }
+        if (!actWeekOpen(a)) { toast("Semana cerrada: esa semana ya terminó y el estado ya no se puede cambiar.", true); return; }
+        if (status === "no_completado") { openNoCompModal(a); return; }
+        if (!requireDb()) return;
+        db.collection("actividades").doc(String(a.id)).update({ status: status, no_completado_motivo: "" }).then(function(){ toast("Estado actualizado · " + STATUS_LABEL[status]); }).catch(writeError);
+      }
+      function openNoCompModal(a){
+        var body = '<form class="form" id="ncForm">'
+          + '<p class="form-note">Vas a marcar <strong>' + esc(a.title) + '</strong> como <strong>No Completado</strong>. Una actividad no completada es por una novedad: explica por qué no se cumplió. Ese texto queda guardado en la actividad y lo ven tú, Anthony y Gio.</p>'
+          + '<div><label class="flabel" for="ncMotivo">¿Por qué no se cumplió? (novedad) *</label><textarea class="input" id="ncMotivo" placeholder="Ej.: El local estaba cerrado por inventario y no se pudo hacer la visita">' + esc(a.no_completado_motivo || "") + '</textarea></div>'
+          + '<div class="form-error" id="formError"></div>'
+          + '<div class="form-actions"><button type="submit" class="btn-save" id="ncSaveBtn">Guardar No Completado</button></div></form>';
+        openModal("No Completado — novedad", body);
+        $("ncForm").addEventListener("submit", function(ev){
+          ev.preventDefault();
+          var motivo = $("ncMotivo").value.trim();
+          if (!motivo) { formError("Escribe la novedad: por qué no se cumplió la actividad. Sin ese texto no se puede guardar como No Completado."); return; }
+          if (!requireDb()) return;
+          var btn = $("ncSaveBtn"); btn.disabled = true; btn.textContent = "Guardando…";
+          db.collection("actividades").doc(String(a.id)).update({ status: "no_completado", no_completado_motivo: motivo }).then(function(){ toast("Estado actualizado · No Completado"); closeModal(); }).catch(function(err){ writeError(err); btn.disabled = false; btn.textContent = "Guardar No Completado"; });
+        });
+        setTimeout(function(){ var f = $("ncMotivo"); if (f) f.focus(); }, 50);
       }
       function fsSaveActivity(id, data){
         if (!guardEdit()) return Promise.reject(new Error("locked"));
@@ -1399,13 +1478,13 @@
         var edits = root.querySelectorAll("[data-act-edit]");
         for (var i=0;i<edits.length;i++) edits[i].addEventListener("click", function(e){ e.stopPropagation(); var a = activityById(this.getAttribute("data-act-edit")); if (a) openActivityModal(a, null); });
         var sts = root.querySelectorAll("[data-act-status]");
-        for (var j=0;j<sts.length;j++) sts[j].addEventListener("click", function(){ fsSetStatus(this.getAttribute("data-act-id"), this.getAttribute("data-act-status")); });
+        for (var j=0;j<sts.length;j++) sts[j].addEventListener("click", function(){ handleSetStatus(this.getAttribute("data-act-id"), this.getAttribute("data-act-status")); });
         var cyc = root.querySelectorAll("[data-act-cycle]");
-        for (var k=0;k<cyc.length;k++) cyc[k].addEventListener("click", function(){ var a = activityById(this.getAttribute("data-act-cycle")); if (a) fsSetStatus(a.id, NEXT_STATUS[a.status] || "pendiente"); });
+        for (var k=0;k<cyc.length;k++) cyc[k].addEventListener("click", function(){ var a = activityById(this.getAttribute("data-act-cycle")); if (a) handleSetStatus(a.id, NEXT_STATUS[a.status] || "pendiente"); });
         var ncb = root.querySelectorAll("[data-act-nocomp]");
-        for (var n=0;n<ncb.length;n++) ncb[n].addEventListener("click", function(e){ e.stopPropagation(); fsSetStatus(this.getAttribute("data-act-nocomp"), "no_completado"); });
+        for (var n=0;n<ncb.length;n++) ncb[n].addEventListener("click", function(e){ e.stopPropagation(); handleSetStatus(this.getAttribute("data-act-nocomp"), "no_completado"); });
         var rvb = root.querySelectorAll("[data-act-revert]");
-        for (var r=0;r<rvb.length;r++) rvb[r].addEventListener("click", function(e){ e.stopPropagation(); fsSetStatus(this.getAttribute("data-act-revert"), "completada"); });
+        for (var r=0;r<rvb.length;r++) rvb[r].addEventListener("click", function(e){ e.stopPropagation(); handleSetStatus(this.getAttribute("data-act-revert"), "completada"); });
       }
       /* ----- Detalle de visitas / recorridos: un local debajo del otro -----
          Igual que en el tema de Próximas aperturas: el detalle puede venir
@@ -1607,8 +1686,12 @@
         var overdue = a.date < TODAY && !isClosedAct(a);
         var done = a.status === "completada";
         var noComp = isNoCompletado(a);
+        /* Sin marcar: actividad propia (vista del equipo) de hoy o de un
+           día anterior de ESTA semana que sigue en el estado automático
+           (Pendiente / En curso), sin elegir Completado ni No Completado. */
+        var unmarked = !isAdmin() && isOwnActivity(a) && a.date >= mondayOfISO(TODAY) && a.date <= TODAY && !isClosedAct(a);
         var barColor = noComp ? "var(--accent-ink)" : overdue ? "var(--accent)" : done ? "#000" : normPriority(a.priority) === "alta" ? "var(--accent)" : "#e4e4e7";
-        var h = '<article class="card'+(overdue?" overdue":"")+'"><span class="bar" style="background:'+barColor+'" aria-hidden="true"></span><div class="card-top">';
+        var h = '<article class="card'+(overdue?" overdue":"")+(unmarked?" unmarked":"")+'"><span class="bar" style="background:'+barColor+'" aria-hidden="true"></span><div class="card-top">';
         h += m ? avatar(m,40) : '<span class="agenda-ico">'+icon("users",16)+'</span>';
         h += '<div class="card-main"><div class="card-title-row"><h4 class="'+(done?"done":"")+'">'+esc(a.title)+'</h4><button type="button" class="icon-btn" data-act-edit="'+esc(a.id)+'" aria-label="Editar '+esc(a.title)+'">'+icon("pencil",15)+'</button></div>';
         h += '<p class="card-who"><span class="who-name">'+esc(m?m.name:"Sin asignar")+'</span>';
@@ -1622,24 +1705,60 @@
         if (_dri) h += '<span class="tag tag-days">'+icon("calendar",11,2.4)+esc(_dri.label)+'</span>';
         if (a.deliverable) h += '<span class="tag tag-deliv">'+icon("box",12)+esc(a.deliverable)+'</span>';
         if (hasPriority(a.priority)) { var _prio = normPriority(a.priority); h += '<span class="tag tag-prio '+_prio+'">'+icon("flag",11,2.4)+PRIORITY_LABEL[_prio]+'</span>'; }
+        if (unmarked) h += '<span class="tag tag-sinmarcar">'+icon("alert",11,2.4)+'Sin marcar</span>';
         h += '</div>';
         h += "</div></div>";
-        h += '<div class="status-group" role="group" aria-label="Cambiar estado de '+esc(a.title)+'">';
-        ["pendiente","en_curso","completada"].forEach(function(st){
-          if (st === "completada" && noComp) {
-            /* La etiqueta «Completada» se reescribe por «No Completado». */
-            h += '<span class="status-static on-nocompletado" aria-current="true">'+icon("x",12,3)+STATUS_LABEL.no_completado+'</span>';
-            return;
+        /* Controles según rol:
+           - Admins: el grupo de estados de siempre (Pendiente / En curso /
+             Completada) más el botón No Completado existente.
+           - Equipo, semana abierta: solo dos botones, Completado y
+             No Completado; Pendiente y En curso son automáticos y solo se
+             muestran como estado actual.
+           - Equipo, semana cerrada: el estado queda fijo y se muestra la
+             nota «Semana cerrada». */
+        var weekClosedTeam = !isAdmin() && !actWeekOpen(a);
+        if (isAdmin()) {
+          h += '<div class="status-group" role="group" aria-label="Cambiar estado de '+esc(a.title)+'">';
+          ["pendiente","en_curso","completada"].forEach(function(st){
+            if (st === "completada" && noComp) {
+              /* La etiqueta «Completada» se reescribe por «No Completado». */
+              h += '<span class="status-static on-nocompletado" aria-current="true">'+icon("x",12,3)+STATUS_LABEL.no_completado+'</span>';
+              return;
+            }
+            var cls = a.status===st ? (st==="completada"?"on-completada":st==="en_curso"?"on-curso":"on-pendiente") : "";
+            var ic = st==="completada" ? icon("check",12,3) : st==="en_curso" ? icon("clock",12) : icon("dot",12,2.6);
+            h += '<button type="button" class="'+cls+'" data-act-id="'+esc(a.id)+'" data-act-status="'+st+'" aria-pressed="'+(a.status===st)+'">'+ic+STATUS_LABEL[st]+'</button>';
+          });
+          h += "</div>";
+          if (done) {
+            h += '<div class="nocomp-row"><button type="button" class="nocomp-btn" data-act-nocomp="'+esc(a.id)+'" aria-label="Marcar '+esc(a.title)+' como No Completado">'+icon("x",12,3)+'Marcar No Completado</button><span class="nocomp-note">Solo si al revisarla no se hizo.</span></div>';
+          } else if (noComp) {
+            h += '<div class="nocomp-row"><button type="button" class="nocomp-btn revert" data-act-revert="'+esc(a.id)+'" aria-label="Volver '+esc(a.title)+' a Completada">'+icon("check",12,3)+'Volver a Completado</button><span class="nocomp-note">O usa Pendiente / En curso arriba para reabrirla.</span></div>';
           }
-          var cls = a.status===st ? (st==="completada"?"on-completada":st==="en_curso"?"on-curso":"on-pendiente") : "";
-          var ic = st==="completada" ? icon("check",12,3) : st==="en_curso" ? icon("clock",12) : icon("dot",12,2.6);
-          h += '<button type="button" class="'+cls+'" data-act-id="'+esc(a.id)+'" data-act-status="'+st+'" aria-pressed="'+(a.status===st)+'">'+ic+STATUS_LABEL[st]+'</button>';
-        });
-        h += "</div>";
-        if (done) {
-          h += '<div class="nocomp-row"><button type="button" class="nocomp-btn" data-act-nocomp="'+esc(a.id)+'" aria-label="Marcar '+esc(a.title)+' como No Completado">'+icon("x",12,3)+'Marcar No Completado</button><span class="nocomp-note">Solo si al revisarla no se hizo.</span></div>';
-        } else if (noComp) {
-          h += '<div class="nocomp-row"><button type="button" class="nocomp-btn revert" data-act-revert="'+esc(a.id)+'" aria-label="Volver '+esc(a.title)+' a Completada">'+icon("check",12,3)+'Volver a Completado</button><span class="nocomp-note">O usa Pendiente / En curso arriba para reabrirla.</span></div>';
+        } else if (weekClosedTeam) {
+          h += '<div class="status-group" role="group" aria-label="Estado de '+esc(a.title)+'">';
+          ["pendiente","en_curso","completada"].forEach(function(st){
+            if (st === "completada" && noComp) {
+              h += '<span class="status-static on-nocompletado" aria-current="true">'+icon("x",12,3)+STATUS_LABEL.no_completado+'</span>';
+              return;
+            }
+            var cls = a.status===st ? (st==="completada"?"on-completada":st==="en_curso"?"on-curso":"on-pendiente") : "";
+            var ic = st==="completada" ? icon("check",12,3) : st==="en_curso" ? icon("clock",12) : icon("dot",12,2.6);
+            h += '<span class="status-static '+cls+'"'+(a.status===st?' aria-current="true"':"")+'>'+ic+STATUS_LABEL[st]+'</span>';
+          });
+          h += "</div>";
+          h += '<p class="week-closed-note">'+icon("lock",12,2.4)+'Semana cerrada · ya no puedes cambiar el estado</p>';
+        } else {
+          var autoState = !done && !noComp;
+          h += '<div class="team-mark" role="group" aria-label="Marcar tu actividad '+esc(a.title)+'">'
+            + '<p class="team-mark-state">'+icon("clock",12)+'Tu estado: <strong>'+STATUS_LABEL[a.status]+'</strong>'+(autoState ? ' · automático' : '')+'</p>'
+            + '<div class="team-mark-btns">'
+            + '<button type="button" class="mark-btn ok'+(done?" on":"")+'" data-act-id="'+esc(a.id)+'" data-act-status="completada" aria-pressed="'+done+'">'+icon("check",13,3)+'Completado</button>'
+            + '<button type="button" class="mark-btn no'+(noComp?" on":"")+'" data-act-nocomp="'+esc(a.id)+'" aria-pressed="'+noComp+'">'+icon("x",13,3)+'No Completado</button>'
+            + '</div></div>';
+        }
+        if (noComp && a.no_completado_motivo) {
+          h += '<div class="nocomp-motivo"><strong>Novedad — por qué no se cumplió:</strong> '+esc(a.no_completado_motivo)+'</div>';
         }
         h += "</article>";
         return h;
@@ -1659,7 +1778,18 @@
         if (memberFilter != null && !wa.some(function(a){return a.member_id===memberFilter;})) memberFilter = null;
         var visible = memberFilter == null ? wa : wa.filter(function(a){return a.member_id===memberFilter;});
         var ov = overdueActs();
-        var h = filterBarHTML(wa);
+        var h = "";
+        /* Recordatorio para el equipo: actividades propias de hoy o de días
+           anteriores de ESTA semana que siguen sin marcar (ni Completado
+           ni No Completado). Desaparece cuando todas quedan marcadas. */
+        if (!isAdmin()) {
+          var moToday = mondayOfISO(TODAY);
+          var unmarkedMine = visibleActivities().filter(function(a){ return a.date >= moToday && a.date <= TODAY && !isClosedAct(a); });
+          if (unmarkedMine.length > 0) {
+            h += '<div class="reminder-banner" role="note"><span class="rb-ico">' + icon("bell", 17) + '</span><div class="rb-body"><p class="rb-title">Recuerda marcar como completa tu actividad</p><p class="rb-text">Tienes ' + unmarkedMine.length + (unmarkedMine.length === 1 ? " actividad" : " actividades") + ' de hoy o de días anteriores de esta semana sin marcar. En cada tarjeta elige <strong>Completado</strong> o <strong>No Completado</strong>; este aviso desaparece cuando todas queden marcadas.</p></div><span class="rb-count">' + unmarkedMine.length + ' sin marcar</span></div>';
+          }
+        }
+        h += filterBarHTML(wa);
         /* Avance diario: un avance individual por cada día de la semana.
            Cada día se calcula por separado con sus propias actividades,
            aunque una actividad se repita en varios días. */
@@ -1785,8 +1915,18 @@
             if (_driA) h += '<span class="meta-days">'+icon("calendar",11,2.4)+esc(_driA.label)+"</span>";
             if (a.deliverable) h += '<span style="display:inline-flex;align-items:center;gap:.25rem">'+icon("box",12)+esc(a.deliverable)+"</span>";
             if (overdue) h += '<span class="venc">'+icon("alert",12)+"Vencida</span>";
+            if (!isAdmin() && isOwnActivity(a) && a.date >= mondayOfISO(TODAY) && a.date <= TODAY && !isClosedAct(a)) h += '<span class="sinmarcar-tag">'+icon("alert",11,2.4)+"Sin marcar</span>";
+            if (!isAdmin() && !actWeekOpen(a)) h += '<span class="pill pill-meta">'+icon("lock",11,2.4)+"Semana cerrada</span>";
             h += '</p></div><button type="button" class="icon-btn" data-act-edit="'+esc(a.id)+'" aria-label="Editar '+esc(a.title)+'">'+icon("pencil",15)+'</button>';
-            if (noComp) {
+            if (!isAdmin()) {
+              /* Equipo: estado actual fijo + solo dos botones (Completado /
+                 No Completado) mientras la semana siga abierta. */
+              h += '<span class="status-pill '+(noComp ? "nocompletado" : pillCls)+'" aria-label="Estado de '+esc(a.title)+": "+STATUS_LABEL[a.status]+'">'+(noComp ? STATUS_LABEL.no_completado : STATUS_LABEL[a.status])+"</span>";
+              if (actWeekOpen(a)) {
+                h += '<button type="button" class="mark-btn ok sm'+(done?" on":"")+'" data-act-id="'+esc(a.id)+'" data-act-status="completada" aria-pressed="'+done+'" aria-label="Marcar '+esc(a.title)+' como Completado">'+icon("check",12,3)+'Completado</button>';
+                h += '<button type="button" class="mark-btn no sm'+(noComp?" on":"")+'" data-act-nocomp="'+esc(a.id)+'" aria-pressed="'+noComp+'" aria-label="Marcar '+esc(a.title)+' como No Completado">'+icon("x",12,3)+'No Completado</button>';
+              }
+            } else if (noComp) {
               /* Reversible: tocar la píldora vuelve la actividad a Completada. */
               h += '<button type="button" class="status-pill nocompletado" data-act-cycle="'+esc(a.id)+'" aria-label="Cambiar estado de '+esc(a.title)+', ahora '+STATUS_LABEL.no_completado+'. Toca para volver a Completada">'+STATUS_LABEL.no_completado+"</button>";
             } else {
@@ -2158,6 +2298,8 @@
           if (!date) { formError("Elige la fecha de la actividad."); return; }
           var mv = $("fMember").value;
           var data = { title:title, detail:$("fDetail").value.trim(), member_id: mv === "" ? null : Number(mv), date:date, place:$("fPlace").value.trim(), deliverable:$("fDeliv").value.trim(), status:$("fStatus").value, priority:$("fPrio").value };
+          /* Al salir de No Completado desde el formulario, el motivo se limpia. */
+          if (data.status !== "no_completado") data.no_completado_motivo = "";
           var btn = $("saveBtn"); btn.disabled = true; btn.textContent = "Guardando…";
           fsSaveActivity(isEdit ? a.id : null, data).then(function(){ toast(isEdit ? "Actividad actualizada" : "Actividad agregada · visible para todo el equipo"); closeModal(); }).catch(function(err){ writeError(err); btn.disabled = false; btn.textContent = isEdit ? "Guardar cambios" : "Agregar actividad"; });
         });
@@ -2242,6 +2384,9 @@
       /* ---------- view: Reporte de novedades ---------- */
       var reportMode = "actividad";
       var reportFiles = [];
+      /* Rango elegido por el admin para el PDF de novedades (Desde/Hasta);
+         por defecto, del lunes de la semana actual a hoy. */
+      var pdfDesde = null, pdfHasta = null;
       function reportWeekActs(){ var mo = monday(), su = addDaysISO(mo, 6); return visibleActivities().filter(function(a){ return a.date >= mo && a.date <= su; }); }
       function gravedadPillHTML(g){ var st = g === "Alta" ? "background:var(--accent);color:#fff" : g === "Media" ? "background:#000;color:#fff" : "background:var(--surface-2);color:rgba(0,0,0,.75)"; return '<span class="pill" style="' + st + '">' + esc(g || "—") + "</span>"; }
       function estadoPillHTML(e){ var st = e === "Cerrado" ? "background:#000;color:#fff" : e === "En revisión" ? "background:var(--accent);color:#fff" : "background:var(--surface-2);color:rgba(0,0,0,.75)"; return '<span class="pill" style="' + st + '">' + esc(e || "Recibido") + "</span>"; }
@@ -2312,6 +2457,14 @@
         h += '<div class="form-error" id="formError"></div>';
         h += '<div class="form-actions"><button type="submit" class="btn-save" id="rSaveBtn">Enviar reporte</button></div>';
         h += "</div></form>";
+        if (isAdmin()) {
+          if (!pdfDesde) { pdfDesde = mondayOfISO(TODAY); pdfHasta = TODAY; }
+          h += '<div class="sec-head" style="margin-top:2rem"><h2>' + secBadge("box", true) + 'PDF de novedades</h2></div>';
+          h += '<div class="card" style="padding:1.25rem"><p style="margin:0 0 1rem;font-size:13.5px;font-weight:600;line-height:1.55;color:var(--dim)">Solo admins. Descarga un PDF con las novedades reportadas entre los días que elijas —desde y hasta incluidos—, ordenadas por fecha, con el detalle completo y las fotos de evidencia.</p>'
+            + '<div class="form"><div class="form-2"><div><label class="flabel" for="pdfDesde">Desde</label><input class="input" id="pdfDesde" type="date" value="' + esc(pdfDesde) + '"></div>'
+            + '<div><label class="flabel" for="pdfHasta">Hasta</label><input class="input" id="pdfHasta" type="date" value="' + esc(pdfHasta) + '"></div></div>'
+            + '<div class="form-actions"><button type="button" class="btn-save" id="pdfBtn">Descargar PDF</button></div></div></div>';
+        }
         h += '<div class="sec-head" style="margin-top:2rem"><h2>' + secBadge("clock") + 'Historial de reportes</h2></div>';
         if (!state.reportsResumen.length) {
           h += emptyHTML("report", "Todavía no hay reportes", "Cuando alguien registre una novedad, aquí se verá el resumen breve: quién reportó, el local o la actividad y la novedad en corto. Tu propio reporte podrás abrirlo completo; el de otros compañeros, no.", true);
@@ -2359,6 +2512,13 @@
         if (form) form.addEventListener("submit", function(ev){ ev.preventDefault(); submitReport(); });
         var opens = main.querySelectorAll("[data-report-open]");
         for (var k = 0; k < opens.length; k++) opens[k].addEventListener("click", function(){ handleReportOpen(this.getAttribute("data-report-open")); });
+        var pdfBtn = $("pdfBtn");
+        if (pdfBtn) pdfBtn.addEventListener("click", function(){
+          var dEl = $("pdfDesde"), hEl = $("pdfHasta");
+          pdfDesde = dEl ? dEl.value : pdfDesde;
+          pdfHasta = hEl ? hEl.value : pdfHasta;
+          downloadNovedadesPDF(pdfDesde, pdfHasta);
+        });
       }
       function submitReport(){
         if (!currentProfile || !currentUser) return;
@@ -2447,11 +2607,13 @@
           if (res.photos.length) body += '<div class="detail-kv"><p class="dk">Evidencia</p><div class="detail-photos" style="margin-top:.5rem">' + res.photos.map(function(p){ return '<img src="' + p + '" alt="Foto de evidencia del reporte">'; }).join("") + "</div></div>";
           if (isAdmin()) {
             body += '<form class="form" id="repEstadoForm" style="margin-top:1rem"><div><label class="flabel" for="repEstado">Cambiar estado</label><select class="input" id="repEstado">' + ["Recibido", "En revisión", "Cerrado"].map(function(e){ return '<option value="' + e + '"' + ((resumen.estado || "Recibido") === e ? " selected" : "") + ">" + e + "</option>"; }).join("") + '</select></div><div class="form-actions"><button type="submit" class="btn-save" id="repEstadoBtn">Guardar estado</button></div></form>';
+            body += '<p class="form-note" style="margin-top:1rem">Si este reporte está mal o sobra, puedes borrarlo: se elimina con su detalle y sus fotos, y desaparece del historial para todos.</p>' + deleteBlockHTML().replace("Eliminar", "Borrar reporte").replace("Sí, eliminar", "Sí, borrar");
           } else {
             body += '<p class="form-note" style="margin-top:1rem">Es tu reporte: puedes verlo completo con sus fotos, pero no editarlo. Solo Anthony y Gio pueden cambiar su estado.</p>';
           }
           openModal("Detalle del reporte", body);
           if (isAdmin()) {
+            bindDelete(function(){ deleteReport(id); });
             $("repEstadoForm").addEventListener("submit", function(ev){
               ev.preventDefault();
               var nuevo = $("repEstado").value;
@@ -2466,6 +2628,157 @@
           console.error(err);
           openModal("Detalle del reporte", '<p class="form-note">No se pudo cargar el detalle. Revisa tu conexión e inténtalo de nuevo.</p>');
         });
+      }
+
+      /* ---------- Borrar reporte (solo admins) ----------
+         Elimina en un solo batch el resumen, el detalle y todas las fotos
+         de evidencia. El equipo no ve este botón: solo crea reportes. */
+      function deleteReport(id){
+        if (!isAdmin()) return;
+        if (!requireDb()) return;
+        var dRef = db.collection("reportes_detalle").doc(id);
+        dRef.collection("fotos").get().then(function(fs){
+          var batch = db.batch();
+          batch.delete(db.collection("reportes_resumen").doc(id));
+          batch.delete(dRef);
+          fs.forEach(function(fd){ batch.delete(fd.ref); });
+          return batch.commit();
+        }).then(function(){
+          toast("Reporte borrado · ya no aparece en el historial");
+          closeModal();
+        }).catch(function(err){
+          console.error(err);
+          toast("No se pudo borrar el reporte. Revisa tu conexión e inténtalo de nuevo.", true);
+        });
+      }
+
+      /* ---------- PDF de novedades por rango de días (solo admins) ---------- */
+      function fetchReportFull(r){
+        var dRef = db.collection("reportes_detalle").doc(r.id);
+        return dRef.get().then(function(doc){
+          var d = doc.exists ? (doc.data() || {}) : {};
+          return dRef.collection("fotos").get().then(function(fs){
+            var photos = [];
+            fs.forEach(function(fd){ var v = fd.data(); if (v && v.dataUrl) photos.push(v.dataUrl); });
+            return { resumen: r, detalle: d, photos: photos };
+          });
+        });
+      }
+      var jspdfPromise = null;
+      function loadJsPDF(){
+        if (window.jspdf && window.jspdf.jsPDF) return Promise.resolve(window.jspdf.jsPDF);
+        if (!jspdfPromise) {
+          jspdfPromise = new Promise(function(resolve, reject){
+            var s = document.createElement("script");
+            s.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+            s.onload = function(){ if (window.jspdf && window.jspdf.jsPDF) resolve(window.jspdf.jsPDF); else reject(new Error("jspdf")); };
+            s.onerror = function(){ reject(new Error("jspdf-load")); };
+            document.head.appendChild(s);
+          });
+        }
+        return jspdfPromise;
+      }
+      function downloadNovedadesPDF(desde, hasta){
+        if (!isAdmin()) return;
+        if (!requireDb()) return;
+        if (!desde || !hasta) { toast("Elige las fechas Desde y Hasta para generar el PDF.", true); return; }
+        if (desde > hasta) { toast("La fecha Desde no puede ser mayor que la fecha Hasta.", true); return; }
+        var list = state.reportsResumen.filter(function(r){ return r.fecha >= desde && r.fecha <= hasta; });
+        list.sort(function(a, b){ return a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : (String(a.created_at || "") < String(b.created_at || "") ? -1 : String(a.created_at || "") > String(b.created_at || "") ? 1 : 0); });
+        if (!list.length) { toast("No hay reportes entre el " + fmtShort(desde) + " y el " + fmtShort(hasta) + ".", true); return; }
+        var btn = $("pdfBtn");
+        var orig = btn ? btn.innerHTML : "";
+        if (btn) { btn.disabled = true; btn.textContent = "Generando PDF…"; }
+        Promise.all(list.map(fetchReportFull)).then(function(full){
+          return loadJsPDF().then(function(jsPDF){ buildNovedadesPDF(jsPDF, full, desde, hasta); });
+        }).then(function(){
+          toast("PDF descargado · " + list.length + (list.length === 1 ? " reporte" : " reportes"));
+        }).catch(function(err){
+          console.error(err);
+          toast("No se pudo generar el PDF. Revisa tu conexión e inténtalo de nuevo.", true);
+        }).then(function(){
+          var b = $("pdfBtn");
+          if (b) { b.disabled = false; b.innerHTML = orig; }
+        });
+      }
+      function buildNovedadesPDF(jsPDF, items, desde, hasta){
+        var doc = new jsPDF({ unit: "pt", format: "a4" });
+        var W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight();
+        var M = 48, CW = W - M * 2;
+        var y = M + 12;
+        function newPageIf(need){ if (y + need > H - M) { doc.addPage(); y = M + 6; } }
+        function kv(label, value){
+          if (!value) return;
+          var size = 10.5, lh = size * 1.45;
+          doc.setFontSize(size);
+          doc.setFont("helvetica", "bold");
+          var labelTxt = label + ": ";
+          var lw = doc.getTextWidth(labelTxt);
+          doc.setFont("helvetica", "normal");
+          var lines = doc.splitTextToSize(String(value), CW - lw);
+          if (!lines.length) return;
+          newPageIf(lines.length * lh + 3);
+          doc.setFont("helvetica", "bold"); doc.setTextColor(113, 113, 122);
+          doc.text(labelTxt, M, y);
+          doc.setFont("helvetica", "normal"); doc.setTextColor(15, 15, 15);
+          lines.forEach(function(ln, i){ doc.text(ln, M + (i === 0 ? lw : 0), y + i * lh); });
+          y += lines.length * lh + 3;
+        }
+        /* Encabezado */
+        doc.setFillColor(227, 6, 19); doc.rect(0, 0, W, 7, "F");
+        doc.setFont("helvetica", "bold"); doc.setFontSize(20); doc.setTextColor(10, 10, 10);
+        doc.text("Reporte de novedades", M, y); y += 22;
+        doc.setFont("helvetica", "normal"); doc.setFontSize(11); doc.setTextColor(113, 113, 122);
+        doc.text("Del " + fmtFull(desde) + " al " + fmtFull(hasta) + " · " + items.length + (items.length === 1 ? " reporte" : " reportes") + " · Generado el " + fmtFull(TODAY), M, y); y += 10;
+        doc.setDrawColor(227, 6, 19); doc.setLineWidth(1.4); doc.line(M, y, M + CW, y); y += 24;
+        items.forEach(function(it, idx){
+          var r = it.resumen, d = it.detalle;
+          var lugar = r.modo === "libre" ? (r.local_libre || d.local_libre || "Local no planificado") : (r.actividad_titulo || d.actividad_titulo || "Actividad de la semana");
+          newPageIf(90);
+          doc.setFont("helvetica", "bold"); doc.setFontSize(13); doc.setTextColor(10, 10, 10);
+          var headLines = doc.splitTextToSize(fmtFull(r.fecha || d.fecha || "") + " — " + lugar, CW);
+          doc.text(headLines, M, y);
+          y += headLines.length * 18 + 4;
+          kv("Reportó", r.reporter_nombre || d.reporter_nombre);
+          kv("Responsable", r.responsable_nombre || d.responsable_nombre);
+          kv("Tipo", r.tipo || d.tipo);
+          kv("Gravedad", r.gravedad || d.gravedad);
+          kv("Motivo de la visita imprevista", d.motivo_imprevisto);
+          kv("¿Qué pasó?", d.que_paso);
+          kv("Acción tomada", d.accion_tomada);
+          kv("Seguimiento", d.seguimiento);
+          kv("Estado", r.estado || d.estado || "Recibido");
+          if (it.photos.length) {
+            doc.setFont("helvetica", "bold"); doc.setFontSize(10.5); doc.setTextColor(113, 113, 122);
+            newPageIf(16);
+            doc.text("Evidencia:", M, y); y += 8;
+            var x = M, rowH = 0;
+            it.photos.forEach(function(p){
+              var w = 150, hgt = 96;
+              try { var pr = doc.getImageProperties(p); var sc = Math.min(150 / pr.width, 96 / pr.height); w = Math.max(10, Math.round(pr.width * sc)); hgt = Math.max(10, Math.round(pr.height * sc)); } catch(e) {}
+              if (x + w > M + CW) { y += rowH + 8; x = M; rowH = 0; }
+              if (y + hgt > H - M) { doc.addPage(); y = M + 6; x = M; rowH = 0; }
+              try { doc.addImage(p, "JPEG", x, y, w, hgt); } catch(e) {}
+              x += w + 10;
+              if (hgt > rowH) rowH = hgt;
+            });
+            y += rowH + 6;
+          }
+          if (idx < items.length - 1) {
+            y += 8;
+            newPageIf(20);
+            doc.setDrawColor(228, 228, 231); doc.setLineWidth(0.8); doc.line(M, y, M + CW, y);
+            y += 24;
+          }
+        });
+        /* Número de página al pie */
+        var total = doc.getNumberOfPages();
+        for (var i = 1; i <= total; i++) {
+          doc.setPage(i);
+          doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(161, 161, 170);
+          doc.text("Página " + i + " de " + total, W - M, H - 24, { align: "right" });
+        }
+        doc.save("novedades_" + desde + "_" + hasta + ".pdf");
       }
 
       /* ---------- view: Datos del equipo (solo admins) ---------- */
