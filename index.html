@@ -2605,7 +2605,7 @@
       var repoFilterDay = "";       /* un día ISO concreto, o "" = Todos */
       var repoFilterReporter = "";  /* reporter_nombre exacto, o "" = Todos */
       var repoFilterTipo = "";      /* tipo de novedad, o "" = Todas */
-      var REPORT_TIPOS = ["Operativa", "Infraestructura", "Personal", "Seguridad", "Inventario", "Otra"];
+      var REPORT_TIPOS = ["Operativa", "Infraestructura", "Personal", "Seguridad", "Inventario", "Inconvenientes con GDN", "Otra"];
       function reportLugar(r){ return r.modo === "libre" ? (r.local_libre || "Local no planificado") : (r.actividad_titulo || "Actividad de la semana"); }
       function repoMatchesFilters(r){
         if (repoFilterDay && r.fecha !== repoFilterDay) return false;
@@ -2753,7 +2753,7 @@
           h += '<div><label class="flabel" for="rMotivo">Motivo de la visita imprevista *</label><input class="input" id="rMotivo" type="text" placeholder="Ej.: Recorrido por una novedad del local"></div>';
           h += '<div class="form-2"><div><label class="flabel" for="rResp">Responsable</label><select class="input" id="rResp">' + memberOptions(mine) + '</select></div><div><label class="flabel" for="rFechaLibre">Fecha</label><input class="input" id="rFechaLibre" type="date" value="' + TODAY + '" disabled></div></div>';
         }
-        h += '<div class="form-2"><div><label class="flabel" for="rTipo">Tipo</label><select class="input" id="rTipo"><option>Operativa</option><option>Infraestructura</option><option>Personal</option><option>Seguridad</option><option>Inventario</option><option>Otra</option></select></div>'
+        h += '<div class="form-2"><div><label class="flabel" for="rTipo">Tipo</label><select class="input" id="rTipo"><option>Operativa</option><option>Infraestructura</option><option>Personal</option><option>Seguridad</option><option>Inventario</option><option>Inconvenientes con GDN</option><option>Otra</option></select></div>'
           + '<div><label class="flabel" for="rGravedad">Gravedad</label><select class="input" id="rGravedad"><option>Baja</option><option selected>Media</option><option>Alta</option></select></div></div>';
         h += '<div><label class="flabel" for="rQuePaso">¿Qué pasó? *</label><textarea class="input" id="rQuePaso" placeholder="Describe la novedad con detalle"></textarea></div>';
         h += '<div><label class="flabel" for="rAccion">Acción tomada</label><textarea class="input" id="rAccion" placeholder="Qué se hizo en el momento (opcional)"></textarea></div>';
