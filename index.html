@@ -620,6 +620,15 @@
       .guia-list li:first-child{border-top:none;padding-top:.2rem}
       .guia-list li:last-child{padding-bottom:0}
       .guia-list li .gl-ico{display:flex;width:1.6rem;height:1.6rem;flex-shrink:0;align-items:center;justify-content:center;border-radius:50%;background:var(--accent);color:#fff;margin-top:.1rem}
+      /* Guía editable (solo admins): botón de edición, panel de visibilidad
+         y marca «Oculta» en las sub-pestañas que el equipo no ve. */
+      .guia-oculta-tag{flex-shrink:0;border-radius:999px;background:var(--accent);color:#fff;padding:2px .5rem;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;line-height:1.35}
+      .guia-vis-card{padding:1.25rem;margin-bottom:1.25rem}
+      .guia-vis-card h3{margin:0 0 .35rem;display:flex;align-items:center;gap:.5rem;font-family:var(--font-display);font-size:1rem;font-weight:900}
+      .guia-vis-card .toggle-row{margin-top:.6rem}
+      .guia-edit-card{padding:1.25rem}
+      .guia-edit-card textarea.input{min-height:8rem}
+      .tpl-head-static{cursor:default}
       .hidden{display:none !important}
       /* ============================================================
          AJUSTES SOLO MÓVIL (≤640px) — el equipo usa celulares:
@@ -712,6 +721,7 @@
         .repo-item .hist-main-btn{width:100%}
         .repo-del{align-self:flex-end}
         .rep-subtab{font-size:12px;padding:.55rem .3rem}
+        .guia-oculta-tag{font-size:8px;padding:1px .4rem}
         .seg-row button{font-size:12px;padding:.5rem .3rem}
         .rep-photo-btn{font-size:12px;padding:.55rem .85rem}
         /* --- Formularios y modales a una columna --- */
@@ -919,7 +929,8 @@
           objectives: SEED_OBJECTIVES.map(function(o){var c={};for(var k in o){if(k!=="docId")c[k]=o[k];}c.id=o.docId;return c;}),
           topics: SEED_TOPICS.map(function(t){var c={};for(var k in t){if(k!=="docId")c[k]=t[k];}c.id=t.docId;return c;}),
           reportsResumen: [],
-          datosEquipo: {}
+          datosEquipo: {},
+          guiaDoc: null
         };
       }
       var state = seedState();
@@ -1479,6 +1490,15 @@
               state.phrase = state.phraseLegacy;
             }
             render();
+          }, function(err){ console.error(err); });
+
+          /* Guía para el Formador editable: config/guia guarda los textos
+             editados por los admins y la visibilidad de cada sub-pestaña.
+             Si el documento no existe o la lectura falla, la guía usa el
+             contenido integrado en el código como respaldo. */
+          db.collection("config").doc("guia").onSnapshot(function(docSnap){
+            state.guiaDoc = docSnap.exists ? (docSnap.data() || {}) : null;
+            if (view === "guia" && (typeof guiaEditing === "undefined" || !guiaEditing)) render();
           }, function(err){ console.error(err); });
 
           db.collection("reportes_resumen").onSnapshot(function(snap){
@@ -2995,7 +3015,11 @@
           body += kv("Acción tomada", d.accion_tomada);
           body += kv("Seguimiento", d.seguimiento);
           body += kv("Estado", resumen.estado || d.estado || "Recibido");
-          if (res.photos.length) body += '<div class="detail-kv"><p class="dk">Evidencia</p><div class="detail-photos" style="margin-top:.5rem">' + res.photos.map(function(p){ return '<img src="' + p + '" alt="Foto de evidencia del reporte">'; }).join("") + "</div></div>";
+          /* Solo se renderizan fotos guardadas como data URL de imagen
+             (así las escribe el formulario) y el valor va escapado: el
+             contenido viene de Firestore y lo pudo crear otro usuario. */
+          var safePhotos = res.photos.filter(function(p){ return typeof p === "string" && p.indexOf("data:image/") === 0; });
+          if (safePhotos.length) body += '<div class="detail-kv"><p class="dk">Evidencia</p><div class="detail-photos" style="margin-top:.5rem">' + safePhotos.map(function(p){ return '<img src="' + esc(p) + '" alt="Foto de evidencia del reporte">'; }).join("") + "</div></div>";
           if (isAdmin()) {
             body += '<form class="form" id="repEstadoForm" style="margin-top:1rem"><div><label class="flabel" for="repEstado">Cambiar estado</label><select class="input" id="repEstado">' + ["Recibido", "En revisión", "Cerrado"].map(function(e){ return '<option value="' + e + '"' + ((resumen.estado || "Recibido") === e ? " selected" : "") + ">" + e + "</option>"; }).join("") + '</select></div><div class="form-actions"><button type="submit" class="btn-save" id="repEstadoBtn">Guardar estado</button></div></form>';
             body += '<p class="form-note" style="margin-top:1rem">Si este reporte está mal o sobra, puedes borrarlo: se elimina con su detalle y sus fotos, y desaparece del historial para todos.</p>' + deleteBlockHTML().replace("Eliminar", "Borrar reporte").replace("Sí, eliminar", "Sí, borrar");
@@ -3277,14 +3301,24 @@
         });
       }
 
-      /* ---------- view: Guía para el Formador (contenido estático) ----------
+      /* ---------- view: Guía para el Formador ----------
          La pestaña se ve como «Guía»; dentro, el título es «Guía para el
          Formador». Sub-pestañas: Correo, Entrenamiento y Seguimiento.
-         Todo el contenido vive aquí en el código: no usa Firestore. */
+         El contenido base vive aquí en el código y funciona como respaldo:
+         los admins pueden editar los textos y mostrar u ocultar cada
+         sub-pestaña al equipo; eso se guarda en Firestore en config/guia
+         (mismo patrón que config/frase) y manda sobre el contenido base.
+         El equipo nunca ve controles de edición. */
       var guiaTab = "correo";        /* correo | entrenamiento | seguimiento */
       var guiaCorreoSel = "valco";   /* valco | tienda */
       var guiaEntrSel = "valco";     /* valco | tienda */
       var guiaOpenTpl = "";          /* id de la plantilla abierta */
+      var guiaEditing = false;       /* modo edición (solo admins) */
+      var GUIA_TABS = [
+        { id:"correo", label:"Correo", ic:"report" },
+        { id:"entrenamiento", label:"Entrenamiento", ic:"target" },
+        { id:"seguimiento", label:"Seguimiento", ic:"trending" }
+      ];
       var GUIA_TEMPLATES = [
         { id:"v1", grupo:"valco", titulo:"Coordinación de Horarios para inicio en Tienda", dur:"",
           para:"Tiendas y Zonales", cc:"Distrital, Giovanna, Anthony, Gabriela Pontón",
@@ -3329,7 +3363,54 @@
           "Registrar novedades en el Reporte de la Virtual Office."
         ]
       };
-      function guiaTemplateById(id){ for (var i = 0; i < GUIA_TEMPLATES.length; i++) if (GUIA_TEMPLATES[i].id === id) return GUIA_TEMPLATES[i]; return null; }
+      var GUIA_SEGUIMIENTO = [
+        "Gravedad: Baja, Media o Alta.",
+        "Seguimiento: Resuelta en sitio, No requiere seguimiento, Lo sigue el responsable, Se escala a Gio o Anthony, Se escala al Adm. Zonal o Se escala al Distrital.",
+        "Escalar lo que no se resuelva en sitio."
+      ];
+      /* ----- Contenido efectivo: config/guia manda sobre el integrado ----- */
+      function guiaVisibles(){
+        var v = (state.guiaDoc && state.guiaDoc.visibles) || {};
+        return { correo: v.correo !== false, entrenamiento: v.entrenamiento !== false, seguimiento: v.seguimiento !== false };
+      }
+      function guiaTemplates(){
+        var ov = (state.guiaDoc && state.guiaDoc.plantillas) || {};
+        return GUIA_TEMPLATES.map(function(t){
+          var o = ov[t.id];
+          if (!o) return t;
+          var c = {}; for (var k in t) c[k] = t[k];
+          ["para","cc","adjuntos","asunto","cuerpo"].forEach(function(f){ if (o[f] != null) c[f] = String(o[f]); });
+          return c;
+        });
+      }
+      function guiaEntrData(){
+        var e = state.guiaDoc && state.guiaDoc.entrenamiento;
+        function arr(x, dflt){ return (Object.prototype.toString.call(x) === "[object Array]" && x.length) ? x.map(function(s){ return String(s); }) : dflt; }
+        if (e) return { valco: arr(e.valco, GUIA_ENTRENAMIENTO.valco), tienda: arr(e.tienda, GUIA_ENTRENAMIENTO.tienda) };
+        return GUIA_ENTRENAMIENTO;
+      }
+      function guiaSegItems(){
+        var s = state.guiaDoc && state.guiaDoc.seguimiento;
+        if (Object.prototype.toString.call(s) === "[object Array]" && s.length) return s.map(function(x){ return String(x); });
+        return GUIA_SEGUIMIENTO;
+      }
+      function guiaTemplateById(id){ var list = guiaTemplates(); for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i]; return null; }
+      /* ----- Guardado en Firestore (config/guia), solo admins ----- */
+      function fsSaveGuia(patch){
+        if (!guardEdit()) return Promise.reject(new Error("locked"));
+        if (!requireDb()) return Promise.reject(new Error("no-db"));
+        patch.actualizado = new Date().toISOString();
+        return db.collection("config").doc("guia").set(patch, { merge:true });
+      }
+      function guiaSetLocal(patch){
+        var d = {};
+        if (state.guiaDoc) for (var k0 in state.guiaDoc) d[k0] = state.guiaDoc[k0];
+        for (var k in patch) d[k] = patch[k];
+        state.guiaDoc = d;
+      }
+      function guiaFieldHTML(label, name, val){
+        return '<div><label class="flabel">' + label + '</label><input class="input" data-f="' + name + '" value="' + esc(val) + '"></div>';
+      }
       function guiaBodyHTML(text){
         var lines = String(text || "").split("\n");
         var h = "", inList = false;
@@ -3380,32 +3461,68 @@
         return h + "</ul>";
       }
       function renderGuia(main){
-        var h = '<div class="sec-head"><h2>' + secBadge("book", true) + 'Guía para el Formador</h2></div>';
-        h += '<p class="guia-intro">Copiar la plantilla, llenar lo que va entre [ ] y enviar.</p>';
-        h += '<div class="rep-subtabs" role="group" aria-label="Apartados de la guía">'
-          + '<button type="button" class="rep-subtab' + (guiaTab === "correo" ? " active" : "") + '" data-guia-tab="correo" aria-pressed="' + (guiaTab === "correo") + '">' + icon("report", 15) + 'Correo</button>'
-          + '<button type="button" class="rep-subtab' + (guiaTab === "entrenamiento" ? " active" : "") + '" data-guia-tab="entrenamiento" aria-pressed="' + (guiaTab === "entrenamiento") + '">' + icon("target", 15) + 'Entrenamiento</button>'
-          + '<button type="button" class="rep-subtab' + (guiaTab === "seguimiento" ? " active" : "") + '" data-guia-tab="seguimiento" aria-pressed="' + (guiaTab === "seguimiento") + '">' + icon("trending", 15) + 'Seguimiento</button>'
-          + '</div>';
+        var admin = isAdmin();
+        if (!admin) guiaEditing = false;
+        var vis = guiaVisibles();
+        var shownTabs = GUIA_TABS.filter(function(t){ return admin || vis[t.id]; });
+        if (!admin && shownTabs.length && !vis[guiaTab]) guiaTab = shownTabs[0].id;
+        var h = '<div class="sec-head"><h2>' + secBadge("book", true) + 'Guía para el Formador</h2>';
+        if (admin) h += '<button type="button" class="btn-black" data-guia-edit-toggle>' + icon(guiaEditing ? "check" : "pencil", 14) + (guiaEditing ? "Terminar edición" : "Editar guía") + '</button>';
+        h += '</div>';
+        if (!shownTabs.length) {
+          /* El equipo no ve ningún apartado visible: guía en preparación. */
+          h += '<div class="empty small"><div class="empty-ico">' + icon("book", 26) + '</div><p class="t">Guía en preparación</p><p class="d">Estamos terminando de preparar la guía para el formador. Vuelve pronto.</p></div>';
+          main.innerHTML = h;
+          return;
+        }
+        if (admin && guiaEditing) {
+          h += '<div class="card guia-vis-card"><h3>' + icon("users", 17) + 'Visible para el equipo</h3><p class="form-note">Apaga un apartado para ocultarlo al equipo mientras lo terminas de preparar. Tú lo sigues viendo, con la marca «Oculta».</p>';
+          GUIA_TABS.forEach(function(t){
+            var on = vis[t.id];
+            h += '<div class="toggle-row"><span>' + t.label + '</span><button type="button" class="toggle-btn' + (on ? " on" : "") + '" data-guia-vis="' + t.id + '" aria-pressed="' + on + '">' + (on ? "Visible" : "Oculta") + '</button></div>';
+          });
+          h += '</div>';
+        }
+        if (!guiaEditing) h += '<p class="guia-intro">Copiar la plantilla, llenar lo que va entre [ ] y enviar.</p>';
+        h += '<div class="rep-subtabs" role="group" aria-label="Apartados de la guía">';
+        shownTabs.forEach(function(t){
+          h += '<button type="button" class="rep-subtab' + (guiaTab === t.id ? " active" : "") + '" data-guia-tab="' + t.id + '" aria-pressed="' + (guiaTab === t.id) + '">' + icon(t.ic, 15) + t.label + (admin && !vis[t.id] ? '<span class="guia-oculta-tag">Oculta</span>' : "") + '</button>';
+        });
+        h += '</div>';
         if (guiaTab === "correo") {
           h += '<div class="seg-row guia-seg" role="group" aria-label="Tipo de correo"><button type="button" data-guia-correo="valco" class="' + (guiaCorreoSel === "valco" ? "on" : "") + '" aria-pressed="' + (guiaCorreoSel === "valco") + '">VALCO</button><button type="button" data-guia-correo="tienda" class="' + (guiaCorreoSel === "tienda" ? "on" : "") + '" aria-pressed="' + (guiaCorreoSel === "tienda") + '">TIENDA</button></div>';
-          GUIA_TEMPLATES.filter(function(t){ return t.grupo === guiaCorreoSel; }).forEach(function(t){
-            var open = guiaOpenTpl === t.id;
-            h += '<article class="card tpl-card' + (open ? " open" : "") + '"><button type="button" class="tpl-head" data-guia-tpl="' + t.id + '" aria-expanded="' + open + '"><span class="tpl-ico">' + icon("report", 17) + '</span><span class="tpl-title">' + esc(t.titulo) + '</span>' + (t.dur ? '<span class="tpl-dur">' + esc(t.dur) + '</span>' : "") + '<span class="tpl-chev">' + icon("chevD", 18) + '</span></button>';
-            if (open) {
-              h += '<div class="tpl-body"><div class="tpl-meta">'
-                + '<div class="detail-kv"><p class="dk">Para</p><p class="dv">' + esc(t.para) + '</p></div>'
-                + '<div class="detail-kv"><p class="dk">CC</p><p class="dv">' + esc(t.cc) + '</p></div>'
-                + '<div class="detail-kv"><p class="dk">Adjuntos</p><p class="dv">' + esc(t.adjuntos) + '</p></div>'
-                + '</div>'
-                + '<p class="tpl-asunto"><strong>Asunto:</strong> ' + esc(t.asunto) + '</p>'
-                + '<div class="tpl-text">' + guiaBodyHTML(t.cuerpo) + '</div>'
-                + '<div class="form-actions"><button type="button" class="btn-red" data-guia-copy="' + t.id + '">' + icon("copy", 15) + 'Copiar correo</button></div>'
-                + '</div>';
-            }
-            h += '</article>';
-          });
-          h += '<h3 class="guia-h3">' + icon("layers", 17) + 'Ejemplo: base de colaboradores</h3>';
+          var grupoTpls = guiaTemplates().filter(function(t){ return t.grupo === guiaCorreoSel; });
+          if (guiaEditing) {
+            grupoTpls.forEach(function(t){
+              h += '<article class="card tpl-card open"><div class="tpl-head tpl-head-static"><span class="tpl-ico">' + icon("report", 17) + '</span><span class="tpl-title">' + esc(t.titulo) + '</span>' + (t.dur ? '<span class="tpl-dur">' + esc(t.dur) + '</span>' : "") + '</div>'
+                + '<div class="tpl-body"><form class="form" data-guia-tplform="' + t.id + '">'
+                + guiaFieldHTML("Para", "para", t.para)
+                + guiaFieldHTML("CC", "cc", t.cc)
+                + guiaFieldHTML("Adjuntos", "adjuntos", t.adjuntos)
+                + guiaFieldHTML("Asunto", "asunto", t.asunto)
+                + '<div><label class="flabel">Cuerpo del correo</label><textarea class="input" data-f="cuerpo" rows="12">' + esc(t.cuerpo) + '</textarea><p class="form-note">Deja [fecha] y [local] como campos para llenar. Usa **texto** para negrita y líneas que empiezan con «- » para listas.</p></div>'
+                + '<div class="form-actions"><button type="submit" class="btn-save">Guardar plantilla</button></div>'
+                + '</form></div></article>';
+            });
+          } else {
+            grupoTpls.forEach(function(t){
+              var open = guiaOpenTpl === t.id;
+              h += '<article class="card tpl-card' + (open ? " open" : "") + '"><button type="button" class="tpl-head" data-guia-tpl="' + t.id + '" aria-expanded="' + open + '"><span class="tpl-ico">' + icon("report", 17) + '</span><span class="tpl-title">' + esc(t.titulo) + '</span>' + (t.dur ? '<span class="tpl-dur">' + esc(t.dur) + '</span>' : "") + '<span class="tpl-chev">' + icon("chevD", 18) + '</span></button>';
+              if (open) {
+                h += '<div class="tpl-body"><div class="tpl-meta">'
+                  + '<div class="detail-kv"><p class="dk">Para</p><p class="dv">' + esc(t.para) + '</p></div>'
+                  + '<div class="detail-kv"><p class="dk">CC</p><p class="dv">' + esc(t.cc) + '</p></div>'
+                  + '<div class="detail-kv"><p class="dk">Adjuntos</p><p class="dv">' + esc(t.adjuntos) + '</p></div>'
+                  + '</div>'
+                  + '<p class="tpl-asunto"><strong>Asunto:</strong> ' + esc(t.asunto) + '</p>'
+                  + '<div class="tpl-text">' + guiaBodyHTML(t.cuerpo) + '</div>'
+                  + '<div class="form-actions"><button type="button" class="btn-red" data-guia-copy="' + t.id + '">' + icon("copy", 15) + 'Copiar correo</button></div>'
+                  + '</div>';
+              }
+              h += '</article>';
+            });
+          }
+          if (!guiaEditing) { h += '<h3 class="guia-h3">' + icon("layers", 17) + 'Ejemplo: base de colaboradores</h3>';
           h += '<p class="guia-note">Datos de ejemplo, no reales.</p>';
           h += '<div class="card guia-table-card">' + guiaTableHTML(
             ["Cédula", "Nombre de colaborador", "Cargo", "Jornada", "Celular", "Local de entrenamiento", "Local apertura", "Zonal", "Observaciones"],
@@ -3424,21 +3541,34 @@
               ["...", "...", "..."],
               ["Último día (2 o 3 semanas)", "07:00 - 16:00", "07:00 - 12:00"]
             ]) + '</div>';
+          }
         } else if (guiaTab === "entrenamiento") {
-          h += '<div class="seg-row guia-seg" role="group" aria-label="Tipo de entrenamiento"><button type="button" data-guia-entr="valco" class="' + (guiaEntrSel === "valco" ? "on" : "") + '" aria-pressed="' + (guiaEntrSel === "valco") + '">VALCO</button><button type="button" data-guia-entr="tienda" class="' + (guiaEntrSel === "tienda" ? "on" : "") + '" aria-pressed="' + (guiaEntrSel === "tienda") + '">TIENDA</button></div>';
-          h += '<div class="card" style="padding:1.25rem">' + guiaListHTML(GUIA_ENTRENAMIENTO[guiaEntrSel]) + '</div>';
+          if (guiaEditing) {
+            var ed = guiaEntrData();
+            h += '<div class="card guia-edit-card"><form class="form" data-guia-entrform>'
+              + '<div><label class="flabel">Entrenamiento VALCO — un punto por línea</label><textarea class="input" data-f="valco" rows="7">' + esc(ed.valco.join("\n")) + '</textarea></div>'
+              + '<div><label class="flabel">Entrenamiento TIENDA — un punto por línea</label><textarea class="input" data-f="tienda" rows="8">' + esc(ed.tienda.join("\n")) + '</textarea></div>'
+              + '<div class="form-actions"><button type="submit" class="btn-save">Guardar entrenamiento</button></div>'
+              + '</form></div>';
+          } else {
+            h += '<div class="seg-row guia-seg" role="group" aria-label="Tipo de entrenamiento"><button type="button" data-guia-entr="valco" class="' + (guiaEntrSel === "valco" ? "on" : "") + '" aria-pressed="' + (guiaEntrSel === "valco") + '">VALCO</button><button type="button" data-guia-entr="tienda" class="' + (guiaEntrSel === "tienda" ? "on" : "") + '" aria-pressed="' + (guiaEntrSel === "tienda") + '">TIENDA</button></div>';
+            h += '<div class="card" style="padding:1.25rem">' + guiaListHTML(guiaEntrData()[guiaEntrSel]) + '</div>';
+          }
         } else {
-          h += '<p class="guia-intro">Registrar cada visita o novedad. Ejemplo:</p>';
-          h += '<div class="card guia-table-card">' + guiaTableHTML(
-            ["Fecha", "Formador", "Local / Actividad", "Novedad", "Gravedad", "Seguimiento", "Estado"],
-            [
-              ["2026-11-25", "NOMBRE", "000-LOCAL EJEMPLO", "Sin claves POS", "Media", "Lo sigue el responsable", "En revisión"]
-            ]) + '</div>';
-          h += '<div class="card" style="padding:1.25rem">' + guiaListHTML([
-            "Gravedad: Baja, Media o Alta.",
-            "Seguimiento: Resuelta en sitio, No requiere seguimiento, Lo sigue el responsable, Se escala a Gio o Anthony, Se escala al Adm. Zonal o Se escala al Distrital.",
-            "Escalar lo que no se resuelva en sitio."
-          ]) + '</div>';
+          if (guiaEditing) {
+            h += '<div class="card guia-edit-card"><form class="form" data-guia-segform>'
+              + '<div><label class="flabel">Seguimiento — un punto por línea</label><textarea class="input" data-f="items" rows="6">' + esc(guiaSegItems().join("\n")) + '</textarea></div>'
+              + '<div class="form-actions"><button type="submit" class="btn-save">Guardar seguimiento</button></div>'
+              + '</form></div>';
+          } else {
+            h += '<p class="guia-intro">Registrar cada visita o novedad. Ejemplo:</p>';
+            h += '<div class="card guia-table-card">' + guiaTableHTML(
+              ["Fecha", "Formador", "Local / Actividad", "Novedad", "Gravedad", "Seguimiento", "Estado"],
+              [
+                ["2026-11-25", "NOMBRE", "000-LOCAL EJEMPLO", "Sin claves POS", "Media", "Lo sigue el responsable", "En revisión"]
+              ]) + '</div>';
+            h += '<div class="card" style="padding:1.25rem">' + guiaListHTML(guiaSegItems()) + '</div>';
+          }
         }
         main.innerHTML = h;
         var tb = main.querySelectorAll("[data-guia-tab]");
@@ -3451,6 +3581,45 @@
         for (var n = 0; n < pb.length; n++) pb[n].addEventListener("click", function(){ var id = this.getAttribute("data-guia-tpl"); guiaOpenTpl = guiaOpenTpl === id ? "" : id; render(); });
         var cp = main.querySelectorAll("[data-guia-copy]");
         for (var m2 = 0; m2 < cp.length; m2++) cp[m2].addEventListener("click", function(){ guiaCopyTemplate(this.getAttribute("data-guia-copy")); });
+        /* ----- Edición (solo admins): entrar/salir, visibilidad y guardado ----- */
+        var et = main.querySelector("[data-guia-edit-toggle]");
+        if (et) et.addEventListener("click", function(){ guiaEditing = !guiaEditing; render(); });
+        var vb = main.querySelectorAll("[data-guia-vis]");
+        for (var v2 = 0; v2 < vb.length; v2++) vb[v2].addEventListener("click", function(){
+          var id = this.getAttribute("data-guia-vis");
+          var nv = guiaVisibles(); nv[id] = !nv[id];
+          guiaSetLocal({ visibles: nv });
+          render();
+          fsSaveGuia({ visibles: nv }).then(function(){ toast(nv[id] ? "Apartado visible para el equipo" : "Apartado oculto al equipo"); }).catch(writeError);
+        });
+        var tf = main.querySelectorAll("[data-guia-tplform]");
+        for (var f2 = 0; f2 < tf.length; f2++) tf[f2].addEventListener("submit", function(ev){
+          ev.preventDefault();
+          var form = this, id = form.getAttribute("data-guia-tplform");
+          function val(f){ var el = form.querySelector('[data-f="' + f + '"]'); return el ? el.value.trim() : ""; }
+          var cuerpoEl = form.querySelector('[data-f="cuerpo"]');
+          var data = { para: val("para"), cc: val("cc"), adjuntos: val("adjuntos"), asunto: val("asunto"), cuerpo: cuerpoEl ? cuerpoEl.value : "" };
+          var map = {}; var cur = (state.guiaDoc && state.guiaDoc.plantillas) || {};
+          for (var k in cur) map[k] = cur[k];
+          map[id] = data;
+          var btn = form.querySelector(".btn-save"); btn.disabled = true; btn.textContent = "Guardando…";
+          fsSaveGuia({ plantillas: map }).then(function(){ guiaSetLocal({ plantillas: map }); toast("Plantilla guardada"); render(); }).catch(function(err){ writeError(err); btn.disabled = false; btn.textContent = "Guardar plantilla"; });
+        });
+        function guiaLines(textarea){ return textarea.value.split("\n").map(function(s){ return s.trim(); }).filter(function(s){ return !!s; }); }
+        var ef = main.querySelector("[data-guia-entrform]");
+        if (ef) ef.addEventListener("submit", function(ev){
+          ev.preventDefault();
+          var data = { valco: guiaLines(ef.querySelector('[data-f="valco"]')), tienda: guiaLines(ef.querySelector('[data-f="tienda"]')) };
+          var btn = ef.querySelector(".btn-save"); btn.disabled = true; btn.textContent = "Guardando…";
+          fsSaveGuia({ entrenamiento: data }).then(function(){ guiaSetLocal({ entrenamiento: data }); toast("Entrenamiento guardado"); render(); }).catch(function(err){ writeError(err); btn.disabled = false; btn.textContent = "Guardar entrenamiento"; });
+        });
+        var sf = main.querySelector("[data-guia-segform]");
+        if (sf) sf.addEventListener("submit", function(ev){
+          ev.preventDefault();
+          var items = guiaLines(sf.querySelector('[data-f="items"]'));
+          var btn = sf.querySelector(".btn-save"); btn.disabled = true; btn.textContent = "Guardando…";
+          fsSaveGuia({ seguimiento: items }).then(function(){ guiaSetLocal({ seguimiento: items }); toast("Seguimiento guardado"); render(); }).catch(function(err){ writeError(err); btn.disabled = false; btn.textContent = "Guardar seguimiento"; });
+        });
       }
 
       /* ---------- render root ---------- */
