@@ -497,6 +497,9 @@
       .datos-rows{margin-top:.85rem;display:flex;flex-direction:column;gap:.45rem}
       .datos-rows p{margin:0;font-size:13.5px;line-height:1.5;color:rgba(10,10,10,.85)}
       .datos-rows p strong{font-weight:800;color:#000}
+      .post-chip{display:inline-flex;align-items:center;gap:.35rem;margin-top:.65rem;border-radius:999px;padding:.4rem .75rem;font-size:12px;font-weight:800;line-height:1.25;background:var(--accent-soft);color:var(--accent-ink);box-shadow:inset 0 0 0 1px #fecdd3}
+      .post-chip svg{flex-shrink:0}
+      .post-chip.done{background:#f4f4f5;color:var(--dim);box-shadow:inset 0 0 0 1px var(--border)}
       .hidden{display:none !important}
     </style>
   </head>
@@ -874,6 +877,7 @@
       var currentUser = null;
       var currentProfile = null;
       var boardStarted = false;
+      var actListenerStarted = false;
       function isAdmin(){ return !!currentProfile && currentProfile.role === "admin"; }
       function canEdit(){ return isAdmin(); }
       function guardEdit(){
@@ -1091,6 +1095,37 @@
         try {
           db = firebase.firestore();
 
+          /* El listener de actividades arranca cuando el roster ya cargó:
+             el rol equipo consulta SOLO sus actividades con
+             where('member_id','==', su orden) en vez de traer toda la
+             colección; los admins traen todo. Esto es lo que exigen las
+             reglas permanentes de Firestore. */
+          function startActivitiesListener(){
+            if (actListenerStarted) return;
+            actListenerStarted = true;
+            var q = db.collection("actividades");
+            if (!isAdmin()) {
+              var mine = myMemberOrden();
+              q = q.where("member_id", "==", mine != null ? mine : -1);
+            }
+            q.onSnapshot(function(snap){
+              if (snap.empty) {
+                if (isAdmin()) {
+                  seedCollection("actividades", SEED_ACTIVITIES, function(s){ return { title:s.title, detail:s.detail, member_id:s.member_id, date:s.date, place:s.place, deliverable:s.deliverable, status:s.status, priority:s.priority }; });
+                } else {
+                  state.activities = [];
+                }
+              } else {
+                var arr = [];
+                snap.forEach(function(d){ var v=d.data(); arr.push({ id:d.id, title:v.title||"", detail:v.detail||"", member_id:v.member_id!=null?Number(v.member_id):null, date:v.date||TODAY, place:v.place||"", deliverable:v.deliverable||"", status:normActStatus(v.status)||"pendiente", priority:v.priority!=null?String(v.priority).toLowerCase().trim():"" }); });
+                arr.sort(function(a,b){ return a.date<b.date?-1:a.date>b.date?1:(a.title<b.title?-1:1); });
+                state.activities = arr;
+              }
+              setLiveStatus("live","Todo se guarda en Firestore y se ve al instante para el equipo con acceso.");
+              render();
+            }, function(err){ console.error(err); setLiveStatus("error","Firestore devolvió un error (revisa las Reglas de Firestore por UID y rol)."); });
+          }
+
           db.collection("equipo").onSnapshot(function(snap){
             listenersReady++;
             if (snap.empty) {
@@ -1101,19 +1136,7 @@
               arr.sort(function(a,b){return a.orden-b.orden;});
               state.members = arr;
             }
-            setLiveStatus("live","Todo se guarda en Firestore y se ve al instante para el equipo con acceso.");
-            render();
-          }, function(err){ console.error(err); setLiveStatus("error","Firestore devolvió un error (revisa las Reglas de Firestore por UID y rol)."); });
-
-          db.collection("actividades").onSnapshot(function(snap){
-            if (snap.empty) {
-              seedCollection("actividades", SEED_ACTIVITIES, function(s){ return { title:s.title, detail:s.detail, member_id:s.member_id, date:s.date, place:s.place, deliverable:s.deliverable, status:s.status, priority:s.priority }; });
-            } else {
-              var arr = [];
-              snap.forEach(function(d){ var v=d.data(); arr.push({ id:d.id, title:v.title||"", detail:v.detail||"", member_id:v.member_id!=null?Number(v.member_id):null, date:v.date||TODAY, place:v.place||"", deliverable:v.deliverable||"", status:normActStatus(v.status)||"pendiente", priority:v.priority!=null?String(v.priority).toLowerCase().trim():"" }); });
-              arr.sort(function(a,b){ return a.date<b.date?-1:a.date>b.date?1:(a.title<b.title?-1:1); });
-              state.activities = arr;
-            }
+            startActivitiesListener();
             setLiveStatus("live","Todo se guarda en Firestore y se ve al instante para el equipo con acceso.");
             render();
           }, function(err){ console.error(err); setLiveStatus("error","Firestore devolvió un error (revisa las Reglas de Firestore por UID y rol)."); });
@@ -2420,9 +2443,17 @@
       }
 
       /* ---------- view: Datos del equipo (solo admins) ---------- */
+      /* Precarga de postulación (Anthony, 2026-11-25): se usa solo si
+         datos_equipo aún no tiene el dato de esa persona; lo guardado
+         en Firestore siempre manda. Anthony, Giovanna, Jesús y Jelexi
+         ya tienen cargo: no aparecen aquí y no muestran conteo. */
       var KNOWN_POSTULACION = [
         { match: "paulina", estado: "Postulando", fecha: "2026-10-01" },
-        { match: "dennise", estado: "Postulando", fecha: "2026-11-30" }
+        { match: "villao", estado: "Postulando", fecha: "2026-11-09" },
+        { match: "nayeli", estado: "Postulando", fecha: "2026-11-09" },
+        { match: "joseph", estado: "Postulando", fecha: "2026-11-16" },
+        { match: "dennise", estado: "Postulando", fecha: "2026-11-23" },
+        { match: "melani", estado: "Postulando", fecha: "2026-11-23" }
       ];
       function emailSlugForMember(m){
         var first = normName(m.name).split(" ")[0];
@@ -2436,6 +2467,33 @@
         KNOWN_POSTULACION.forEach(function(k){ if (nn.indexOf(k.match) !== -1) known = k; });
         return { slug: slug, doc: doc, estado: (doc && doc.postulacion_estado) || (known ? known.estado : "Con cargo"), fecha: (doc && doc.postulacion_fecha) || (known ? known.fecha : "") };
       }
+      /* La postulación dura 90 días desde postulacion_fecha; el término
+         es fecha + 90 días. El conteo se calcula con la fecha actual del
+         navegador (TODAY). Quien ya tiene cargo no muestra conteo. */
+      var POSTULACION_DIAS = 90;
+      function diffDaysISO(a, b){ return Math.round((parseISO(b) - parseISO(a)) / 86400000); }
+      function fmtDayMonthYear(s){ var d = parseISO(s); return d.getDate() + " " + MONTHS_SHORT[d.getMonth()] + " " + d.getFullYear(); }
+      function postulacionChip(info){
+        if (!info.fecha) return "";
+        if (normName(info.estado).indexOf("postul") === -1) return "";
+        var fin = addDaysISO(info.fecha, POSTULACION_DIAS);
+        var finTxt = fmtDayMonthYear(fin);
+        var txt, done = false;
+        if (TODAY < info.fecha) {
+          var dInicia = diffDaysISO(TODAY, info.fecha);
+          txt = "Inicia en " + dInicia + (dInicia === 1 ? " día" : " días") + " · termina el " + finTxt;
+        } else if (TODAY === fin) {
+          txt = "Termina hoy";
+        } else if (TODAY > fin) {
+          var dPaso = diffDaysISO(fin, TODAY);
+          txt = "Terminó hace " + dPaso + (dPaso === 1 ? " día" : " días");
+          done = true;
+        } else {
+          var dFaltan = diffDaysISO(TODAY, fin);
+          txt = "Faltan " + dFaltan + (dFaltan === 1 ? " día" : " días") + " · termina el " + finTxt;
+        }
+        return '<span class="post-chip' + (done ? " done" : "") + '">' + icon("clock", 13) + esc(txt) + "</span>";
+      }
       function renderDatos(main){
         if (!isAdmin()) { view = "semana"; renderSemana(main); return; }
         var h = '<section aria-label="Datos del equipo"><div class="sec-head"><h2>' + secBadge("idcard", true) + 'Datos del equipo</h2></div>';
@@ -2448,10 +2506,13 @@
           h += '<article class="card datos-card"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem"><div class="team-who">' + avatar(m, 48) + "<div><h3>" + esc(doc.nombre || m.name) + "</h3><p>" + esc(doc.rol || m.role || "Equipo de Formación") + '</p></div></div><button type="button" class="icon-btn" data-datos-edit="' + m.orden + '" aria-label="Editar datos de ' + esc(m.name) + '">' + icon("pencil", 15) + "</button></div>"
             + '<div class="datos-rows">'
             + "<p><strong>Postulación:</strong> " + esc(info.estado) + (fechaTxt ? " · desde el " + esc(fechaTxt) : "") + "</p>"
+            + "<p><strong>Fecha de nacimiento:</strong> " + esc(doc.fecha_nacimiento ? fmtFull(doc.fecha_nacimiento) : "—") + "</p>"
             + "<p><strong>Cédula:</strong> " + esc(doc.cedula || "—") + "</p>"
             + "<p><strong>Teléfono:</strong> " + esc(doc.telefono || "—") + "</p>"
             + "<p><strong>Correo:</strong> " + esc(doc.correo || "—") + "</p>"
-            + "</div></article>";
+            + "</div>"
+            + postulacionChip(info)
+            + "</article>";
         });
         h += "</div></section>";
         main.innerHTML = h;
@@ -2468,7 +2529,8 @@
           + '<div><label class="flabel" for="dRol">Rol</label><input class="input" id="dRol" type="text" value="' + esc(doc.rol || m.role || "") + '"></div>'
           + '<div class="form-2"><div><label class="flabel" for="dPostEstado">Postulación · estado</label><input class="input" id="dPostEstado" type="text" placeholder="Ej.: Con cargo / Postulando" value="' + esc(info.estado) + '"></div>'
           + '<div><label class="flabel" for="dPostFecha">Postulación · desde</label><input class="input" id="dPostFecha" type="date" value="' + esc(info.fecha || "") + '"></div></div>'
-          + '<div><label class="flabel" for="dCedula">Cédula</label><input class="input" id="dCedula" type="text" value="' + esc(doc.cedula || "") + '"></div>'
+          + '<div class="form-2"><div><label class="flabel" for="dNacimiento">Fecha de nacimiento</label><input class="input" id="dNacimiento" type="date" value="' + esc(doc.fecha_nacimiento || "") + '"></div>'
+          + '<div><label class="flabel" for="dCedula">Cédula</label><input class="input" id="dCedula" type="text" value="' + esc(doc.cedula || "") + '"></div></div>'
           + '<div class="form-2"><div><label class="flabel" for="dTelefono">Teléfono</label><input class="input" id="dTelefono" type="text" value="' + esc(doc.telefono || "") + '"></div>'
           + '<div><label class="flabel" for="dCorreo">Correo</label><input class="input" id="dCorreo" type="text" value="' + esc(doc.correo || "") + '"></div></div>'
           + '<div class="form-error" id="formError"></div>'
@@ -2477,7 +2539,7 @@
         $("datosForm").addEventListener("submit", function(ev){
           ev.preventDefault();
           if (!requireDb()) return;
-          var data = { nombre: $("dNombre").value.trim(), rol: $("dRol").value.trim(), postulacion_estado: $("dPostEstado").value.trim(), postulacion_fecha: $("dPostFecha").value || "", cedula: $("dCedula").value.trim(), telefono: $("dTelefono").value.trim(), correo: $("dCorreo").value.trim() };
+          var data = { nombre: $("dNombre").value.trim(), rol: $("dRol").value.trim(), postulacion_estado: $("dPostEstado").value.trim(), postulacion_fecha: $("dPostFecha").value || "", fecha_nacimiento: $("dNacimiento").value || "", cedula: $("dCedula").value.trim(), telefono: $("dTelefono").value.trim(), correo: $("dCorreo").value.trim() };
           var btn = $("datosSaveBtn"); btn.disabled = true; btn.textContent = "Guardando…";
           db.collection("datos_equipo").doc(info.slug).set(data, { merge: true }).then(function(){ toast("Datos guardados"); closeModal(); }).catch(function(err){ writeError(err); btn.disabled = false; btn.textContent = "Guardar datos"; });
         });
