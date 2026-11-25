@@ -565,11 +565,13 @@
       .rep-subtab .count{border-radius:999px;padding:2px 6px;font-size:11px;font-weight:900;background:#fff;color:var(--dim);box-shadow:inset 0 0 0 1px var(--border)}
       .rep-subtab.active .count{background:var(--accent);color:#fff;box-shadow:none}
       .repo-filters{display:grid;gap:.75rem}
-      @media(min-width:640px){.repo-filters{grid-template-columns:1fr 1fr 1fr}}
+      @media(min-width:640px){.repo-filters{grid-template-columns:1fr 1fr}}
+      @media(min-width:1024px){.repo-filters{grid-template-columns:repeat(4,1fr)}}
       .repo-day-row{display:flex;gap:.5rem;align-items:stretch}
       .repo-day-row .input{flex:1;min-width:0}
       .repo-all-btn{flex-shrink:0;border-radius:.75rem;padding:.5rem .8rem;font-size:13px;font-weight:800;background:#fff;color:#52525b;box-shadow:inset 0 0 0 1px var(--border-strong);min-height:2.5rem}
       .repo-all-btn.on{background:#000;color:#fff;box-shadow:none}
+      .repo-grav-chips{display:flex;flex-wrap:wrap;gap:.5rem}
       .repo-count{margin:0 0 1rem;font-size:13.5px;font-weight:700;color:var(--dim)}
       .repo-count strong{color:#000}
       .repo-item{display:flex;gap:.5rem;align-items:flex-start}
@@ -2605,12 +2607,15 @@
       var repoFilterDay = "";       /* un día ISO concreto, o "" = Todos */
       var repoFilterReporter = "";  /* reporter_nombre exacto, o "" = Todos */
       var repoFilterTipo = "";      /* tipo de novedad, o "" = Todas */
+      var repoFilterGravedad = [];  /* gravedades marcadas (selección múltiple); [] = Todas */
       var REPORT_TIPOS = ["Operativa", "Infraestructura", "Personal", "Seguridad", "Inventario", "Inconvenientes con GDN", "Otra"];
+      var REPORT_GRAVEDADES = ["Baja", "Media", "Alta"];
       function reportLugar(r){ return r.modo === "libre" ? (r.local_libre || "Local no planificado") : (r.actividad_titulo || "Actividad de la semana"); }
       function repoMatchesFilters(r){
         if (repoFilterDay && r.fecha !== repoFilterDay) return false;
         if (repoFilterReporter && (r.reporter_nombre || "") !== repoFilterReporter) return false;
         if (repoFilterTipo && (r.tipo || "") !== repoFilterTipo) return false;
+        if (repoFilterGravedad.length && repoFilterGravedad.indexOf(r.gravedad || "") === -1) return false;
         return true;
       }
       function repoFilteredReports(){ return state.reportsResumen.filter(repoMatchesFilters); }
@@ -2661,19 +2666,20 @@
       }
       /* ---------- Repositorio de reportes (solo admins) ----------
          Todos los reportes con filtros combinables por día, por formador
-         (quien reportó) y por tipo de novedad. Cada fila abre el detalle
+         (quien reportó), por tipo de novedad y por gravedad. Cada fila abre el detalle
          completo con fotos y cambio de estado (openReportDetail, como
          siempre); aquí mismo van el botón Borrar reporte de cada fila y
          la descarga PDF por Desde/Hasta respetando los filtros activos. */
       function renderRepositorioHTML(){
         if (!pdfDesde) { pdfDesde = mondayOfISO(TODAY); pdfHasta = TODAY; }
         var filtered = repoFilteredReports();
-        var anyFilter = !!(repoFilterDay || repoFilterReporter || repoFilterTipo);
-        var h = '<p style="margin:-.25rem 0 1.25rem;font-size:13.5px;font-weight:600;line-height:1.55;color:var(--dim)">Repositorio de <strong style="color:#000">todos los reportes</strong> del equipo. Filtra por día, por formador y por tipo de novedad —los filtros se combinan— y toca un reporte para ver su detalle completo con fotos y cambiar su estado.</p>';
+        var anyFilter = !!(repoFilterDay || repoFilterReporter || repoFilterTipo || repoFilterGravedad.length);
+        var h = '<p style="margin:-.25rem 0 1.25rem;font-size:13.5px;font-weight:600;line-height:1.55;color:var(--dim)">Repositorio de <strong style="color:#000">todos los reportes</strong> del equipo. Filtra por día, por formador, por tipo de novedad y por gravedad —los filtros se combinan— y toca un reporte para ver su detalle completo con fotos y cambiar su estado.</p>';
         h += '<div class="card" style="padding:1.25rem;margin-bottom:1.25rem"><div class="repo-filters">'
           + '<div><label class="flabel" for="repoDay">Por día</label><div class="repo-day-row"><input class="input" id="repoDay" type="date" value="' + esc(repoFilterDay) + '"><button type="button" class="repo-all-btn' + (repoFilterDay ? "" : " on") + '" id="repoDayAll" aria-pressed="' + (!repoFilterDay) + '">Todos</button></div></div>'
           + '<div><label class="flabel" for="repoReporter">Por formador</label><select class="input" id="repoReporter"><option value=""' + (repoFilterReporter ? "" : " selected") + '>Todos</option>' + repoReporterNames().map(function(n){ return '<option value="' + esc(n) + '"' + (repoFilterReporter === n ? " selected" : "") + ">" + esc(n) + "</option>"; }).join("") + "</select></div>"
           + '<div><label class="flabel" for="repoTipo">Por novedad</label><select class="input" id="repoTipo"><option value=""' + (repoFilterTipo ? "" : " selected") + '>Todas</option>' + REPORT_TIPOS.map(function(t){ return '<option value="' + esc(t) + '"' + (repoFilterTipo === t ? " selected" : "") + ">" + esc(t) + "</option>"; }).join("") + "</select></div>"
+          + '<div><span class="flabel" id="repoGravedadLabel">Gravedad</span><div class="repo-grav-chips" role="group" aria-labelledby="repoGravedadLabel">' + REPORT_GRAVEDADES.map(function(g){ var on = repoFilterGravedad.indexOf(g) !== -1; return '<button type="button" class="chip' + (on ? " active" : "") + '" data-repo-grav="' + esc(g) + '" aria-pressed="' + on + '">' + esc(g) + "</button>"; }).join("") + "</div></div>"
           + "</div>"
           + (anyFilter ? '<div style="margin-top:1rem"><button type="button" class="chip" id="repoClearFilters">' + icon("x", 13, 2.6) + ' Limpiar filtros</button></div>' : "")
           + "</div>";
@@ -2686,7 +2692,7 @@
         if (!state.reportsResumen.length) {
           h += emptyHTML("report", "Todavía no hay reportes", "Cuando alguien registre una novedad, aparecerá aquí con su fecha, quién reportó, la actividad o local, el responsable, el tipo, la gravedad, el estado y un resumen breve.", true);
         } else if (!filtered.length) {
-          h += emptyHTML("report", "Ningún reporte cumple esos filtros", "Prueba con otro día, otro formador u otro tipo de novedad, o limpia los filtros para ver todo el repositorio.", true);
+          h += emptyHTML("report", "Ningún reporte cumple esos filtros", "Prueba con otro día, otro formador, otro tipo de novedad u otra gravedad, o limpia los filtros para ver todo el repositorio.", true);
         } else {
           filtered.forEach(function(r){
             var lugar = reportLugar(r);
@@ -2796,8 +2802,15 @@
         if (repoRepEl) repoRepEl.addEventListener("change", function(){ repoFilterReporter = this.value || ""; render(); });
         var repoTipoEl = $("repoTipo");
         if (repoTipoEl) repoTipoEl.addEventListener("change", function(){ repoFilterTipo = this.value || ""; render(); });
+        var repoGravChips = main.querySelectorAll("[data-repo-grav]");
+        for (var gi = 0; gi < repoGravChips.length; gi++) repoGravChips[gi].addEventListener("click", function(){
+          var g = this.getAttribute("data-repo-grav");
+          var idx = repoFilterGravedad.indexOf(g);
+          if (idx === -1) repoFilterGravedad.push(g); else repoFilterGravedad.splice(idx, 1);
+          render();
+        });
         var repoClear = $("repoClearFilters");
-        if (repoClear) repoClear.addEventListener("click", function(){ repoFilterDay = ""; repoFilterReporter = ""; repoFilterTipo = ""; render(); });
+        if (repoClear) repoClear.addEventListener("click", function(){ repoFilterDay = ""; repoFilterReporter = ""; repoFilterTipo = ""; repoFilterGravedad = []; render(); });
         var dels = main.querySelectorAll("[data-report-delete]");
         for (var di = 0; di < dels.length; di++) dels[di].addEventListener("click", function(){ openDeleteReportConfirm(this.getAttribute("data-report-delete")); });
         var modes = main.querySelectorAll("[data-repmode]");
@@ -3004,10 +3017,10 @@
         if (!desde || !hasta) { toast("Elige las fechas Desde y Hasta para generar el PDF.", true); return; }
         if (desde > hasta) { toast("La fecha Desde no puede ser mayor que la fecha Hasta.", true); return; }
         /* El PDF incluye los reportes del rango que cumplen los filtros
-           activos del Repositorio (día, formador y tipo de novedad). */
+           activos del Repositorio (día, formador, tipo de novedad y gravedad). */
         var list = state.reportsResumen.filter(function(r){ return r.fecha >= desde && r.fecha <= hasta && repoMatchesFilters(r); });
         list.sort(function(a, b){ return a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : (String(a.created_at || "") < String(b.created_at || "") ? -1 : String(a.created_at || "") > String(b.created_at || "") ? 1 : 0); });
-        if (!list.length) { toast("No hay reportes entre el " + fmtShort(desde) + " y el " + fmtShort(hasta) + ((repoFilterDay || repoFilterReporter || repoFilterTipo) ? " que cumplan los filtros activos del Repositorio." : "."), true); return; }
+        if (!list.length) { toast("No hay reportes entre el " + fmtShort(desde) + " y el " + fmtShort(hasta) + ((repoFilterDay || repoFilterReporter || repoFilterTipo || repoFilterGravedad.length) ? " que cumplan los filtros activos del Repositorio." : "."), true); return; }
         var btn = $("pdfBtn");
         var orig = btn ? btn.innerHTML : "";
         if (btn) { btn.disabled = true; btn.textContent = "Generando PDF…"; }
