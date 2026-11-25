@@ -462,10 +462,61 @@
       body.locked .agenda-row-title{pointer-events:none;cursor:default}
       body.locked .nocomp-row{display:none !important}
       body.locked .agenda-nocomp-btn{display:none !important}
+
+      .login-gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.25rem .75rem;background:var(--surface-3)}
+      .login-card{width:100%;max-width:26rem;border-radius:28px;background:#0a0a0a;color:#fff;padding:1.75rem 1.5rem;box-shadow:0 24px 48px -20px rgba(0,0,0,.45);position:relative;overflow:hidden}
+      .login-card::before{content:"";position:absolute;inset:0 0 auto 0;height:6px;background:var(--accent)}
+      .login-card h1{margin:1rem 0 0;font-family:var(--font-display);font-size:26px;font-weight:900;line-height:1.1;letter-spacing:-.02em}
+      .login-sub{margin:.6rem 0 1.25rem;font-size:14px;line-height:1.55;color:rgba(255,255,255,.72);font-weight:600}
+      .login-card .flabel{color:rgba(255,255,255,.65)}
+      .login-card .input{background:#fff;border-color:transparent}
+      .login-note{margin:1rem 0 0;font-size:12.5px;line-height:1.5;color:rgba(255,255,255,.55);font-weight:600}
+      .seg-row{display:flex;border-radius:999px;background:var(--surface-2);padding:.25rem;gap:.25rem}
+      .seg-row button{flex:1;border-radius:999px;padding:.55rem .5rem;font-size:13px;font-weight:800;color:var(--dim);min-height:2.5rem}
+      .seg-row button.on{background:#000;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+      .rep-photo-row{display:flex;gap:.5rem;flex-wrap:wrap}
+      .rep-photo-btn{display:inline-flex;align-items:center;gap:.45rem;border-radius:999px;background:#000;color:#fff;padding:.6rem 1rem;font-size:13px;font-weight:800;min-height:2.5rem;cursor:pointer}
+      .rep-photo-btn.alt{background:#fff;color:#000;box-shadow:inset 0 0 0 1px var(--border-strong)}
+      .rep-photo-name{font-size:12.5px;font-weight:600;color:var(--dim)}
+      .hist-item{width:100%;text-align:left;display:flex;gap:.75rem;align-items:flex-start;border-radius:var(--radius);border:1px solid var(--border);background:#fff;padding:.95rem 1rem;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:.625rem;cursor:pointer}
+      .hist-item:hover{box-shadow:0 2px 6px rgba(0,0,0,.06),0 12px 24px -12px rgba(0,0,0,.16)}
+      .hist-main{flex:1;min-width:0}
+      .hist-title{margin:0;font-family:var(--font-display);font-size:14.5px;font-weight:800;line-height:1.35;color:#000;overflow-wrap:break-word}
+      .hist-brief{margin:.3rem 0 0;font-size:13px;line-height:1.5;color:rgba(10,10,10,.75);overflow-wrap:break-word}
+      .hist-meta{margin-top:.5rem;display:flex;flex-wrap:wrap;gap:.375rem;align-items:center}
+      .detail-kv{margin:0 0 .8rem}
+      .detail-kv .dk{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.07em;color:var(--dim)}
+      .detail-kv .dv{margin-top:2px;font-size:14.5px;line-height:1.55;color:rgba(10,10,10,.9);white-space:pre-line;overflow-wrap:break-word}
+      .detail-photos{display:flex;flex-direction:column;gap:.6rem}
+      .detail-photos img{width:100%;border-radius:12px;border:1px solid var(--border)}
+      .datos-grid{display:grid;gap:.75rem}
+      @media(min-width:640px){.datos-grid{grid-template-columns:1fr 1fr}}
+      .datos-card{padding:1.25rem}
+      .datos-card::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:var(--accent)}
+      .datos-card h3{margin:0;font-family:var(--font-display);font-size:1rem;font-weight:800;line-height:1.3}
+      .datos-rows{margin-top:.85rem;display:flex;flex-direction:column;gap:.45rem}
+      .datos-rows p{margin:0;font-size:13.5px;line-height:1.5;color:rgba(10,10,10,.85)}
+      .datos-rows p strong{font-weight:800;color:#000}
       .hidden{display:none !important}
     </style>
   </head>
-  <body class="locked">
+  <body class="locked noauth">
+
+    <div class="login-gate" id="loginGate">
+      <div class="login-card">
+        <p class="hero-badge"><span class="dot" aria-hidden="true"></span>Formación y Desarrollo</p>
+        <h1>Acceso al tablero</h1>
+        <p class="login-sub">Ingresa con el usuario y la contraseña que te asignaron. Sin una cuenta válida, el tablero no se muestra.</p>
+        <form class="form" id="loginForm" autocomplete="on">
+          <div><label class="flabel" for="loginUser">Usuario</label><input class="input" id="loginUser" type="text" autocomplete="username" placeholder="nombre.apellido" /></div>
+          <div><label class="flabel" for="loginPass">Contraseña</label><input class="input" id="loginPass" type="password" autocomplete="current-password" placeholder="Tu contraseña" /></div>
+          <div class="form-error" id="loginError" role="alert"></div>
+          <button type="submit" class="btn-save" id="loginBtn">Ingresar</button>
+        </form>
+        <p class="login-note">Puedes escribir solo tu usuario (nombre.apellido) o el correo completo. ¿Olvidaste tu contraseña? Pídele a Anthony que te asigne una nueva; una vez dentro, podrás cambiarla tú mismo.</p>
+      </div>
+    </div>
+    <div id="boardApp" class="hidden">
     <header class="hero-outer">
       <div class="hero">
         <span class="hero-glow" aria-hidden="true"></span>
@@ -500,10 +551,11 @@
     <div class="wrap">
       <div class="livebar" aria-live="polite">
         <span class="live-pill connecting" id="livePill"><span class="ldot" aria-hidden="true"></span><span id="liveText">Conectando en vivo…</span></span>
-        <span class="live-note" id="liveNote">Los cambios se guardan en Firestore y se ven al instante en todos los dispositivos con este enlace.</span>
+        <span class="live-note" id="liveNote">Los cambios se guardan en Firestore y se ven al instante para el equipo con acceso.</span>
         <span class="lock-actions">
-          <span class="lock-pill" id="lockPill">Solo lectura</span>
-          <button type="button" class="btn-lock" id="editLockBtn">Editar</button>
+          <span class="lock-pill" id="lockPill">Sin sesión</span>
+          <button type="button" class="btn-lock is-editing" id="changePassBtn">Cambiar contraseña</button>
+          <button type="button" class="btn-lock" id="logoutBtn">Cerrar sesión</button>
           <span class="auth-identity hidden" id="authIdentity" aria-live="polite"></span>
         </span>
       </div>
@@ -514,6 +566,7 @@
     <main class="wrap" id="main"></main>
 
     <button type="button" class="fab" id="fab"></button>
+    </div>
     <div id="modalRoot"></div>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script>
@@ -581,7 +634,9 @@
           members: SEED_MEMBERS.map(function(m){return {id:m.docId, orden:m.orden, name:m.name, role:m.role, color:m.color};}),
           activities: SEED_ACTIVITIES.map(function(a){var c={};for(var k in a){if(k!=="docId")c[k]=a[k];}c.id=a.docId;return c;}),
           objectives: SEED_OBJECTIVES.map(function(o){var c={};for(var k in o){if(k!=="docId")c[k]=o[k];}c.id=o.docId;return c;}),
-          topics: SEED_TOPICS.map(function(t){var c={};for(var k in t){if(k!=="docId")c[k]=t[k];}c.id=t.docId;return c;})
+          topics: SEED_TOPICS.map(function(t){var c={};for(var k in t){if(k!=="docId")c[k]=t[k];}c.id=t.docId;return c;}),
+          reportsResumen: [],
+          datosEquipo: {}
         };
       }
       var state = seedState();
@@ -644,7 +699,11 @@
         trash:["M3 6h18","M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6","M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"],
         lock:["M19 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2Z","M7 11V7a5 5 0 0 1 10 0v4"],
         unlock:["M19 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2Z","M7 11V7a5 5 0 0 1 9.9-1"],
-        key:["m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"]
+        key:["m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"],
+        camera:["M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z","M12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"],
+        image:["M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Z","M8.5 10a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z","m21 15-5-5L5 21"],
+        report:["M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z","M14 2v6h6","M16 13H8","M16 17H8","M10 9H8"],
+        idcard:["M2 5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z","M9 11a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z","M5.5 17c.6-1.7 1.9-2.5 3.5-2.5s2.9.8 3.5 2.5","M15 8h4","M15 12h4"]
       };
       function icon(name,size,sw){
         size=size||16; sw=sw||2;
@@ -669,7 +728,7 @@
       function memberById(id){for(var i=0;i<state.members.length;i++)if(state.members[i].id===id||state.members[i].orden===id)return state.members[i];return undefined;}
       function avatar(m,size){if(!m)return "";return '<span class="avatar" style="background-color:'+m.color+';width:'+size+'px;height:'+size+'px;font-size:'+Math.round(size*0.36)+'px" aria-hidden="true">'+esc(initials(m.name))+'</span>';}
       function monday(){return addDaysISO(mondayOfISO(TODAY),weekOffset*7);}
-      function weekActs(){var mo=monday(),su=addDaysISO(mo,6);return state.activities.filter(function(a){return a.date>=mo&&a.date<=su;});}
+      function weekActs(){var mo=monday(),su=addDaysISO(mo,6);return visibleActivities().filter(function(a){return a.date>=mo&&a.date<=su;});}
       /* ----- Frase de la semana: una por semana, fijada por mes ----- */
       function phraseForMonday(moISO){
         if (!moISO) return "";
@@ -703,7 +762,7 @@
         return st.getDate() + " " + MONTHS_SHORT[st.getMonth()] + " al " + en.getDate() + " " + MONTHS_SHORT[en.getMonth()];
       }
       function weeksFixedCount(mondays){ return mondays.filter(function(mo){ return phraseIsFixed(mo); }).length; }
-      function overdueActs(){return state.activities.filter(function(a){return a.date<TODAY&&!isClosedAct(a)&&(memberFilter==null||a.member_id===memberFilter);});}
+      function overdueActs(){return visibleActivities().filter(function(a){return a.date<TODAY&&!isClosedAct(a)&&(memberFilter==null||a.member_id===memberFilter);});}
       function activityById(id){for(var i=0;i<state.activities.length;i++)if(String(state.activities[i].id)===String(id))return state.activities[i];return undefined;}
       function objectiveById(id){for(var i=0;i<state.objectives.length;i++)if(String(state.objectives[i].id)===String(id))return state.objectives[i];return undefined;}
       /* ===== Objetivos por proyecto y cierre de semana =====
@@ -716,7 +775,9 @@
       var KNOWN_PROJECTS = [
         { key:"aperturas", label:"Proyecto Aperturas", full:"Proyecto Aperturas" },
         { key:"huella", label:"Proyecto Huella", full:"Proyecto Huella" },
-        { key:"formacion-valco", label:"Proyecto Formación VALCO, Escuela y Chaski GO", full:"Proyecto Formación VALCO, Escuela y Chaski GO" }
+        { key:"formacion-valco", label:"Proyecto Formación VALCO", full:"Proyecto Formación VALCO" },
+        { key:"escuela-tgo", label:"Proyecto Escuela TGO!", full:"Proyecto Escuela TGO!" },
+        { key:"chaski-go", label:"Proyecto Chaski GO", full:"Proyecto Chaski GO" }
       ];
       function normalizeProjectLabel(raw){
         var s = String(raw||"").trim();
@@ -724,21 +785,33 @@
         var low = s.toLowerCase();
         if(/apertura/.test(low)) return "Proyecto Aperturas";
         if(/huella/.test(low)) return "Proyecto Huella";
-        if(/valco|escuela|chaski/.test(low)) return "Proyecto Formación VALCO, Escuela y Chaski GO";
+        /* VALCO, Escuela TGO! y Chaski GO son proyectos distintos: nunca
+           se agrupan juntos. Una etiqueta combinada legada no se usa
+           como grupo; el objetivo se clasifica por su título/detalle. */
+        if(/valco/.test(low) && (/escuela/.test(low) || /chaski/.test(low))) return "";
+        if(/chaski/.test(low)) return "Proyecto Chaski GO";
+        if(/escuela/.test(low)) return "Proyecto Escuela TGO!";
+        if(/valco/.test(low)) return "Proyecto Formación VALCO";
         if(/^proyecto\s+/i.test(s)) return s.charAt(0).toUpperCase()+s.slice(1);
         return "Proyecto " + s.charAt(0).toUpperCase() + s.slice(1);
       }
       function objectiveProject(o){
         if(!o) return "Otros proyectos";
         var explicit = o.project || o.proyecto || o.project_name || "";
-        if(explicit && String(explicit).trim()) return normalizeProjectLabel(explicit);
+        if(explicit && String(explicit).trim()){
+          var exLow = String(explicit).toLowerCase();
+          var combinedLegacy = /valco/.test(exLow) && (/escuela/.test(exLow) || /chaski/.test(exLow));
+          if(!combinedLegacy) { var np = normalizeProjectLabel(explicit); if(np) return np; }
+        }
         var text = (String(o.title||"") + " " + String(o.detail||"")).toLowerCase();
         /* Aperturas va primero: "Seguimiento y validación de próximas
            aperturas" contiene "seguimiento y validación" pero es de
            Aperturas, no del objetivo viejo de la semana 16–22. */
         if(/apertura/.test(text)) return "Proyecto Aperturas";
         if(/huella/.test(text)) return "Proyecto Huella";
-        if(/valco|escuela\s*tgo|chaski/.test(text)) return "Proyecto Formación VALCO, Escuela y Chaski GO";
+        if(/chaski/.test(text)) return "Proyecto Chaski GO";
+        if(/escuela\s*tgo/.test(text)) return "Proyecto Escuela TGO!";
+        if(/valco/.test(text)) return "Proyecto Formación VALCO";
         return "Otros proyectos";
       }
       function projectOrder(label){
@@ -776,43 +849,99 @@
       var seedAttempted = {};
       var listenersReady = 0;
 
-      /* ===== Edición segura con Firebase Authentication (Google) =====
-         Ruta segura: el tablero es público en solo lectura. Solo la
-         cuenta autorizada puede editar, iniciando sesión con Google.
-         Cualquier otra cuenta queda en solo lectura y su sesión se
-         cierra. «Bloquear edición» cierra la sesión de Google.
-         El documento antiguo config/editLock NO se borra ni se usa:
-         queda en Firestore sin cambios, solo deja de ser el acceso. */
-      var ALLOWED_EDITOR_EMAIL = "tonnylve2@gmail.com";
+      /* ===== Acceso obligatorio con usuario y contraseña (Firebase Auth) =====
+         Sin una sesión válida de la lista de UID no se muestra el tablero
+         ni se cargan datos de Firestore. Roles: Anthony y Gio (admin)
+         tienen acceso total; el resto del equipo entra en solo lectura
+         y ve únicamente su propia planificación. Las contraseñas viven
+         solo en Firebase Authentication: nunca en el código ni en
+         Firestore. Cada persona puede cambiar la suya desde la web. */
+      var PROFILES = [
+        { uid:"YcOaz7IboFMptFEOZMEfXGx6Jau2", email:"anthony.quimis@formacion.ec", name:"Anthony Quimis", role:"admin" },
+        { uid:"M9gCQC8AwScvh8rBn7I3Rjfjhn92", email:"giovanna.caballero@formacion.ec", name:"Giovanna Caballero", role:"admin" },
+        { uid:"fHp5Q5056pbD27uPP2a7vKi4QlR2", email:"jesus.menoscal@formacion.ec", name:"Jesús Menoscal", role:"equipo" },
+        { uid:"ozSajxBuM0RjZBLbsnvFMQggtFL2", email:"jelexi.merchan@formacion.ec", name:"Jelexi Merchán", role:"equipo" },
+        { uid:"kUCufPTUOmbjn9r5bs97XVkaWZ32", email:"paulina.rodriguez@formacion.ec", name:"Paulina Rodríguez", role:"equipo" },
+        { uid:"4qhocW1IlvhfqM9gDf28qD4kmjk1", email:"joseph.vera@formacion.ec", name:"Joseph Vera", role:"equipo" },
+        { uid:"yUWBx9xknwQFpsCQe0KPSQPZpfs2", email:"josue.villao@formacion.ec", name:"Josue Villao", role:"equipo" },
+        { uid:"sIoSfhxRhUYakOD98bvzwtJjqnI2", email:"nayeli.medranda@formacion.ec", name:"Nayeli Medranda", role:"equipo" },
+        { uid:"EEcpCm9wncOnX5AQaoBBTRfxVYh2", email:"melani.sellan@formacion.ec", name:"Melani Sellan", role:"equipo" },
+        { uid:"inKQBPajqfSjEi40y3fKMSzf1Ek2", email:"dennise.pico@formacion.ec", name:"Dennise Pico", role:"equipo" }
+      ];
+      var PROFILES_BY_UID = {};
+      PROFILES.forEach(function(p){ PROFILES_BY_UID[p.uid] = p; });
       var auth = null;
       var currentUser = null;
-      var isEditing = false;
-      var authReady = false;
-      function isAllowedEditor(user){ return !!user && String(user.email || "").toLowerCase() === ALLOWED_EDITOR_EMAIL; }
-      function canEdit(){ return isEditing && isAllowedEditor(currentUser); }
+      var currentProfile = null;
+      var boardStarted = false;
+      function isAdmin(){ return !!currentProfile && currentProfile.role === "admin"; }
+      function canEdit(){ return isAdmin(); }
       function guardEdit(){
         if (canEdit()) return true;
-        toast("Estás en modo solo lectura. Pulsa Editar e inicia sesión con la cuenta de Google autorizada para hacer cambios.", true);
+        toast("Tu cuenta es de solo lectura: solo Anthony y Gio pueden editar el tablero.", true);
         return false;
+      }
+      function normName(v){ return String(v || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, " ").trim(); }
+      /* La persona logueada se cruza con el roster cargado de Firestore
+         por nombre normalizado (sin asumir IDs): coincidencia exacta o,
+         si no, mismo primer nombre y mayor cantidad de apellidos en
+         común. Así se sabe qué member_id (orden) le corresponde. */
+      function myMemberOrden(){
+        if (!currentProfile) return null;
+        var target = normName(currentProfile.name);
+        var first = target.split(" ")[0];
+        var best = null, bestScore = -1;
+        state.members.forEach(function(m){
+          var mn = normName(m.name);
+          if (mn === target) { best = m.orden; bestScore = 99; return; }
+          var mt = mn.split(" "), tt = target.split(" ");
+          if (mt[0] !== first) return;
+          var score = 0;
+          tt.forEach(function(tok){ if (mt.indexOf(tok) !== -1) score++; });
+          if (score > bestScore) { bestScore = score; best = m.orden; }
+        });
+        return best;
+      }
+      /* Admins ven todo; el equipo, solo actividades de su member_id.
+         Esto alimenta tarjetas, conteos, avances, Agenda y filtros. */
+      function visibleActivities(){
+        if (!currentProfile) return [];
+        if (isAdmin()) return state.activities.slice();
+        var mine = myMemberOrden();
+        if (mine == null) return [];
+        return state.activities.filter(function(a){ return a.member_id === mine; });
+      }
+      function setGateError(msg){
+        var e = $("loginError");
+        if (e) { e.textContent = msg || ""; e.classList.toggle("show", !!msg); }
+      }
+      function showGate(){
+        document.body.classList.add("noauth");
+        document.body.classList.add("locked");
+        var g = $("loginGate"); if (g) g.classList.remove("hidden");
+        var b = $("boardApp"); if (b) b.classList.add("hidden");
+      }
+      function hideGate(){
+        document.body.classList.remove("noauth");
+        var g = $("loginGate"); if (g) g.classList.add("hidden");
+        var b = $("boardApp"); if (b) b.classList.remove("hidden");
       }
       function updateLockUI(){
         document.body.classList.toggle("locked", !canEdit());
         document.body.classList.toggle("editing", canEdit());
-        var pill = $("lockPill"), btn = $("editLockBtn"), ident = $("authIdentity");
+        var pill = $("lockPill"), ident = $("authIdentity");
         if (pill) {
-          pill.classList.toggle("editing", canEdit());
-          pill.innerHTML = icon(canEdit() ? "unlock" : "lock", 13, 2.4) + (canEdit() ? "Editando" : "Solo lectura");
-        }
-        if (btn) {
-          btn.classList.toggle("is-editing", canEdit());
-          btn.innerHTML = icon(canEdit() ? "lock" : "key", 14, 2.4) + (canEdit() ? "Bloquear edición" : "Editar con Google");
+          if (currentProfile) {
+            pill.classList.toggle("editing", canEdit());
+            pill.innerHTML = icon(canEdit() ? "unlock" : "lock", 13, 2.4) + esc(currentProfile.name) + (isAdmin() ? " · Admin total" : " · Equipo");
+          } else {
+            pill.classList.remove("editing");
+            pill.innerHTML = icon("lock", 13, 2.4) + "Sin sesión";
+          }
         }
         if (ident) {
-          /* Discreto y solo en modo edición: correo + UID de Auth.
-             Ese UID es el que se usará después en las reglas
-             permanentes de Firestore. Sin sesión no se muestra nada. */
-          if (canEdit() && currentUser) {
-            ident.innerHTML = "Sesión de edición: <strong>" + esc(currentUser.email) + "</strong> · UID: <code>" + esc(currentUser.uid) + "</code>";
+          if (currentProfile) {
+            ident.innerHTML = "Sesión: <strong>" + esc(currentProfile.email) + "</strong>" + (isAdmin() ? " · UID: <code>" + esc(currentProfile.uid) + "</code>" : "");
             ident.classList.remove("hidden");
           } else {
             ident.innerHTML = "";
@@ -820,84 +949,101 @@
           }
         }
       }
-      function setEditing(v, silent){
-        /* La edición solo puede activarse con la cuenta autorizada. */
-        isEditing = !!v && isAllowedEditor(currentUser);
-        updateLockUI();
-        render();
-        if (!silent) toast(isEditing ? "Edición activada con tu cuenta de Google" : "Edición bloqueada. El tablero quedó en solo lectura.");
+      function normalizeLoginEmail(raw){
+        var v = String(raw || "").trim().toLowerCase();
+        if (!v) return "";
+        if (v.indexOf("@") === -1) v = v + "@formacion.ec";
+        return v;
+      }
+      function signInWithCredentials(){
+        if (!auth) { setGateError("El acceso todavía se está conectando. Espera un momento e inténtalo de nuevo."); return; }
+        var email = normalizeLoginEmail($("loginUser").value);
+        var pass = $("loginPass").value;
+        if (!email || !pass) { setGateError("Escribe tu usuario y tu contraseña."); return; }
+        var btn = $("loginBtn");
+        btn.disabled = true; btn.textContent = "Ingresando…";
+        setGateError("");
+        auth.signInWithEmailAndPassword(email, pass).then(function(){
+          btn.disabled = false; btn.textContent = "Ingresar";
+        }).catch(function(err){
+          console.error(err);
+          btn.disabled = false; btn.textContent = "Ingresar";
+          if (err && (err.code === "auth/invalid-credential" || err.code === "auth/wrong-password" || err.code === "auth/user-not-found")) setGateError("Usuario o contraseña incorrectos. Revisa los datos e inténtalo de nuevo.");
+          else if (err && err.code === "auth/too-many-requests") setGateError("Demasiados intentos seguidos. Espera unos minutos e inténtalo de nuevo.");
+          else if (err && err.code === "auth/network-request-failed") setGateError("Sin conexión. Revisa tu internet e inténtalo de nuevo.");
+          else setGateError("No se pudo ingresar. Inténtalo de nuevo.");
+        });
+      }
+      function signOutSession(silent){
+        var done = function(){
+          currentUser = null; currentProfile = null;
+          updateLockUI(); showGate();
+          if (!silent) toast("Sesión cerrada.");
+        };
+        if (!auth) { done(); return; }
+        auth.signOut().then(done).catch(function(err){ console.error(err); done(); });
       }
       function applyAuthUser(user){
         if (!user) {
-          currentUser = null;
-          isEditing = false;
-          authReady = true;
-          updateLockUI();
-          render();
+          currentUser = null; currentProfile = null;
+          updateLockUI(); showGate();
           return;
         }
-        if (!isAllowedEditor(user)) {
-          var rejectedEmail = user.email || "sin correo";
-          currentUser = null;
-          isEditing = false;
-          authReady = true;
-          updateLockUI();
-          render();
-          toast("La cuenta " + rejectedEmail + " no tiene permiso de edición. Solo " + ALLOWED_EDITOR_EMAIL + " puede editar; esta sesión se cerrará y el tablero sigue en solo lectura.", true);
+        var profile = PROFILES_BY_UID[user.uid];
+        if (!profile) {
+          currentUser = null; currentProfile = null;
+          updateLockUI(); showGate();
+          setGateError("Acceso no autorizado: esta cuenta no está en la lista del equipo de Formación. La sesión se cerró.");
           if (auth) auth.signOut().catch(function(err){ console.error(err); });
           return;
         }
         currentUser = user;
-        isEditing = true;
-        authReady = true;
+        currentProfile = profile;
+        hideGate();
         updateLockUI();
+        initBoardData();
         render();
-        toast("Edición activada · " + user.email);
+        toast("Hola, " + profile.name.split(" ")[0] + (isAdmin() ? " · acceso total" : " · ves solo tu planificación"));
       }
       function initAuth(){
         if (!auth) return;
         try {
-          /* Si se vuelve de un inicio de sesión por redirección, su
-             resultado (o su error) se recoge aquí sin bloquear nada. */
-          if (auth.getRedirectResult) {
-            auth.getRedirectResult().catch(function(err){ console.error(err); });
-          }
-          auth.onAuthStateChanged(function(user){ applyAuthUser(user); }, function(err){ console.error(err); authReady = true; updateLockUI(); });
+          auth.onAuthStateChanged(function(user){ applyAuthUser(user); }, function(err){ console.error(err); showGate(); });
         } catch(e) { console.error(e); }
       }
-      function signInWithGoogle(){
-        if (!auth) { toast("El acceso con Google todavía se está conectando. Espera un momento e inténtalo de nuevo.", true); return; }
-        var provider = new firebase.auth.GoogleAuthProvider();
-        provider.setCustomParameters({ prompt: "select_account" });
-        toast("Abriendo el acceso seguro de Google…");
-        auth.signInWithPopup(provider).catch(function(err){
-          console.error(err);
-          if (err && (err.code === "auth/popup-blocked" || err.code === "auth/popup-closed-by-user" || err.code === "auth/cancelled-popup-request" || err.code === "auth/operation-not-supported-in-this-environment")) {
-            toast("La ventana de Google no se pudo abrir aquí. Intentando con redirección segura…");
-            auth.signInWithRedirect(provider).catch(function(err2){ console.error(err2); toast("No se pudo iniciar sesión con Google. Revisa tu conexión e inténtalo de nuevo.", true); });
-          } else if (err && err.code === "auth/unauthorized-domain") {
-            toast("Este dominio todavía no está autorizado en Firebase Authentication. El tablero sigue en solo lectura.", true);
-          } else {
-            toast("No se pudo iniciar sesión con Google. El tablero sigue en solo lectura.", true);
-          }
+      function openChangePasswordModal(){
+        if (!currentUser || !currentProfile) return;
+        var body = '<form class="form" id="passForm">'
+          + '<p class="form-note">Cambias la contraseña de <strong>' + esc(currentProfile.email) + '</strong>. Debe tener al menos 6 caracteres y no se guarda en ningún otro lugar: solo en tu cuenta de acceso.</p>'
+          + '<div><label class="flabel" for="pCurrent">Contraseña actual *</label><input class="input" id="pCurrent" type="password" autocomplete="current-password"></div>'
+          + '<div><label class="flabel" for="pNew">Contraseña nueva *</label><input class="input" id="pNew" type="password" autocomplete="new-password"></div>'
+          + '<div><label class="flabel" for="pNew2">Repite la contraseña nueva *</label><input class="input" id="pNew2" type="password" autocomplete="new-password"></div>'
+          + '<div class="form-error" id="formError"></div>'
+          + '<div class="form-actions"><button type="submit" class="btn-save" id="passSaveBtn">Cambiar contraseña</button></div></form>';
+        openModal("Cambiar contraseña", body);
+        $("passForm").addEventListener("submit", function(ev){
+          ev.preventDefault();
+          var cur = $("pCurrent").value, nw = $("pNew").value, nw2 = $("pNew2").value;
+          if (!cur) { formError("Escribe tu contraseña actual."); return; }
+          if (!nw || nw.length < 6) { formError("La contraseña nueva debe tener al menos 6 caracteres."); return; }
+          if (nw !== nw2) { formError("La contraseña nueva no coincide en los dos campos."); return; }
+          var btn = $("passSaveBtn"); btn.disabled = true; btn.textContent = "Guardando…";
+          var cred = firebase.auth.EmailAuthProvider.credential(currentUser.email, cur);
+          currentUser.reauthenticateWithCredential(cred).then(function(){
+            return currentUser.updatePassword(nw);
+          }).then(function(){
+            toast("Contraseña actualizada. Úsala la próxima vez que ingreses.");
+            closeModal();
+          }).catch(function(err){
+            console.error(err);
+            btn.disabled = false; btn.textContent = "Cambiar contraseña";
+            if (err && (err.code === "auth/wrong-password" || err.code === "auth/invalid-credential")) formError("La contraseña actual no es correcta.");
+            else if (err && err.code === "auth/weak-password") formError("La contraseña nueva es muy débil. Usa una más segura.");
+            else if (err && err.code === "auth/requires-recent-login") formError("Por seguridad, cierra sesión, vuelve a ingresar e inténtalo de nuevo.");
+            else formError("No se pudo cambiar la contraseña. Inténtalo de nuevo.");
+          });
         });
-      }
-      function signOutOfGoogle(silent){
-        if (!auth) { currentUser = null; isEditing = false; updateLockUI(); render(); return; }
-        auth.signOut().then(function(){
-          currentUser = null;
-          isEditing = false;
-          updateLockUI();
-          render();
-          if (!silent) toast("Sesión de Google cerrada. El tablero quedó en solo lectura.");
-        }).catch(function(err){
-          console.error(err);
-          currentUser = null;
-          isEditing = false;
-          updateLockUI();
-          render();
-          if (!silent) toast("Edición bloqueada. El tablero quedó en solo lectura.");
-        });
+        setTimeout(function(){ var f = $("pCurrent"); if (f) f.focus(); }, 50);
       }
 
       function setLiveStatus(status, note){
@@ -923,7 +1069,7 @@
       }
 
       function seedCollection(name, seeds, build){
-        if (seedAttempted[name] || !db) return;
+        if (seedAttempted[name] || !db || !canEdit()) return;
         seedAttempted[name] = true;
         var batch = db.batch();
         seeds.forEach(function(s){ batch.set(db.collection(name).doc(s.docId), build(s)); });
@@ -931,10 +1077,19 @@
       }
       function initFirebase(){
         try {
-          if (typeof firebase === "undefined") { setLiveStatus("error","No se cargó Firebase. Se muestran los datos de ejemplo; recarga la página para sincronizar."); return; }
+          if (typeof firebase === "undefined") { setGateError("No se cargó Firebase. Revisa tu conexión y recarga la página."); return; }
           if (!firebase.apps || !firebase.apps.length) firebase.initializeApp(firebaseConfig);
-          db = firebase.firestore();
           if (typeof firebase.auth === "function") { auth = firebase.auth(); initAuth(); }
+          else setGateError("El acceso no se cargó. Recarga la página e inténtalo de nuevo.");
+        } catch(e) { console.error(e); setGateError("No se pudo iniciar el acceso. Recarga la página."); }
+      }
+      /* Los datos de Firestore se cargan SOLO con una sesión válida:
+         sin login no se abre ningún listener del tablero. */
+      function initBoardData(){
+        if (boardStarted || !currentProfile) return;
+        boardStarted = true;
+        try {
+          db = firebase.firestore();
 
           db.collection("equipo").onSnapshot(function(snap){
             listenersReady++;
@@ -946,9 +1101,9 @@
               arr.sort(function(a,b){return a.orden-b.orden;});
               state.members = arr;
             }
-            setLiveStatus("live","Todo lo que cambies aquí se guarda en Firestore y se ve al instante para todos los que abran este enlace.");
+            setLiveStatus("live","Todo se guarda en Firestore y se ve al instante para el equipo con acceso.");
             render();
-          }, function(err){ console.error(err); setLiveStatus("error","Firestore devolvió un error (revisa las Reglas: lectura pública y escritura solo con la cuenta autorizada). Se muestran los datos de ejemplo."); });
+          }, function(err){ console.error(err); setLiveStatus("error","Firestore devolvió un error (revisa las Reglas de Firestore por UID y rol)."); });
 
           db.collection("actividades").onSnapshot(function(snap){
             if (snap.empty) {
@@ -959,9 +1114,9 @@
               arr.sort(function(a,b){ return a.date<b.date?-1:a.date>b.date?1:(a.title<b.title?-1:1); });
               state.activities = arr;
             }
-            setLiveStatus("live","Todo lo que cambies aquí se guarda en Firestore y se ve al instante para todos los que abran este enlace.");
+            setLiveStatus("live","Todo se guarda en Firestore y se ve al instante para el equipo con acceso.");
             render();
-          }, function(err){ console.error(err); setLiveStatus("error","Firestore devolvió un error (revisa las Reglas: lectura pública y escritura solo con la cuenta autorizada). Se muestran los datos de ejemplo."); });
+          }, function(err){ console.error(err); setLiveStatus("error","Firestore devolvió un error (revisa las Reglas de Firestore por UID y rol)."); });
 
           db.collection("objetivos").onSnapshot(function(snap){
             if (snap.empty) {
@@ -990,7 +1145,7 @@
 
           db.collection("config").doc("frase").onSnapshot(function(docSnap){
             if (!docSnap.exists) {
-              if (!seedAttempted["frase"] && db) {
+              if (!seedAttempted["frase"] && db && canEdit()) {
                 seedAttempted["frase"]=true;
                 var seedMap = {};
                 for (var sk in FIXED_MONTH_PHRASES) seedMap[sk] = FIXED_MONTH_PHRASES[sk];
@@ -1016,10 +1171,27 @@
             render();
           }, function(err){ console.error(err); });
 
+          db.collection("reportes_resumen").onSnapshot(function(snap){
+            var arr = [];
+            snap.forEach(function(d){ var v = d.data(); v.id = d.id; arr.push(v); });
+            arr.sort(function(a,b){ return String(b.created_at || "") < String(a.created_at || "") ? -1 : String(b.created_at || "") > String(a.created_at || "") ? 1 : 0; });
+            state.reportsResumen = arr;
+            if (view === "reporte") render();
+          }, function(err){ console.error(err); });
+
+          if (isAdmin()) {
+            db.collection("datos_equipo").onSnapshot(function(snap){
+              var map = {};
+              snap.forEach(function(d){ map[d.id] = d.data(); });
+              state.datosEquipo = map;
+              if (view === "datos") render();
+            }, function(err){ console.error(err); });
+          }
+
           setTimeout(function(){ if (liveStatus==="connecting") setLiveStatus("error","La conexión está tardando. Se muestran los datos de ejemplo; si guardas un cambio y no hay conexión, Firestore lo reintentará al volver internet."); }, 9000);
         } catch(e) {
           console.error(e);
-          setLiveStatus("error","No se pudo iniciar Firebase. Se muestran los datos de ejemplo.");
+          setLiveStatus("error","No se pudo cargar el tablero. Revisa tu conexión y recarga la página.");
         }
       }
 
@@ -1103,7 +1275,7 @@
         $("ringWrap").setAttribute("aria-label", "Avance de la semana: " + pct + " por ciento");
         $("statTotal").textContent = wa.length;
         $("statDone").textContent = done;
-        var ov = state.activities.filter(function(a){return a.date<TODAY&&!isClosedAct(a);});
+        var ov = visibleActivities().filter(function(a){return a.date<TODAY&&!isClosedAct(a);});
         $("statOver").textContent = ov.length;
         $("statOverBox").classList.toggle("red", ov.length > 0);
       }
@@ -1122,18 +1294,20 @@
         var monthKey = agendaMonthKey();
         var tabs = [
           { id:"semana", label:"Semana", ic:"calendar", count: weekActs().length },
-          { id:"agenda", label:"Agenda", ic:"agenda", count: state.activities.filter(function(a){return a.date.indexOf(monthKey)===0;}).length },
+          { id:"agenda", label:"Agenda", ic:"agenda", count: visibleActivities().filter(function(a){return a.date.indexOf(monthKey)===0;}).length },
           { id:"objetivos", label:"Objetivos", ic:"target", count: state.objectives.filter(function(o){return !isObjectiveCompleted(o);}).length },
           { id:"temas", label:"Temas", ic:"bell", count: state.topics.length },
-          { id:"equipo", label:"Equipo", ic:"users", count: state.members.length }
+          { id:"equipo", label:"Equipo", ic:"users", count: state.members.length },
+          { id:"reporte", label:"Reporte", ic:"report", count: state.reportsResumen.length }
         ];
+        if (isAdmin()) tabs.push({ id:"datos", label:"Datos", ic:"idcard", count: state.members.length });
         $("tabs").innerHTML = tabs.map(function(t){
           return '<button type="button" class="tab'+(view===t.id?" active":"")+'" data-view="'+t.id+'" aria-pressed="'+(view===t.id)+'">'+icon(t.ic,16,2.2)+'<span class="tab-label">'+t.label+'</span>'+(t.count>0?'<span class="count">'+t.count+'</span>':"")+'</button>';
         }).join("");
         var btns = $("tabs").querySelectorAll("[data-view]");
         for (var i=0;i<btns.length;i++) btns[i].addEventListener("click", function(){ view = this.getAttribute("data-view"); render(); });
         var fab = $("fab");
-        if (view === "equipo") { fab.classList.add("hidden"); }
+        if (view === "equipo" || view === "reporte" || view === "datos") { fab.classList.add("hidden"); }
         else {
           fab.classList.remove("hidden");
           var label = view === "objetivos" ? "Nuevo objetivo" : view === "temas" ? "Nuevo tema" : "Nueva actividad";
@@ -1146,6 +1320,10 @@
 
       /* ---------- shared bits ---------- */
       function filterBarHTML(actsForFilter){
+        if (!isAdmin()) {
+          var meP = memberById(myMemberOrden());
+          return '<div class="filterbar"><span class="flabel">' + icon("users", 14) + ' Tu planificación</span><span class="chip-person active">' + (meP ? avatar(meP, 24) + esc(meP.name) : esc(currentProfile ? currentProfile.name : "")) + "</span></div>";
+        }
         var sourceActs = actsForFilter || state.activities;
         var withActs = {};
         sourceActs.forEach(function(a){ if (a.member_id != null) withActs[a.member_id] = true; });
@@ -1427,6 +1605,7 @@
       function renderSemana(main){
         var mo = monday();
         var wa = weekActs();
+        if (!isAdmin()) memberFilter = myMemberOrden();
         if (memberFilter != null && !wa.some(function(a){return a.member_id===memberFilter;})) memberFilter = null;
         var visible = memberFilter == null ? wa : wa.filter(function(a){return a.member_id===memberFilter;});
         var ov = overdueActs();
@@ -1495,12 +1674,13 @@
         var gridStart = mondayOfISO(monthStart);
         var days = []; for (var i=0;i<42;i++) days.push(addDaysISO(gridStart, i));
         var mk = agendaMonthKey();
-        var monthAll = state.activities.filter(function(a){return a.date.indexOf(mk)===0;});
+        if (!isAdmin()) memberFilter = myMemberOrden();
+        var monthAll = visibleActivities().filter(function(a){return a.date.indexOf(mk)===0;});
         if (memberFilter != null && !monthAll.some(function(a){return a.member_id===memberFilter;})) memberFilter = null;
         var monthActs = memberFilter == null ? monthAll : monthAll.filter(function(a){return a.member_id===memberFilter;});
         var monthDone = monthActs.filter(function(a){return a.status==="completada";}).length;
         var byDate = {};
-        state.activities.forEach(function(a){
+        visibleActivities().forEach(function(a){
           if (memberFilter != null && a.member_id !== memberFilter) return;
           (byDate[a.date] = byDate[a.date] || []).push(a);
         });
@@ -1793,14 +1973,20 @@
       function renderEquipo(main){
         var mo = monday();
         var wa = weekActs();
+        var mineOrden = isAdmin() ? null : myMemberOrden();
         var h = '<section aria-label="Equipo"><div class="sec-head" style="margin-bottom:.5rem"><h2>'+secBadge("users")+"Equipo de Formación</h2></div>";
-        h += '<p class="team-sub">'+icon("trending",15)+"Carga de trabajo en la "+weekLabel(mo).toLowerCase()+".</p>";
+        h += '<p class="team-sub">'+icon("trending",15)+(isAdmin() ? "Carga de trabajo en la "+weekLabel(mo).toLowerCase()+"." : "Todo el equipo de Formación. Solo tu tarjeta muestra actividades y avance: es tu planificación.")+'</p>';
         h += '<div class="grid-3">';
         state.members.forEach(function(m){
+          var isMine = !isAdmin() && mineOrden != null && m.orden === mineOrden;
+          if (!isAdmin() && !isMine) {
+            h += '<article class="card team-card" style="--team-color:'+m.color+'"><div class="team-top"><div class="team-who">'+avatar(m,52)+"<div><h3>"+esc(m.name)+"</h3><p>"+esc(m.role || "Equipo de Formación")+'</p></div></div></div><p class="team-note" style="margin-top:1rem">Equipo de Formación</p></article>';
+            return;
+          }
           var mine = wa.filter(function(a){return a.member_id===m.orden;});
           var mineDone = mine.filter(function(a){return a.status==="completada";}).length;
           var pct = mine.length ? Math.round(mineDone/mine.length*100) : 0;
-          h += '<article class="card team-card" style="--team-color:'+m.color+'"><div class="team-top"><div class="team-who">'+avatar(m,52)+"<div><h3>"+esc(m.name)+"</h3><p>"+esc(m.role || "Equipo de Formación")+'</p></div></div></div><div class="team-pct"><span class="big">'+pct+'<span>%</span></span><span class="team-count">'+mineDone+"/"+mine.length+' hechas</span></div><div class="team-bar"><div style="width:'+pct+'%"></div></div><p class="team-note">'+(mine.length===0 ? "Sin actividades esta semana" : mine.length+(mine.length===1?" actividad":" actividades")+" esta semana")+"</p></article>";
+          h += '<article class="card team-card" style="--team-color:'+m.color+'"><div class="team-top"><div class="team-who">'+avatar(m,52)+"<div><h3>"+esc(m.name)+(isMine?" · Tú":"")+"</h3><p>"+esc(m.role || "Equipo de Formación")+'</p></div></div></div><div class="team-pct"><span class="big">'+pct+'<span>%</span></span><span class="team-count">'+mineDone+"/"+mine.length+' hechas</span></div><div class="team-bar"><div style="width:'+pct+'%"></div></div><p class="team-note">'+(mine.length===0 ? "Sin actividades esta semana" : mine.length+(mine.length===1?" actividad":" actividades")+" esta semana")+"</p></article>";
         });
         h += "</div></section>";
         main.innerHTML = h;
@@ -1848,13 +2034,6 @@
         return ["ninguna","alta","media","baja"].map(function(s){
           return '<option value="' + s + '"' + (sel === s ? " selected" : "") + '>' + PRIORITY_LABEL[s] + '</option>';
         }).join("");
-      }
-
-      function handleLockButton(){
-        if (canEdit()) { signOutOfGoogle(false); return; }
-        if (typeof firebase === "undefined" || typeof firebase.auth !== "function") { toast("El acceso con Google no se cargó. Recarga la página e inténtalo de nuevo; el tablero sigue en solo lectura.", true); return; }
-        if (!auth) { toast("El acceso con Google todavía se está conectando. Espera un momento e inténtalo de nuevo.", true); return; }
-        signInWithGoogle();
       }
 
       function phrasePlanAnchorMonday(){
@@ -1945,11 +2124,13 @@
         var projOptions = '<option value="">Detectar por el título</option>'
           + '<option value="Proyecto Aperturas"' + (currentProject==="Proyecto Aperturas"?" selected":"") + '>Proyecto Aperturas</option>'
           + '<option value="Proyecto Huella"' + (currentProject==="Proyecto Huella"?" selected":"") + '>Proyecto Huella</option>'
-          + '<option value="Proyecto Formación VALCO, Escuela y Chaski GO"' + (currentProject==="Proyecto Formación VALCO, Escuela y Chaski GO"?" selected":"") + '>Proyecto Formación VALCO, Escuela y Chaski GO</option>'
+          + '<option value="Proyecto Formación VALCO"' + (currentProject==="Proyecto Formación VALCO"?" selected":"") + '>Proyecto Formación VALCO</option>'
+          + '<option value="Proyecto Escuela TGO!"' + (currentProject==="Proyecto Escuela TGO!"?" selected":"") + '>Proyecto Escuela TGO!</option>'
+          + '<option value="Proyecto Chaski GO"' + (currentProject==="Proyecto Chaski GO"?" selected":"") + '>Proyecto Chaski GO</option>'
           + '<option value="Otros proyectos"' + (currentProject==="Otros proyectos"?" selected":"") + '>Otros proyectos</option>';
         var body = '<form class="form" id="objForm">'
           + '<div><label class="flabel" for="oTitle">Objetivo *</label><input class="input" id="oTitle" type="text" placeholder="Ej.: Completar 12 visitas de campo" value="' + esc(o.title) + '"></div>'
-          + '<div><label class="flabel" for="oProject">Proyecto</label><select class="input" id="oProject">' + projOptions + '</select><p class="form-note" style="margin-top:.35rem">Los objetivos del mismo proyecto se juntan en el mismo grupo. Si lo dejas en «Detectar por el título», se agrupa solo por Aperturas, Huella o VALCO / Escuela / Chaski según el nombre.</p></div>'
+          + '<div><label class="flabel" for="oProject">Proyecto</label><select class="input" id="oProject">' + projOptions + '</select><p class="form-note" style="margin-top:.35rem">Los objetivos del mismo proyecto se juntan en el mismo grupo. Si lo dejas en «Detectar por el título», se agrupa solo por Aperturas, Huella, Formación VALCO, Escuela TGO! o Chaski GO según el nombre. Cada proyecto va en su propio grupo: nunca se juntan proyectos distintos.</p></div>'
           + '<div><label class="flabel" for="oDetail">Detalle</label><textarea class="input" id="oDetail" placeholder="Cómo se mide o notas (opcional)">' + esc(o.detail) + '</textarea></div>'
           + '<div class="form-2"><div><label class="flabel" for="oDue">Fecha meta</label><input class="input" id="oDue" type="date" value="' + esc(o.due_date || "") + '"></div>'
           + '<div><label class="flabel" for="oStatus">Estado</label><select class="input" id="oStatus">'
@@ -2009,6 +2190,299 @@
         setTimeout(function(){ var f = $("tTitle"); if (f) f.focus(); }, 50);
       }
 
+      /* ---------- view: Reporte de novedades ---------- */
+      var reportMode = "actividad";
+      var reportFiles = [];
+      function reportWeekActs(){ var mo = monday(), su = addDaysISO(mo, 6); return visibleActivities().filter(function(a){ return a.date >= mo && a.date <= su; }); }
+      function gravedadPillHTML(g){ var st = g === "Alta" ? "background:var(--accent);color:#fff" : g === "Media" ? "background:#000;color:#fff" : "background:var(--surface-2);color:rgba(0,0,0,.75)"; return '<span class="pill" style="' + st + '">' + esc(g || "—") + "</span>"; }
+      function estadoPillHTML(e){ var st = e === "Cerrado" ? "background:#000;color:#fff" : e === "En revisión" ? "background:var(--accent);color:#fff" : "background:var(--surface-2);color:rgba(0,0,0,.75)"; return '<span class="pill" style="' + st + '">' + esc(e || "Recibido") + "</span>"; }
+      /* Comprime una foto a JPEG de menos de ~850 KB en el cliente. */
+      function compressPhoto(file){
+        return new Promise(function(resolve, reject){
+          var url = URL.createObjectURL(file);
+          var img = new Image();
+          img.onload = function(){
+            try {
+              var maxDim = 1280;
+              var scale = Math.min(1, maxDim / Math.max(img.width || 1, img.height || 1));
+              var canvas = document.createElement("canvas");
+              canvas.width = Math.max(1, Math.round(img.width * scale));
+              canvas.height = Math.max(1, Math.round(img.height * scale));
+              canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+              URL.revokeObjectURL(url);
+              var qualities = [0.82, 0.68, 0.54, 0.4];
+              var out = "";
+              for (var i = 0; i < qualities.length; i++){
+                out = canvas.toDataURL("image/jpeg", qualities[i]);
+                if (out.length <= 1130000) break;
+              }
+              var guard = 0;
+              while (out.length > 1130000 && canvas.width > 320 && guard < 6){
+                guard++;
+                var nw = Math.round(canvas.width * 0.75), nh = Math.round(canvas.height * 0.75);
+                var c2 = document.createElement("canvas"); c2.width = nw; c2.height = nh;
+                c2.getContext("2d").drawImage(canvas, 0, 0, nw, nh);
+                canvas = c2;
+                out = canvas.toDataURL("image/jpeg", 0.55);
+              }
+              resolve(out);
+            } catch(e){ reject(e); }
+          };
+          img.onerror = function(){ URL.revokeObjectURL(url); reject(new Error("img")); };
+          img.src = url;
+        });
+      }
+      function renderReporte(main){
+        var wa = reportWeekActs();
+        var mine = myMemberOrden();
+        var h = '<section aria-label="Reporte de novedades"><div class="sec-head"><h2>' + secBadge("report", true) + 'Reporte de novedades</h2></div>';
+        h += '<p style="margin:-.5rem 0 1.25rem;font-size:13.5px;font-weight:600;line-height:1.55;color:var(--dim)">Registra una novedad de una actividad de esta semana o de un local no planificado. Quien reporta eres tú: <strong style="color:#000">' + esc(currentProfile ? currentProfile.name : "") + "</strong>.</p>";
+        h += '<form class="card" id="reportForm" style="padding:1.25rem"><div class="form">';
+        h += '<div><span style="display:block;margin-bottom:.375rem;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#52525b">Actividad o local</span><div class="seg-row" role="group" aria-label="Modo del reporte"><button type="button" data-repmode="actividad" class="' + (reportMode === "actividad" ? "on" : "") + '">Actividad de la semana</button><button type="button" data-repmode="libre" class="' + (reportMode === "libre" ? "on" : "") + '">Local no planificado</button></div></div>';
+        if (reportMode === "actividad") {
+          if (!wa.length) {
+            h += '<p class="form-note">Esta semana no hay actividades disponibles para reportar. Usa «Local no planificado» si la novedad fue en una visita imprevista.</p>';
+          } else {
+            var pre = null;
+            wa.forEach(function(a){ if (pre == null && a.member_id === mine) pre = a.id; });
+            if (pre == null) pre = wa[0].id;
+            h += '<div><label class="flabel" for="rAct">Actividad de la semana</label><select class="input" id="rAct">' + wa.map(function(a){ var m = a.member_id != null ? memberByOrden(a.member_id) : undefined; return '<option value="' + esc(a.id) + '"' + (String(pre) === String(a.id) ? " selected" : "") + ">" + esc(fmtShort(a.date) + " · " + a.title + (m ? " — " + m.name : "")) + "</option>"; }).join("") + "</select></div>";
+            h += '<p class="form-note" id="rActInfo"></p>';
+          }
+        } else {
+          h += '<div><label class="flabel" for="rLocal">Local (escríbelo libremente) *</label><input class="input" id="rLocal" type="text" placeholder="Ej.: Local 123 · Nombre del local"></div>';
+          h += '<div><label class="flabel" for="rMotivo">Motivo de la visita imprevista *</label><input class="input" id="rMotivo" type="text" placeholder="Ej.: Recorrido por una novedad del local"></div>';
+          h += '<div class="form-2"><div><label class="flabel" for="rResp">Responsable</label><select class="input" id="rResp">' + memberOptions(mine) + '</select></div><div><label class="flabel" for="rFechaLibre">Fecha</label><input class="input" id="rFechaLibre" type="date" value="' + TODAY + '" disabled></div></div>';
+        }
+        h += '<div class="form-2"><div><label class="flabel" for="rTipo">Tipo</label><select class="input" id="rTipo"><option>Operativa</option><option>Infraestructura</option><option>Personal</option><option>Seguridad</option><option>Inventario</option><option>Otra</option></select></div>'
+          + '<div><label class="flabel" for="rGravedad">Gravedad</label><select class="input" id="rGravedad"><option>Baja</option><option selected>Media</option><option>Alta</option></select></div></div>';
+        h += '<div><label class="flabel" for="rQuePaso">¿Qué pasó? *</label><textarea class="input" id="rQuePaso" placeholder="Describe la novedad con detalle"></textarea></div>';
+        h += '<div><label class="flabel" for="rAccion">Acción tomada</label><textarea class="input" id="rAccion" placeholder="Qué se hizo en el momento (opcional)"></textarea></div>';
+        h += '<div><label class="flabel" for="rSeg">Seguimiento</label><select class="input" id="rSeg"><option>Resuelta en sitio</option><option>Sin seguimiento</option><option>Lo sigue el responsable</option><option>Escalar a Gio o Anthony</option></select></div>';
+        h += '<div><span style="display:block;margin-bottom:.375rem;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#52525b">Evidencia (máx. 3 fotos)</span><div class="rep-photo-row"><label class="rep-photo-btn">' + icon("camera", 15) + 'Tomar foto<input type="file" id="rTake" accept="image/*" capture="environment" class="hidden"></label><label class="rep-photo-btn alt">' + icon("image", 15) + 'Adjuntar foto<input type="file" id="rAttach" accept="image/*" multiple class="hidden"></label><span class="rep-photo-name" id="rPhotoInfo">Sin fotos</span></div></div>';
+        h += '<div class="form-error" id="formError"></div>';
+        h += '<div class="form-actions"><button type="submit" class="btn-save" id="rSaveBtn">Enviar reporte</button></div>';
+        h += "</div></form>";
+        h += '<div class="sec-head" style="margin-top:2rem"><h2>' + secBadge("clock") + 'Historial de reportes</h2></div>';
+        if (!state.reportsResumen.length) {
+          h += emptyHTML("report", "Todavía no hay reportes", "Cuando alguien registre una novedad, aquí se verá el resumen breve: quién reportó, el local o la actividad y la novedad en corto. Tu propio reporte podrás abrirlo completo; el de otros compañeros, no.", true);
+        } else {
+          state.reportsResumen.forEach(function(r){
+            var lugar = r.modo === "libre" ? (r.local_libre || "Local no planificado") : (r.actividad_titulo || "Actividad de la semana");
+            var own = currentUser && r.reporter_uid === currentUser.uid;
+            h += '<button type="button" class="hist-item" data-report-open="' + esc(r.id) + '"><span class="agenda-ico' + (r.gravedad === "Alta" ? " curso" : "") + '">' + icon("report", 17) + '</span><span class="hist-main"><span class="hist-title" style="display:block">' + esc(lugar) + '</span><p class="hist-brief">' + esc(r.resumen_breve || "") + '</p><span class="hist-meta">' + gravedadPillHTML(r.gravedad) + estadoPillHTML(r.estado) + '<span class="pill pill-meta">' + icon("users", 11) + esc(r.reporter_nombre || "") + '</span><span class="pill pill-meta">' + icon("calendar", 11) + esc(r.fecha || "") + "</span>" + (r.foto_count ? '<span class="pill pill-meta">' + icon("camera", 11) + r.foto_count + (r.foto_count === 1 ? " foto" : " fotos") + "</span>" : "") + (own ? '<span class="pill" style="background:#000;color:#fff">Tu reporte</span>' : "") + "</span></span></button>";
+          });
+        }
+        h += "</section>";
+        main.innerHTML = h;
+        bindReportForm(main);
+      }
+      function bindReportForm(main){
+        var modes = main.querySelectorAll("[data-repmode]");
+        for (var i = 0; i < modes.length; i++) modes[i].addEventListener("click", function(){ reportMode = this.getAttribute("data-repmode"); reportFiles = []; render(); });
+        var actSel = $("rAct");
+        function actInfo(){
+          if (!actSel) return;
+          var a = activityById(actSel.value);
+          var info = $("rActInfo");
+          if (a && info) {
+            var m = a.member_id != null ? memberByOrden(a.member_id) : undefined;
+            info.textContent = "Responsable: " + (m ? m.name : "Sin asignar") + " · Fecha: " + fmtFull(a.date) + (a.place ? " · Lugar: " + a.place : "");
+          }
+        }
+        if (actSel) { actSel.addEventListener("change", actInfo); actInfo(); }
+        function photoInfo(){
+          var el = $("rPhotoInfo");
+          if (el) el.textContent = reportFiles.length ? reportFiles.length + (reportFiles.length === 1 ? " foto lista: " : " fotos listas: ") + reportFiles.map(function(f){ return f.name; }).join(", ") : "Sin fotos";
+        }
+        function addFiles(list){
+          if (!list) return;
+          for (var j = 0; j < list.length; j++) {
+            if (reportFiles.length >= 3) { toast("Máximo 3 fotos por reporte.", true); break; }
+            reportFiles.push(list[j]);
+          }
+          photoInfo();
+        }
+        var tk = $("rTake"), at = $("rAttach");
+        if (tk) tk.addEventListener("change", function(){ addFiles(this.files); this.value = ""; });
+        if (at) at.addEventListener("change", function(){ addFiles(this.files); this.value = ""; });
+        var form = $("reportForm");
+        if (form) form.addEventListener("submit", function(ev){ ev.preventDefault(); submitReport(); });
+        var opens = main.querySelectorAll("[data-report-open]");
+        for (var k = 0; k < opens.length; k++) opens[k].addEventListener("click", function(){ handleReportOpen(this.getAttribute("data-report-open")); });
+      }
+      function submitReport(){
+        if (!currentProfile || !currentUser) return;
+        if (!requireDb()) return;
+        var quePaso = $("rQuePaso").value.trim();
+        if (!quePaso) { formError("Describe qué pasó: es el campo principal del reporte."); return; }
+        var modo = reportMode, actividadId = null, actividadTitulo = "", localLibre = "", motivo = "", responsableNombre = "", fecha = TODAY;
+        if (modo === "actividad") {
+          var sel = $("rAct");
+          if (!sel) { formError("No hay actividad seleccionada. Usa «Local no planificado»."); return; }
+          var a = activityById(sel.value);
+          if (!a) { formError("La actividad seleccionada ya no existe."); return; }
+          actividadId = a.id; actividadTitulo = a.title; fecha = a.date;
+          var m = a.member_id != null ? memberByOrden(a.member_id) : undefined;
+          responsableNombre = m ? m.name : "";
+        } else {
+          localLibre = $("rLocal").value.trim();
+          motivo = $("rMotivo").value.trim();
+          if (!localLibre) { formError("Escribe el local de la visita no planificada."); return; }
+          if (!motivo) { formError("Escribe el motivo de la visita imprevista."); return; }
+          var rv = $("rResp").value;
+          var rm = rv === "" ? undefined : memberById(Number(rv));
+          responsableNombre = rm ? rm.name : currentProfile.name;
+        }
+        var tipo = $("rTipo").value, gravedad = $("rGravedad").value, accion = $("rAccion").value.trim(), seg = $("rSeg").value;
+        var btn = $("rSaveBtn"); btn.disabled = true; btn.textContent = "Enviando…";
+        var photoPromises = reportFiles.slice(0, 3).map(function(f){ return compressPhoto(f); });
+        Promise.all(photoPromises).then(function(dataUrls){
+          var nowIso = new Date().toISOString();
+          var ref = db.collection("reportes_resumen").doc();
+          var id = ref.id;
+          var resumen = { reporter_uid: currentUser.uid, reporter_nombre: currentProfile.name, modo: modo, actividad_id: actividadId, actividad_titulo: actividadTitulo, local_libre: localLibre, responsable_nombre: responsableNombre, fecha: fecha, tipo: tipo, gravedad: gravedad, resumen_breve: quePaso.slice(0, 140), foto_count: dataUrls.length, estado: "Recibido", created_at: nowIso };
+          var detalle = { reporter_uid: currentUser.uid, reporter_nombre: currentProfile.name, modo: modo, actividad_id: actividadId, actividad_titulo: actividadTitulo, local_libre: localLibre, responsable_nombre: responsableNombre, fecha: fecha, tipo: tipo, gravedad: gravedad, que_paso: quePaso, accion_tomada: accion, seguimiento: seg, motivo_imprevisto: motivo, estado: "Recibido", created_at: nowIso };
+          var batch = db.batch();
+          batch.set(ref, resumen);
+          var dRef = db.collection("reportes_detalle").doc(id);
+          batch.set(dRef, detalle);
+          dataUrls.forEach(function(du, idx){ batch.set(dRef.collection("fotos").doc("foto" + (idx + 1)), { dataUrl: du, created_at: nowIso }); });
+          return batch.commit();
+        }).then(function(){
+          reportFiles = [];
+          toast("Reporte enviado · queda en el historial breve para el equipo");
+          render();
+        }).catch(function(err){
+          console.error(err);
+          btn.disabled = false; btn.textContent = "Enviar reporte";
+          formError("No se pudo enviar el reporte. Revisa tu conexión e inténtalo de nuevo.");
+        });
+      }
+      function handleReportOpen(id){
+        var r = null;
+        state.reportsResumen.forEach(function(x){ if (x.id === id) r = x; });
+        if (!r) return;
+        var own = currentUser && r.reporter_uid === currentUser.uid;
+        if (!isAdmin() && !own) {
+          openModal("Detalle no disponible", '<p class="form-note">Este reporte es de otro compañero. Solo puedes abrir <strong>tus propios reportes</strong> completos; el detalle de los demás lo revisan Anthony y Gio.</p>');
+          return;
+        }
+        openReportDetail(id, r);
+      }
+      function openReportDetail(id, resumen){
+        if (!requireDb()) return;
+        openModal("Detalle del reporte", '<p class="form-note">Cargando detalle…</p>');
+        db.collection("reportes_detalle").doc(id).get().then(function(doc){
+          var d = doc.exists ? (doc.data() || {}) : {};
+          return db.collection("reportes_detalle").doc(id).collection("fotos").get().then(function(fs){
+            var photos = [];
+            fs.forEach(function(fd){ var v = fd.data(); if (v && v.dataUrl) photos.push(v.dataUrl); });
+            return { d: d, photos: photos };
+          });
+        }).then(function(res){
+          var d = res.d;
+          var lugar = resumen.modo === "libre" ? (resumen.local_libre || d.local_libre || "Local no planificado") : (resumen.actividad_titulo || d.actividad_titulo || "Actividad de la semana");
+          function kv(k, v){ return v ? '<div class="detail-kv"><p class="dk">' + k + '</p><p class="dv">' + esc(v) + "</p></div>" : ""; }
+          var body = "";
+          body += kv("Local / Actividad", lugar);
+          body += kv("Reportó", resumen.reporter_nombre || d.reporter_nombre);
+          body += kv("Responsable", resumen.responsable_nombre || d.responsable_nombre);
+          body += kv("Fecha", resumen.fecha || d.fecha);
+          body += kv("Tipo · Gravedad", ((resumen.tipo || d.tipo || "") + " · " + (resumen.gravedad || d.gravedad || "")).trim());
+          body += kv("Motivo de la visita imprevista", d.motivo_imprevisto);
+          body += kv("¿Qué pasó?", d.que_paso);
+          body += kv("Acción tomada", d.accion_tomada);
+          body += kv("Seguimiento", d.seguimiento);
+          body += kv("Estado", resumen.estado || d.estado || "Recibido");
+          if (res.photos.length) body += '<div class="detail-kv"><p class="dk">Evidencia</p><div class="detail-photos" style="margin-top:.5rem">' + res.photos.map(function(p){ return '<img src="' + p + '" alt="Foto de evidencia del reporte">'; }).join("") + "</div></div>";
+          if (isAdmin()) {
+            body += '<form class="form" id="repEstadoForm" style="margin-top:1rem"><div><label class="flabel" for="repEstado">Cambiar estado</label><select class="input" id="repEstado">' + ["Recibido", "En revisión", "Cerrado"].map(function(e){ return '<option value="' + e + '"' + ((resumen.estado || "Recibido") === e ? " selected" : "") + ">" + e + "</option>"; }).join("") + '</select></div><div class="form-actions"><button type="submit" class="btn-save" id="repEstadoBtn">Guardar estado</button></div></form>';
+          } else {
+            body += '<p class="form-note" style="margin-top:1rem">Es tu reporte: puedes verlo completo con sus fotos, pero no editarlo. Solo Anthony y Gio pueden cambiar su estado.</p>';
+          }
+          openModal("Detalle del reporte", body);
+          if (isAdmin()) {
+            $("repEstadoForm").addEventListener("submit", function(ev){
+              ev.preventDefault();
+              var nuevo = $("repEstado").value;
+              var btn = $("repEstadoBtn"); btn.disabled = true; btn.textContent = "Guardando…";
+              var batch = db.batch();
+              batch.update(db.collection("reportes_resumen").doc(id), { estado: nuevo });
+              batch.update(db.collection("reportes_detalle").doc(id), { estado: nuevo });
+              batch.commit().then(function(){ toast("Estado del reporte: " + nuevo); closeModal(); }).catch(function(err){ console.error(err); btn.disabled = false; btn.textContent = "Guardar estado"; toast("No se pudo guardar el estado del reporte.", true); });
+            });
+          }
+        }).catch(function(err){
+          console.error(err);
+          openModal("Detalle del reporte", '<p class="form-note">No se pudo cargar el detalle. Revisa tu conexión e inténtalo de nuevo.</p>');
+        });
+      }
+
+      /* ---------- view: Datos del equipo (solo admins) ---------- */
+      var KNOWN_POSTULACION = [
+        { match: "paulina", estado: "Postulando", fecha: "2026-10-01" },
+        { match: "dennise", estado: "Postulando", fecha: "2026-11-30" }
+      ];
+      function emailSlugForMember(m){
+        var first = normName(m.name).split(" ")[0];
+        for (var i = 0; i < PROFILES.length; i++) if (normName(PROFILES[i].name).split(" ")[0] === first) return PROFILES[i].email.split("@")[0];
+        return "";
+      }
+      function datosForMember(m){
+        var slug = emailSlugForMember(m);
+        var doc = slug ? (state.datosEquipo[slug] || null) : null;
+        var known = null, nn = normName(m.name);
+        KNOWN_POSTULACION.forEach(function(k){ if (nn.indexOf(k.match) !== -1) known = k; });
+        return { slug: slug, doc: doc, estado: (doc && doc.postulacion_estado) || (known ? known.estado : "Con cargo"), fecha: (doc && doc.postulacion_fecha) || (known ? known.fecha : "") };
+      }
+      function renderDatos(main){
+        if (!isAdmin()) { view = "semana"; renderSemana(main); return; }
+        var h = '<section aria-label="Datos del equipo"><div class="sec-head"><h2>' + secBadge("idcard", true) + 'Datos del equipo</h2></div>';
+        h += '<p style="margin:-.5rem 0 1.25rem;font-size:13.5px;font-weight:600;line-height:1.55;color:var(--dim)">Información interna del equipo. Solo la ven Anthony y Gio con su acceso de administrador.</p>';
+        h += '<div class="datos-grid">';
+        state.members.forEach(function(m){
+          var info = datosForMember(m);
+          var doc = info.doc || {};
+          var fechaTxt = info.fecha ? fmtFull(info.fecha) : "";
+          h += '<article class="card datos-card"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem"><div class="team-who">' + avatar(m, 48) + "<div><h3>" + esc(doc.nombre || m.name) + "</h3><p>" + esc(doc.rol || m.role || "Equipo de Formación") + '</p></div></div><button type="button" class="icon-btn" data-datos-edit="' + m.orden + '" aria-label="Editar datos de ' + esc(m.name) + '">' + icon("pencil", 15) + "</button></div>"
+            + '<div class="datos-rows">'
+            + "<p><strong>Postulación:</strong> " + esc(info.estado) + (fechaTxt ? " · desde el " + esc(fechaTxt) : "") + "</p>"
+            + "<p><strong>Cédula:</strong> " + esc(doc.cedula || "—") + "</p>"
+            + "<p><strong>Teléfono:</strong> " + esc(doc.telefono || "—") + "</p>"
+            + "<p><strong>Correo:</strong> " + esc(doc.correo || "—") + "</p>"
+            + "</div></article>";
+        });
+        h += "</div></section>";
+        main.innerHTML = h;
+        var eb = main.querySelectorAll("[data-datos-edit]");
+        for (var i = 0; i < eb.length; i++) eb[i].addEventListener("click", function(){ var m = memberByOrden(Number(this.getAttribute("data-datos-edit"))); if (m) openDatosModal(m); });
+      }
+      function openDatosModal(m){
+        if (!guardEdit()) return;
+        var info = datosForMember(m);
+        if (!info.slug) { toast("No se encontró la cuenta de acceso de esta persona.", true); return; }
+        var doc = info.doc || {};
+        var body = '<form class="form" id="datosForm">'
+          + '<div><label class="flabel" for="dNombre">Nombre</label><input class="input" id="dNombre" type="text" value="' + esc(doc.nombre || m.name) + '"></div>'
+          + '<div><label class="flabel" for="dRol">Rol</label><input class="input" id="dRol" type="text" value="' + esc(doc.rol || m.role || "") + '"></div>'
+          + '<div class="form-2"><div><label class="flabel" for="dPostEstado">Postulación · estado</label><input class="input" id="dPostEstado" type="text" placeholder="Ej.: Con cargo / Postulando" value="' + esc(info.estado) + '"></div>'
+          + '<div><label class="flabel" for="dPostFecha">Postulación · desde</label><input class="input" id="dPostFecha" type="date" value="' + esc(info.fecha || "") + '"></div></div>'
+          + '<div><label class="flabel" for="dCedula">Cédula</label><input class="input" id="dCedula" type="text" value="' + esc(doc.cedula || "") + '"></div>'
+          + '<div class="form-2"><div><label class="flabel" for="dTelefono">Teléfono</label><input class="input" id="dTelefono" type="text" value="' + esc(doc.telefono || "") + '"></div>'
+          + '<div><label class="flabel" for="dCorreo">Correo</label><input class="input" id="dCorreo" type="text" value="' + esc(doc.correo || "") + '"></div></div>'
+          + '<div class="form-error" id="formError"></div>'
+          + '<div class="form-actions"><button type="submit" class="btn-save" id="datosSaveBtn">Guardar datos</button></div></form>';
+        openModal("Datos de " + m.name, body);
+        $("datosForm").addEventListener("submit", function(ev){
+          ev.preventDefault();
+          if (!requireDb()) return;
+          var data = { nombre: $("dNombre").value.trim(), rol: $("dRol").value.trim(), postulacion_estado: $("dPostEstado").value.trim(), postulacion_fecha: $("dPostFecha").value || "", cedula: $("dCedula").value.trim(), telefono: $("dTelefono").value.trim(), correo: $("dCorreo").value.trim() };
+          var btn = $("datosSaveBtn"); btn.disabled = true; btn.textContent = "Guardando…";
+          db.collection("datos_equipo").doc(info.slug).set(data, { merge: true }).then(function(){ toast("Datos guardados"); closeModal(); }).catch(function(err){ writeError(err); btn.disabled = false; btn.textContent = "Guardar datos"; });
+        });
+      }
+
       /* ---------- render root ---------- */
       function render(){
         renderHeader();
@@ -2024,6 +2498,8 @@
         else if (view === "objetivos") renderObjetivos(main);
         else if (view === "temas") renderTemas(main);
         else if (view === "equipo") renderEquipo(main);
+        else if (view === "reporte") renderReporte(main);
+        else if (view === "datos") renderDatos(main);
       }
       document.getElementById("weekPrev").innerHTML = icon("chevL",18);
       document.getElementById("weekNext").innerHTML = icon("chevR",18);
@@ -2037,8 +2513,12 @@
         else openActivityModal(null, monday());
       });
       document.addEventListener("keydown", function(e){ if (e.key === "Escape") closeModal(); });
-      var lockBtn = document.getElementById("editLockBtn");
-      if (lockBtn) lockBtn.addEventListener("click", handleLockButton);
+      var loginForm = document.getElementById("loginForm");
+      if (loginForm) loginForm.addEventListener("submit", function(ev){ ev.preventDefault(); signInWithCredentials(); });
+      var logoutBtn = document.getElementById("logoutBtn");
+      if (logoutBtn) logoutBtn.addEventListener("click", function(){ signOutSession(false); });
+      var cpBtn = document.getElementById("changePassBtn");
+      if (cpBtn) cpBtn.addEventListener("click", function(){ openChangePasswordModal(); });
       updateLockUI();
       render();
       initFirebase();
