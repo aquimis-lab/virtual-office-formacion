@@ -556,6 +556,26 @@
       .obj-pending li .pmeta.nc{color:var(--accent-ink)}
       .obj-empty-note{margin-top:1rem;border-radius:.75rem;background:var(--surface-2);padding:.75rem .85rem;font-size:13.5px;font-weight:700;color:var(--dim)}
       .obj-done-note{margin-top:1rem;border-radius:.75rem;background:#000;color:#fff;padding:.75rem .85rem;font-size:13.5px;font-weight:700}
+      /* Subpestañas de Reporte (solo admins): Reporte de novedades / Repositorio */
+      .rep-subtabs{display:flex;gap:.25rem;border-radius:1rem;background:var(--surface-2);padding:.375rem;margin-bottom:1.25rem}
+      .rep-subtab{flex:1;display:flex;align-items:center;justify-content:center;gap:.375rem;border-radius:.75rem;padding:.625rem .5rem;font-size:13px;font-weight:800;color:#52525b;transition:all .15s;min-height:2.75rem}
+      @media(min-width:640px){.rep-subtab{font-size:.875rem}}
+      .rep-subtab:hover{color:#000}
+      .rep-subtab.active{background:#000;color:#fff;box-shadow:0 8px 20px -8px rgba(0,0,0,.5)}
+      .rep-subtab .count{border-radius:999px;padding:2px 6px;font-size:11px;font-weight:900;background:#fff;color:var(--dim);box-shadow:inset 0 0 0 1px var(--border)}
+      .rep-subtab.active .count{background:var(--accent);color:#fff;box-shadow:none}
+      .repo-filters{display:grid;gap:.75rem}
+      @media(min-width:640px){.repo-filters{grid-template-columns:1fr 1fr 1fr}}
+      .repo-day-row{display:flex;gap:.5rem;align-items:stretch}
+      .repo-day-row .input{flex:1;min-width:0}
+      .repo-all-btn{flex-shrink:0;border-radius:.75rem;padding:.5rem .8rem;font-size:13px;font-weight:800;background:#fff;color:#52525b;box-shadow:inset 0 0 0 1px var(--border-strong);min-height:2.5rem}
+      .repo-all-btn.on{background:#000;color:#fff;box-shadow:none}
+      .repo-count{margin:0 0 1rem;font-size:13.5px;font-weight:700;color:var(--dim)}
+      .repo-count strong{color:#000}
+      .repo-item{display:flex;gap:.5rem;align-items:flex-start}
+      .repo-item .hist-main-btn{flex:1;min-width:0;text-align:left;display:flex;gap:.75rem;align-items:flex-start;padding:0;min-height:0;cursor:pointer}
+      .repo-del{flex-shrink:0;display:inline-flex;align-items:center;gap:.35rem;border-radius:999px;padding:.5rem .8rem;font-size:12px;font-weight:800;background:#fff;color:var(--accent-ink);box-shadow:inset 0 0 0 1px #fecdd3;min-height:2.25rem;transition:all .15s}
+      .repo-del:hover{background:var(--accent);color:#fff;box-shadow:none}
       .hidden{display:none !important}
     </style>
   </head>
@@ -2420,6 +2440,29 @@
       /* Rango elegido por el admin para el PDF de novedades (Desde/Hasta);
          por defecto, del lunes de la semana actual a hoy. */
       var pdfDesde = null, pdfHasta = null;
+      /* Subpestañas de Reporte SOLO para admins: "novedades" (el formulario
+         de siempre) y "repositorio" (todos los reportes, con filtros).
+         El equipo no ve subpestañas: sigue con formulario + historial. */
+      var reportSubTab = "novedades";
+      /* Filtros combinables del Repositorio (admins): "" = sin filtro. */
+      var repoFilterDay = "";       /* un día ISO concreto, o "" = Todos */
+      var repoFilterReporter = "";  /* reporter_nombre exacto, o "" = Todos */
+      var repoFilterTipo = "";      /* tipo de novedad, o "" = Todas */
+      var REPORT_TIPOS = ["Operativa", "Infraestructura", "Personal", "Seguridad", "Inventario", "Otra"];
+      function reportLugar(r){ return r.modo === "libre" ? (r.local_libre || "Local no planificado") : (r.actividad_titulo || "Actividad de la semana"); }
+      function repoMatchesFilters(r){
+        if (repoFilterDay && r.fecha !== repoFilterDay) return false;
+        if (repoFilterReporter && (r.reporter_nombre || "") !== repoFilterReporter) return false;
+        if (repoFilterTipo && (r.tipo || "") !== repoFilterTipo) return false;
+        return true;
+      }
+      function repoFilteredReports(){ return state.reportsResumen.filter(repoMatchesFilters); }
+      function repoReporterNames(){
+        var seen = {}, names = [];
+        PROFILES.forEach(function(p){ if (!seen[p.name]) { seen[p.name] = true; names.push(p.name); } });
+        state.reportsResumen.forEach(function(r){ var n = r.reporter_nombre || ""; if (n && !seen[n]) { seen[n] = true; names.push(n); } });
+        return names;
+      }
       function reportWeekActs(){ var mo = monday(), su = addDaysISO(mo, 6); return visibleActivities().filter(function(a){ return a.date >= mo && a.date <= su; }); }
       function gravedadPillHTML(g){ var st = g === "Alta" ? "background:var(--accent);color:#fff" : g === "Media" ? "background:#000;color:#fff" : "background:var(--surface-2);color:rgba(0,0,0,.75)"; return '<span class="pill" style="' + st + '">' + esc(g || "—") + "</span>"; }
       function estadoPillHTML(e){ var st = e === "Cerrado" ? "background:#000;color:#fff" : e === "En revisión" ? "background:var(--accent);color:#fff" : "background:var(--surface-2);color:rgba(0,0,0,.75)"; return '<span class="pill" style="' + st + '">' + esc(e || "Recibido") + "</span>"; }
@@ -2459,10 +2502,82 @@
           img.src = url;
         });
       }
+      /* ---------- Repositorio de reportes (solo admins) ----------
+         Todos los reportes con filtros combinables por día, por formador
+         (quien reportó) y por tipo de novedad. Cada fila abre el detalle
+         completo con fotos y cambio de estado (openReportDetail, como
+         siempre); aquí mismo van el botón Borrar reporte de cada fila y
+         la descarga PDF por Desde/Hasta respetando los filtros activos. */
+      function renderRepositorioHTML(){
+        if (!pdfDesde) { pdfDesde = mondayOfISO(TODAY); pdfHasta = TODAY; }
+        var filtered = repoFilteredReports();
+        var anyFilter = !!(repoFilterDay || repoFilterReporter || repoFilterTipo);
+        var h = '<p style="margin:-.25rem 0 1.25rem;font-size:13.5px;font-weight:600;line-height:1.55;color:var(--dim)">Repositorio de <strong style="color:#000">todos los reportes</strong> del equipo. Filtra por día, por formador y por tipo de novedad —los filtros se combinan— y toca un reporte para ver su detalle completo con fotos y cambiar su estado.</p>';
+        h += '<div class="card" style="padding:1.25rem;margin-bottom:1.25rem"><div class="repo-filters">'
+          + '<div><label class="flabel" for="repoDay">Por día</label><div class="repo-day-row"><input class="input" id="repoDay" type="date" value="' + esc(repoFilterDay) + '"><button type="button" class="repo-all-btn' + (repoFilterDay ? "" : " on") + '" id="repoDayAll" aria-pressed="' + (!repoFilterDay) + '">Todos</button></div></div>'
+          + '<div><label class="flabel" for="repoReporter">Por formador</label><select class="input" id="repoReporter"><option value=""' + (repoFilterReporter ? "" : " selected") + '>Todos</option>' + repoReporterNames().map(function(n){ return '<option value="' + esc(n) + '"' + (repoFilterReporter === n ? " selected" : "") + ">" + esc(n) + "</option>"; }).join("") + "</select></div>"
+          + '<div><label class="flabel" for="repoTipo">Por novedad</label><select class="input" id="repoTipo"><option value=""' + (repoFilterTipo ? "" : " selected") + '>Todas</option>' + REPORT_TIPOS.map(function(t){ return '<option value="' + esc(t) + '"' + (repoFilterTipo === t ? " selected" : "") + ">" + esc(t) + "</option>"; }).join("") + "</select></div>"
+          + "</div>"
+          + (anyFilter ? '<div style="margin-top:1rem"><button type="button" class="chip" id="repoClearFilters">' + icon("x", 13, 2.6) + ' Limpiar filtros</button></div>' : "")
+          + "</div>";
+        h += '<div class="sec-head" style="margin-top:0"><h2>' + secBadge("box", true) + 'PDF de novedades</h2></div>';
+        h += '<div class="card" style="padding:1.25rem;margin-bottom:1.5rem"><p style="margin:0 0 1rem;font-size:13.5px;font-weight:600;line-height:1.55;color:var(--dim)">Descarga un PDF con las novedades entre los días que elijas —desde y hasta incluidos—, ordenadas por fecha, con el detalle completo y las fotos de evidencia. Si hay filtros activos arriba, el PDF incluye solo los reportes del rango que cumplen esos filtros.</p>'
+          + '<div class="form"><div class="form-2"><div><label class="flabel" for="pdfDesde">Desde</label><input class="input" id="pdfDesde" type="date" value="' + esc(pdfDesde) + '"></div>'
+          + '<div><label class="flabel" for="pdfHasta">Hasta</label><input class="input" id="pdfHasta" type="date" value="' + esc(pdfHasta) + '"></div></div>'
+          + '<div class="form-actions"><button type="button" class="btn-save" id="pdfBtn">Descargar PDF</button></div></div></div>';
+        h += '<p class="repo-count" role="status">' + (anyFilter ? "Mostrando <strong>" + filtered.length + "</strong> de " + state.reportsResumen.length + (state.reportsResumen.length === 1 ? " reporte" : " reportes") + " con los filtros activos." : "<strong>" + filtered.length + "</strong> " + (filtered.length === 1 ? "reporte" : "reportes") + " en el repositorio.") + "</p>";
+        if (!state.reportsResumen.length) {
+          h += emptyHTML("report", "Todavía no hay reportes", "Cuando alguien registre una novedad, aparecerá aquí con su fecha, quién reportó, la actividad o local, el responsable, el tipo, la gravedad, el estado y un resumen breve.", true);
+        } else if (!filtered.length) {
+          h += emptyHTML("report", "Ningún reporte cumple esos filtros", "Prueba con otro día, otro formador u otro tipo de novedad, o limpia los filtros para ver todo el repositorio.", true);
+        } else {
+          filtered.forEach(function(r){
+            var lugar = reportLugar(r);
+            var own = currentUser && r.reporter_uid === currentUser.uid;
+            h += '<div class="hist-item repo-item"><button type="button" class="hist-main-btn" data-report-open="' + esc(r.id) + '" aria-label="Abrir el reporte de ' + esc(lugar) + '"><span class="agenda-ico' + (r.gravedad === "Alta" ? " curso" : "") + '">' + icon("report", 17) + '</span><span class="hist-main"><span class="hist-title" style="display:block">' + esc(lugar) + '</span><p class="hist-brief">' + esc(r.resumen_breve || "") + '</p><span class="hist-meta">'
+              + '<span class="pill pill-meta">' + icon("calendar", 11) + esc(r.fecha || "") + "</span>"
+              + '<span class="pill pill-meta">' + icon("users", 11) + "Reportó: " + esc(r.reporter_nombre || "") + "</span>"
+              + (r.responsable_nombre ? '<span class="pill pill-meta">' + icon("checkCircle", 11) + "Responsable: " + esc(r.responsable_nombre) + "</span>" : "")
+              + '<span class="pill pill-meta">' + esc(r.tipo || "—") + "</span>"
+              + gravedadPillHTML(r.gravedad) + estadoPillHTML(r.estado)
+              + (r.foto_count ? '<span class="pill pill-meta">' + icon("camera", 11) + r.foto_count + (r.foto_count === 1 ? " foto" : " fotos") + "</span>" : "")
+              + (own ? '<span class="pill" style="background:#000;color:#fff">Tu reporte</span>' : "")
+              + "</span></span></button>"
+              + '<button type="button" class="repo-del" data-report-delete="' + esc(r.id) + '" aria-label="Borrar el reporte de ' + esc(lugar) + '">' + icon("trash", 13, 2.4) + 'Borrar reporte</button></div>';
+          });
+        }
+        return h;
+      }
+      /* Confirmación para borrar un reporte desde el Repositorio:
+         mismo borrado de siempre (resumen + detalle + fotos). */
+      function openDeleteReportConfirm(id){
+        if (!isAdmin()) return;
+        var r = null;
+        state.reportsResumen.forEach(function(x){ if (x.id === id) r = x; });
+        var lugar = r ? reportLugar(r) : "este reporte";
+        var body = '<p class="form-note">Vas a borrar el reporte de <strong>' + esc(lugar) + "</strong>" + (r ? " (" + esc(r.fecha || "") + " · " + esc(r.reporter_nombre || "") + ")" : "") + '. Se elimina con su detalle y sus fotos de evidencia, y desaparece del historial para todos. Esta acción no se puede deshacer.</p>'
+          + deleteBlockHTML().replace("Eliminar", "Borrar reporte").replace("Sí, eliminar", "Sí, borrar");
+        openModal("Borrar reporte", body);
+        bindDelete(function(){ deleteReport(id); });
+      }
       function renderReporte(main){
         var wa = reportWeekActs();
         var mine = myMemberOrden();
+        var admin = isAdmin();
         var h = '<section aria-label="Reporte de novedades"><div class="sec-head"><h2>' + secBadge("report", true) + 'Reporte de novedades</h2></div>';
+        if (admin) {
+          /* Solo admins: dos subpestañas. El equipo nunca ve esto. */
+          h += '<div class="rep-subtabs" role="group" aria-label="Apartados de Reporte">'
+            + '<button type="button" class="rep-subtab' + (reportSubTab === "novedades" ? " active" : "") + '" data-repsubtab="novedades" aria-pressed="' + (reportSubTab === "novedades") + '">' + icon("report", 15, 2.2) + 'Reporte de novedades</button>'
+            + '<button type="button" class="rep-subtab' + (reportSubTab === "repositorio" ? " active" : "") + '" data-repsubtab="repositorio" aria-pressed="' + (reportSubTab === "repositorio") + '">' + icon("box", 15, 2.2) + 'Repositorio' + (state.reportsResumen.length ? '<span class="count">' + state.reportsResumen.length + "</span>" : "") + "</button></div>";
+          if (reportSubTab === "repositorio") {
+            h += renderRepositorioHTML();
+            h += "</section>";
+            main.innerHTML = h;
+            bindReportForm(main);
+            return;
+          }
+        }
         h += '<p style="margin:-.5rem 0 1.25rem;font-size:13.5px;font-weight:600;line-height:1.55;color:var(--dim)">Registra una novedad de una actividad de esta semana o de un local no planificado. Quien reporta eres tú: <strong style="color:#000">' + esc(currentProfile ? currentProfile.name : "") + "</strong>.</p>";
         h += '<form class="card" id="reportForm" style="padding:1.25rem"><div class="form">';
         h += '<div><span style="display:block;margin-bottom:.375rem;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#52525b">Actividad o local</span><div class="seg-row" role="group" aria-label="Modo del reporte"><button type="button" data-repmode="actividad" class="' + (reportMode === "actividad" ? "on" : "") + '">Actividad de la semana</button><button type="button" data-repmode="libre" class="' + (reportMode === "libre" ? "on" : "") + '">Local no planificado</button></div></div>';
@@ -2490,13 +2605,14 @@
         h += '<div class="form-error" id="formError"></div>';
         h += '<div class="form-actions"><button type="submit" class="btn-save" id="rSaveBtn">Enviar reporte</button></div>';
         h += "</div></form>";
-        if (isAdmin()) {
-          if (!pdfDesde) { pdfDesde = mondayOfISO(TODAY); pdfHasta = TODAY; }
-          h += '<div class="sec-head" style="margin-top:2rem"><h2>' + secBadge("box", true) + 'PDF de novedades</h2></div>';
-          h += '<div class="card" style="padding:1.25rem"><p style="margin:0 0 1rem;font-size:13.5px;font-weight:600;line-height:1.55;color:var(--dim)">Solo admins. Descarga un PDF con las novedades reportadas entre los días que elijas —desde y hasta incluidos—, ordenadas por fecha, con el detalle completo y las fotos de evidencia.</p>'
-            + '<div class="form"><div class="form-2"><div><label class="flabel" for="pdfDesde">Desde</label><input class="input" id="pdfDesde" type="date" value="' + esc(pdfDesde) + '"></div>'
-            + '<div><label class="flabel" for="pdfHasta">Hasta</label><input class="input" id="pdfHasta" type="date" value="' + esc(pdfHasta) + '"></div></div>'
-            + '<div class="form-actions"><button type="button" class="btn-save" id="pdfBtn">Descargar PDF</button></div></div></div>';
+        /* Admins: el PDF y la lista completa viven en la subpestaña
+           Repositorio; esta subpestaña es solo para reportar.
+           El equipo sigue como siempre: formulario + historial breve. */
+        if (admin) {
+          h += "</section>";
+          main.innerHTML = h;
+          bindReportForm(main);
+          return;
         }
         h += '<div class="sec-head" style="margin-top:2rem"><h2>' + secBadge("clock") + 'Historial de reportes</h2></div>';
         if (!state.reportsResumen.length) {
@@ -2513,6 +2629,20 @@
         bindReportForm(main);
       }
       function bindReportForm(main){
+        var subtabs = main.querySelectorAll("[data-repsubtab]");
+        for (var s = 0; s < subtabs.length; s++) subtabs[s].addEventListener("click", function(){ reportSubTab = this.getAttribute("data-repsubtab"); render(); });
+        var repoDayEl = $("repoDay");
+        if (repoDayEl) repoDayEl.addEventListener("change", function(){ repoFilterDay = this.value || ""; render(); });
+        var repoDayAll = $("repoDayAll");
+        if (repoDayAll) repoDayAll.addEventListener("click", function(){ repoFilterDay = ""; render(); });
+        var repoRepEl = $("repoReporter");
+        if (repoRepEl) repoRepEl.addEventListener("change", function(){ repoFilterReporter = this.value || ""; render(); });
+        var repoTipoEl = $("repoTipo");
+        if (repoTipoEl) repoTipoEl.addEventListener("change", function(){ repoFilterTipo = this.value || ""; render(); });
+        var repoClear = $("repoClearFilters");
+        if (repoClear) repoClear.addEventListener("click", function(){ repoFilterDay = ""; repoFilterReporter = ""; repoFilterTipo = ""; render(); });
+        var dels = main.querySelectorAll("[data-report-delete]");
+        for (var di = 0; di < dels.length; di++) dels[di].addEventListener("click", function(){ openDeleteReportConfirm(this.getAttribute("data-report-delete")); });
         var modes = main.querySelectorAll("[data-repmode]");
         for (var i = 0; i < modes.length; i++) modes[i].addEventListener("click", function(){ reportMode = this.getAttribute("data-repmode"); reportFiles = []; render(); });
         var actSel = $("rAct");
@@ -2716,9 +2846,11 @@
         if (!requireDb()) return;
         if (!desde || !hasta) { toast("Elige las fechas Desde y Hasta para generar el PDF.", true); return; }
         if (desde > hasta) { toast("La fecha Desde no puede ser mayor que la fecha Hasta.", true); return; }
-        var list = state.reportsResumen.filter(function(r){ return r.fecha >= desde && r.fecha <= hasta; });
+        /* El PDF incluye los reportes del rango que cumplen los filtros
+           activos del Repositorio (día, formador y tipo de novedad). */
+        var list = state.reportsResumen.filter(function(r){ return r.fecha >= desde && r.fecha <= hasta && repoMatchesFilters(r); });
         list.sort(function(a, b){ return a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : (String(a.created_at || "") < String(b.created_at || "") ? -1 : String(a.created_at || "") > String(b.created_at || "") ? 1 : 0); });
-        if (!list.length) { toast("No hay reportes entre el " + fmtShort(desde) + " y el " + fmtShort(hasta) + ".", true); return; }
+        if (!list.length) { toast("No hay reportes entre el " + fmtShort(desde) + " y el " + fmtShort(hasta) + ((repoFilterDay || repoFilterReporter || repoFilterTipo) ? " que cumplan los filtros activos del Repositorio." : "."), true); return; }
         var btn = $("pdfBtn");
         var orig = btn ? btn.innerHTML : "";
         if (btn) { btn.disabled = true; btn.textContent = "Generando PDF…"; }
