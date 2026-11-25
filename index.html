@@ -500,6 +500,22 @@
       .post-chip{display:inline-flex;align-items:center;gap:.35rem;margin-top:.65rem;border-radius:999px;padding:.4rem .75rem;font-size:12px;font-weight:800;line-height:1.25;background:var(--accent-soft);color:var(--accent-ink);box-shadow:inset 0 0 0 1px #fecdd3}
       .post-chip svg{flex-shrink:0}
       .post-chip.done{background:#f4f4f5;color:var(--dim);box-shadow:inset 0 0 0 1px var(--border)}
+      .obj-person{display:flex;align-items:center;gap:.75rem;min-width:0}
+      .obj-person h3{margin:0;font-family:var(--font-display);font-size:1rem;font-weight:800;line-height:1.3}
+      .obj-person p{margin:2px 0 0;font-size:13px;font-weight:600;color:var(--dim)}
+      .obj-mine-tag{flex-shrink:0;border-radius:999px;background:var(--accent);color:#fff;padding:.3rem .65rem;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.07em}
+      .obj-count-line{margin-top:.85rem;display:flex;flex-wrap:wrap;gap:.4rem;align-items:center}
+      .obj-count-line .pill-meta strong{color:#000}
+      .obj-pending{margin-top:1rem;border-top:1px solid var(--border);padding-top:.85rem}
+      .obj-pending h4{margin:0 0 .55rem;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:var(--dim)}
+      .obj-pending ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:.5rem}
+      .obj-pending li{display:flex;gap:.55rem;align-items:flex-start;font-size:13.5px;line-height:1.45;color:rgba(10,10,10,.88)}
+      .obj-pending li .dotp{flex-shrink:0;width:.5rem;height:.5rem;border-radius:50%;background:var(--accent);margin-top:.4rem}
+      .obj-pending li .ptitle{flex:1;min-width:0;font-weight:600;overflow-wrap:break-word}
+      .obj-pending li .pmeta{flex-shrink:0;font-size:11.5px;font-weight:800;color:var(--dim);white-space:nowrap}
+      .obj-pending li .pmeta.nc{color:var(--accent-ink)}
+      .obj-empty-note{margin-top:1rem;border-radius:.75rem;background:var(--surface-2);padding:.75rem .85rem;font-size:13.5px;font-weight:700;color:var(--dim)}
+      .obj-done-note{margin-top:1rem;border-radius:.75rem;background:#000;color:#fff;padding:.75rem .85rem;font-size:13.5px;font-weight:700}
       .hidden{display:none !important}
     </style>
   </head>
@@ -1318,7 +1334,7 @@
         var tabs = [
           { id:"semana", label:"Semana", ic:"calendar", count: weekActs().length },
           { id:"agenda", label:"Agenda", ic:"agenda", count: visibleActivities().filter(function(a){return a.date.indexOf(monthKey)===0;}).length },
-          { id:"objetivos", label:"Objetivos", ic:"target", count: state.objectives.filter(function(o){return !isObjectiveCompleted(o);}).length },
+          { id:"objetivos", label:"Objetivos", ic:"target", count: isAdmin() ? state.members.length : 1 },
           { id:"temas", label:"Temas", ic:"bell", count: state.topics.length },
           { id:"equipo", label:"Equipo", ic:"users", count: state.members.length },
           { id:"reporte", label:"Reporte", ic:"report", count: state.reportsResumen.length }
@@ -1330,10 +1346,10 @@
         var btns = $("tabs").querySelectorAll("[data-view]");
         for (var i=0;i<btns.length;i++) btns[i].addEventListener("click", function(){ view = this.getAttribute("data-view"); render(); });
         var fab = $("fab");
-        if (view === "equipo" || view === "reporte" || view === "datos") { fab.classList.add("hidden"); }
+        if (view === "equipo" || view === "reporte" || view === "datos" || view === "objetivos") { fab.classList.add("hidden"); }
         else {
           fab.classList.remove("hidden");
-          var label = view === "objetivos" ? "Nuevo objetivo" : view === "temas" ? "Nuevo tema" : "Nueva actividad";
+          var label = view === "temas" ? "Nuevo tema" : "Nueva actividad";
           fab.setAttribute("aria-label", label);
           fab.innerHTML = icon("plus",20,2.4) + '<span class="fab-label">' + label + '</span>';
         }
@@ -1790,86 +1806,84 @@
         });
       }
 
-      /* ---------- view: Objetivos ----------
-         Activos: agrupados por proyecto (cada proyecto en su propio grupo;
-         si dos objetivos son del mismo proyecto, comparten grupo).
-         Completados / cerrados: sección aparte al final, fuera de la vista
-         de la semana actual. Un objetivo al 100% cuenta como completado
-         aunque su status todavía diga "activo" — así el objetivo
-         "Seguimiento y Validación" (meta 22 nov, 100%, semana 16–22) ya
-         no sale como "En progreso" en la semana del 23. */
-      function objectiveCardHTML(o, opts){
-        opts = opts || {};
-        var completed = isObjectiveCompleted(o);
-        var objOver = o.due_date && o.due_date < TODAY && !completed;
-        var full = completed || o.progress >= 100;
-        var proj = objectiveProject(o);
-        var statusLine = completed ? "Objetivo cumplido · Cerrado" : o.status==="pausado" ? "En pausa" : "En progreso";
-        var h = '<article class="card obj-card'+(full?" full":"")+'"><div class="obj-top"><div class="obj-left"><span class="obj-ico'+(full?" full":"")+'">'+icon(completed?"checkCircle":"target",20)+'</span><div><h3>'+esc(o.title)+'</h3><p class="obj-status-line">'+statusLine+'</p></div></div><button type="button" class="icon-btn" data-obj-edit="'+esc(o.id)+'" aria-label="Editar objetivo">'+icon("pencil",15)+'</button></div>';
-        if (o.detail) h += '<p style="margin-top:.75rem;font-size:.875rem;line-height:1.6;color:rgba(0,0,0,.7)">'+esc(o.detail)+"</p>";
-        h += '<div class="tags" style="margin-top:.75rem">';
-        if (!opts.hideProject) h += '<span class="pill pill-proyecto'+(proj==="Proyecto Huella"?" red":"")+'">'+esc(proj)+"</span>";
-        h += '<span class="pill '+(completed?"pill-completado":o.status==="pausado"?"pill-pausado":"pill-activo")+'">'+icon(completed?"checkCircle":"trending",12)+(completed?"Completado":o.status==="pausado"?"Pausado":"Activo")+"</span>";
-        if (o.due_date) h += '<span class="pill pill-meta'+(objOver?" over":"")+'">'+icon("calendar",12)+"Meta: "+fmtShort(o.due_date)+(objOver?" · vencida":"")+"</span>";
-        else h += '<span class="pill pill-meta" style="color:var(--dim)">'+icon("calendar",12)+"Sin fecha meta</span>";
-        if (opts.weekLabel) h += '<span class="pill pill-meta">'+esc(opts.weekLabel)+"</span>";
-        h += "</div>";
-        h += '<div class="obj-pct"><span class="big">'+o.progress+'<span>%</span></span><span class="av">avance</span></div><div class="progress"><div class="'+(full?"full":"")+'" style="width:'+o.progress+'%"></div></div>';
-        h += '<div class="obj-actions"><button type="button" data-obj-dec="'+esc(o.id)+'" '+(o.progress<=0?"disabled":"")+' aria-label="Bajar avance">− 10%</button>';
-        if (completed) h += '<button type="button" class="complete" data-obj-reopen="'+esc(o.id)+'">Reabrir</button>';
-        else h += '<button type="button" class="complete" data-obj-complete="'+esc(o.id)+'">'+icon("check",14,2.8)+' Completar</button>';
-        h += '<button type="button" data-obj-inc="'+esc(o.id)+'" '+(o.progress>=100?"disabled":"")+' aria-label="Subir avance">+ 10%</button></div>';
+      /* ---------- view: Objetivos: individual por persona ----------
+         El objetivo de cada persona es cumplir SUS actividades de la
+         semana que muestra el tablero (misma semana de Semana/Agenda).
+         Avance = Completada / total de sus actividades de esa semana.
+         Pendiente, En curso y No Completado cuentan como NO cumplidas
+         (No Completado nunca suma). No se usan objetivos de proyecto
+         combinados en esta vista: la colección objetivos queda intacta
+         en Firestore, solo deja de mostrarse aquí. */
+      function weeklyStatsFor(orden, wa){
+        var mine = wa.filter(function(a){ return a.member_id === orden; });
+        var done = mine.filter(function(a){ return a.status === "completada"; }).length;
+        var pending = mine.filter(function(a){ return a.status !== "completada"; });
+        pending.sort(function(a,b){ return a.date < b.date ? -1 : a.date > b.date ? 1 : String(a.title||"").localeCompare(String(b.title||""), "es"); });
+        var total = mine.length;
+        return { total: total, done: done, pending: pending, missing: total - done, pct: total ? Math.round(done/total*100) : 0 };
+      }
+      function individualObjectiveCardHTML(m, stats, isMine){
+        var full = stats.total > 0 && stats.pct >= 100;
+        var h = '<article class="card obj-card' + (full ? " full" : "") + '"><div class="obj-top"><div class="obj-person">' + avatar(m, 48) + '<div><h3>' + esc(m.name) + '</h3><p>' + esc(m.role || "Equipo de Formación") + '</p></div></div>' + (isMine ? '<span class="obj-mine-tag">Tu objetivo</span>' : "") + '</div>';
+        if (stats.total === 0) {
+          h += '<div class="obj-pct"><span class="big">0<span>%</span></span><span class="av">avance</span></div><div class="progress"><div style="width:0%"></div></div>';
+          h += '<p class="obj-empty-note">Sin actividades esta semana</p>';
+          h += "</article>";
+          return h;
+        }
+        h += '<div class="obj-pct"><span class="big">' + stats.pct + '<span>%</span></span><span class="av">avance semanal</span></div><div class="progress"><div class="' + (full ? "full" : "") + '" style="width:' + stats.pct + '%"></div></div>';
+        h += '<div class="obj-count-line"><span class="pill pill-meta"><strong>' + stats.done + ' de ' + stats.total + ' completadas</strong></span>';
+        if (stats.missing > 0) h += '<span class="pill pill-meta over">' + icon("clock", 12) + 'Te faltan ' + stats.missing + (stats.missing === 1 ? " actividad" : " actividades") + '</span>';
+        else h += '<span class="pill pill-completado">' + icon("checkCircle", 12) + 'Semana completa</span>';
+        h += '</div>';
+        if (stats.missing === 0) {
+          h += '<p class="obj-done-note">Cumpliste todas tus actividades de esta semana.</p>';
+        } else {
+          h += '<div class="obj-pending"><h4>Por cumplir (' + stats.pending.length + ')</h4><ul>';
+          stats.pending.forEach(function(a){
+            var stLabel = STATUS_LABEL[a.status] || a.status;
+            var nc = a.status === "no_completado";
+            h += '<li><span class="dotp" aria-hidden="true"></span><span class="ptitle">' + esc(a.title) + '</span><span class="pmeta' + (nc ? " nc" : "") + '">' + esc(fmtShort(a.date)) + ' · ' + esc(stLabel) + '</span></li>';
+          });
+          h += '</ul></div>';
+        }
         h += "</article>";
         return h;
       }
       function renderObjetivos(main){
         var mo = monday();
-        var weekEnd = addDaysISO(mo, 6);
-        var active = state.objectives.filter(function(o){ return !isObjectiveCompleted(o); });
-        var completed = state.objectives.filter(function(o){ return isObjectiveCompleted(o); });
-        /* Orden de cerrados: más recientes primero (por fecha meta). */
-        completed.sort(function(a,b){ return String(b.due_date||"") < String(a.due_date||"") ? -1 : String(b.due_date||"") > String(a.due_date||"") ? 1 : 0; });
-        var h = '<section aria-label="Objetivos"><div class="sec-head"><h2>' + secBadge("target") + 'Objetivos</h2><button type="button" class="btn-red" id="objNew">' + icon("plus",15,2.5) + ' Nuevo objetivo</button></div>';
-        h += '<p style="margin:-.5rem 0 1.25rem;font-size:13.5px;font-weight:600;line-height:1.55;color:var(--dim)">Objetivos activos de la ' + esc(weekLabel(mo).toLowerCase()) + ', organizados por proyecto. Cada proyecto tiene su propio grupo: si un objetivo nuevo es del mismo proyecto que otro, se junta en ese mismo grupo.</p>';
-        if (state.objectives.length === 0) {
-          h += emptyHTML("target", "Todavía no hay objetivos definidos", "Pulsa «Nuevo objetivo» para crear el primero: se guardará en Firestore y se verá en vivo para todo el equipo.", false);
-        } else if (active.length === 0) {
-          h += emptyHTML("target", "No hay objetivos activos esta semana", "Todos los objetivos están cerrados. Los encuentras abajo, en la sección de cerrados / semana anterior.", true);
+        var wa = weekActs();
+        var wl = weekLabel(mo);
+        var h = "";
+        if (!isAdmin()) {
+          var mineOrden = myMemberOrden();
+          var me = mineOrden != null ? memberByOrden(mineOrden) : undefined;
+          h += '<section aria-label="Mi objetivo semanal"><div class="sec-head"><h2>' + secBadge("target") + 'Mi objetivo semanal</h2></div>';
+          h += '<p style="margin:-.5rem 0 1.25rem;font-size:13.5px;font-weight:600;line-height:1.55;color:var(--dim)">Tu objetivo de la ' + esc(wl.toLowerCase()) + ' es cumplir tus propias actividades semanales. El avance se calcula solo con tus actividades: Completada suma; Pendiente, En curso y No Completado cuentan como por cumplir.</p>';
+          if (!me) {
+            h += emptyHTML("target", "Sin actividades esta semana", "No encontramos tu tarjeta en el equipo de esta semana. Si crees que es un error, avísale a Anthony o a Gio.", true);
+          } else {
+            var st = weeklyStatsFor(me.orden, wa);
+            h += '<div class="grid-2">' + individualObjectiveCardHTML(me, st, true) + '</div>';
+            if (st.total === 0) h += '<p style="margin-top:1rem;font-size:13.5px;font-weight:600;line-height:1.55;color:var(--dim)">Sin actividades esta semana: no tienes avance que cumplir en esta semana.</p>';
+          }
+          h += "</section>";
+          main.innerHTML = h;
+          return;
+        }
+        h += '<section aria-label="Objetivos individuales"><div class="sec-head"><h2>' + secBadge("target") + 'Objetivos individuales</h2></div>';
+        h += '<p style="margin:-.5rem 0 1.25rem;font-size:13.5px;font-weight:600;line-height:1.55;color:var(--dim)">Objetivo individual de la ' + esc(wl.toLowerCase()) + ': cada persona cumple con sus propias actividades semanales. Una tarjeta por persona, con su avance, cuántas lleva y cuántas le faltan.</p>';
+        if (!state.members.length) {
+          h += emptyHTML("target", "Todavía no hay equipo cargado", "Cuando el equipo esté cargado, aquí verás una tarjeta individual por persona con su avance semanal.", false);
         } else {
-          var groups = groupObjectivesByProject(active);
-          h += '<div class="obj-groups">';
-          groups.forEach(function(g, gi){
-            var isRed = g.project === "Proyecto Huella";
-            h += '<section class="project-group" aria-label="'+esc(g.project)+'"><div class="project-head"><span class="project-icon'+(isRed?" red":"")+'">'+icon("target",18)+'</span><div><p class="proj-label">Proyecto</p><h3>'+esc(g.project.replace(/^Proyecto\s+/i,""))+'</h3></div><span class="proj-count">'+g.items.length+(g.items.length===1?" objetivo":" objetivos")+'</span><span class="proj-line" aria-hidden="true"></span></div>';
-            h += '<div class="grid-2">';
-            g.items.forEach(function(o){ h += objectiveCardHTML(o, { hideProject:true }); });
-            h += "</div></section>";
+          h += '<div class="grid-2">';
+          state.members.forEach(function(m){
+            h += individualObjectiveCardHTML(m, weeklyStatsFor(m.orden, wa), false);
           });
           h += "</div>";
         }
-        /* Cerrados / semana anterior: fuera de la vista de la semana actual */
-        if (completed.length > 0) {
-          h += '<section class="closed-section" aria-label="Objetivos cerrados, semana anterior"><div class="closed-head"><span class="closed-badge">'+icon("checkCircle",19)+'</span><div><h3>Cerrados · Semana anterior</h3><p>Objetivos ya completados de semanas anteriores. No cuentan como en progreso en la semana actual ('+esc(weekLabel(mo).toLowerCase())+').</p></div><span class="proj-count" style="border-radius:999px;background:var(--surface-2);padding:3px .6rem;font-size:11px;font-weight:800;color:rgba(0,0,0,.7)">'+completed.length+(completed.length===1?" cerrado":" cerrados")+'</span></div>';
-          h += '<div class="grid-2 closed-grid">';
-          completed.forEach(function(o){
-            var wl = "";
-            if (o.due_date) {
-              var dueMonday = mondayOfISO(o.due_date);
-              if (dueMonday === "2026-11-16") wl = "Semana 16–22 nov";
-              else wl = "Semana del " + shortWeekRange(dueMonday);
-            }
-            h += objectiveCardHTML(o, { weekLabel: wl });
-          });
-          h += "</div></section>";
-        }
         h += "</section>";
         main.innerHTML = h;
-        $("objNew").addEventListener("click", function(){ openObjectiveModal(null); });
-        var eb = main.querySelectorAll("[data-obj-edit]"); for (var i=0;i<eb.length;i++) eb[i].addEventListener("click", function(){ var o=objectiveById(this.getAttribute("data-obj-edit")); if(o) openObjectiveModal(o); });
-        var dec = main.querySelectorAll("[data-obj-dec]"); for (var a=0;a<dec.length;a++) dec[a].addEventListener("click", function(){ var o=objectiveById(this.getAttribute("data-obj-dec")); if(o) fsUpdateObjective(o.id,{progress:Math.max(0,o.progress-10), status: isObjectiveCompleted(o) && Math.max(0,o.progress-10)<100 ? "activo" : o.status}); });
-        var inc = main.querySelectorAll("[data-obj-inc]"); for (var b=0;b<inc.length;b++) inc[b].addEventListener("click", function(){ var o=objectiveById(this.getAttribute("data-obj-inc")); if(o) fsUpdateObjective(o.id,{progress:Math.min(100,o.progress+10)}); });
-        var comp = main.querySelectorAll("[data-obj-complete]"); for (var c=0;c<comp.length;c++) comp[c].addEventListener("click", function(){ fsUpdateObjective(this.getAttribute("data-obj-complete"),{progress:100,status:"completado"}); toast("Objetivo completado · pasa a Cerrados"); });
-        var reo = main.querySelectorAll("[data-obj-reopen]"); for (var d=0;d<reo.length;d++) reo[d].addEventListener("click", function(){ fsUpdateObjective(this.getAttribute("data-obj-reopen"),{status:"activo", progress: Math.min(90, Number((objectiveById(this.getAttribute("data-obj-reopen"))||{}).progress||100))}); });
       }
 
       /* ---------- view: Temas ---------- */
@@ -1970,6 +1984,7 @@
       }
       function renderTemas(main){
         var h = '<section aria-label="Temas importantes"><div class="sec-head"><h2>' + secBadge("bell", true) + 'Temas importantes</h2><button type="button" class="btn-red" id="topicNew">' + icon("plus",15,2.5) + ' Nuevo tema</button></div>';
+        h += '<p style="margin:-.5rem 0 1.25rem;font-size:13.5px;font-weight:600;line-height:1.55;color:var(--dim)">Planificación general: aquí se ve toda la planificación y todos los temas completos, igual para todas las personas que ingresan. Esta vista no se filtra por persona.</p>';
         if (state.topics.length === 0) {
           h += emptyHTML("bell", "No hay temas importantes por ahora", "Pulsa «Nuevo tema» para agregar acuerdos, avisos y pendientes clave. Se verán en vivo para todo el equipo.", false);
         } else {
@@ -2281,7 +2296,7 @@
           + '<div><label class="flabel" for="rGravedad">Gravedad</label><select class="input" id="rGravedad"><option>Baja</option><option selected>Media</option><option>Alta</option></select></div></div>';
         h += '<div><label class="flabel" for="rQuePaso">¿Qué pasó? *</label><textarea class="input" id="rQuePaso" placeholder="Describe la novedad con detalle"></textarea></div>';
         h += '<div><label class="flabel" for="rAccion">Acción tomada</label><textarea class="input" id="rAccion" placeholder="Qué se hizo en el momento (opcional)"></textarea></div>';
-        h += '<div><label class="flabel" for="rSeg">Seguimiento</label><select class="input" id="rSeg"><option>Resuelta en sitio</option><option>Sin seguimiento</option><option>Lo sigue el responsable</option><option>Escalar a Gio o Anthony</option></select></div>';
+        h += '<div><label class="flabel" for="rSeg">Seguimiento</label><select class="input" id="rSeg"><option>Resuelta en sitio</option><option>No requiere seguimiento</option><option>Lo sigue el responsable</option><option>Escalar a Gio o Anthony</option><option>Escala al zonal</option><option>Se escala al Distrital</option></select></div>';
         h += '<div><span style="display:block;margin-bottom:.375rem;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#52525b">Evidencia (máx. 3 fotos)</span><div class="rep-photo-row"><label class="rep-photo-btn">' + icon("camera", 15) + 'Tomar foto<input type="file" id="rTake" accept="image/*" capture="environment" class="hidden"></label><label class="rep-photo-btn alt">' + icon("image", 15) + 'Adjuntar foto<input type="file" id="rAttach" accept="image/*" multiple class="hidden"></label><span class="rep-photo-name" id="rPhotoInfo">Sin fotos</span></div></div>';
         h += '<div class="form-error" id="formError"></div>';
         h += '<div class="form-actions"><button type="submit" class="btn-save" id="rSaveBtn">Enviar reporte</button></div>';
@@ -2569,8 +2584,7 @@
       document.getElementById("weekNext").addEventListener("click", function(){ weekOffset++; render(); });
       document.getElementById("weekToday").addEventListener("click", function(){ weekOffset = 0; render(); });
       document.getElementById("fab").addEventListener("click", function(){
-        if (view === "objetivos") openObjectiveModal(null);
-        else if (view === "temas") openTopicModal(null);
+        if (view === "temas") openTopicModal(null);
         else if (view === "agenda") openActivityModal(null, selectedDay);
         else openActivityModal(null, monday());
       });
