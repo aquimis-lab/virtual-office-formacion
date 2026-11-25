@@ -711,6 +711,29 @@
         .closed-head,.project-head{gap:.55rem}
         .team-pct .big{font-size:1.6rem}
       }
+      /* Tercera pasada móvil: la barra de pestañas NUNCA desborda.
+         Causa del corte a 500px: cada .tab es flex:1 pero con el
+         min-width automático de flex no podía encogerse por debajo
+         de su etiqueta (nowrap), y 7 pestañas sumaban más que el
+         viewport; la barra fija se salía por la derecha y empujaba
+         el ancho de toda la página. Ahora cada pestaña parte de
+         base 0 y puede encogerse: caben todas dentro del viewport,
+         con icono compacto arriba y conteo como badge pequeño. */
+      @media(max-width:640px){
+        html,body{overflow-x:hidden;overflow-x:clip}
+        #boardApp{max-width:100%;overflow-x:clip}
+        .tabs{left:0;right:0;width:100%;max-width:100vw;overflow:hidden}
+        .tab{flex:1 1 0%;min-width:0;max-width:100%;overflow:hidden}
+        .tab svg{flex-shrink:0}
+        .tab .tab-label{min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+        .tab .count{right:2px;max-width:calc(100% - 4px);overflow:hidden}
+        /* Ningún otro elemento empuja el ancho de la página */
+        .day-head{flex-wrap:wrap}
+        .cal-holiday-tag{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+        .hero-badge,.hero .live-pill{max-width:100%}
+        .card,.hist-item,.agenda-row,.modal{max-width:100%}
+        .modal{max-width:100vw}
+      }
     </style>
   </head>
   <body class="locked noauth">
