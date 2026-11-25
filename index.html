@@ -42,10 +42,16 @@
       .hero-top{display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap}
       .hero-badge{display:inline-flex;align-items:center;gap:.5rem;border-radius:999px;background:rgba(255,255,255,.1);padding:.375rem .75rem;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.16em}
       .hero-badge .dot{width:.5rem;height:.5rem;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(227,6,19,.25)}
-      .hero-nav{display:flex;align-items:center;gap:.375rem}
+      .hero-nav{display:flex;align-items:center;gap:.375rem;flex-wrap:wrap;justify-content:flex-end}
       .hero-nav button{display:flex;width:2.5rem;height:2.5rem;align-items:center;justify-content:center;border-radius:50%;background:rgba(255,255,255,.1);color:#fff;transition:background .15s}
       .hero-nav button:hover{background:var(--accent)}
       .hero-nav .hoy-btn{width:auto;height:auto;border-radius:999px;background:var(--accent);padding:.5rem .875rem;font-size:.875rem;font-weight:800;margin-left:.25rem}
+      .hero-session{display:flex;align-items:center;gap:.375rem;margin-left:.375rem;padding-left:.5rem;border-left:1px solid rgba(255,255,255,.18);flex-wrap:wrap}
+      .hero-nav button.hero-session-btn{width:auto;height:auto;min-height:1.85rem;border-radius:999px;background:rgba(255,255,255,.12);color:#fff;padding:.35rem .65rem;font-size:11.5px;font-weight:800;line-height:1;white-space:nowrap;box-shadow:none}
+      .hero-nav button.hero-session-btn:hover{background:rgba(255,255,255,.24)}
+      .hero-nav button.hero-session-btn.accent{background:var(--accent)}
+      .hero-nav button.hero-session-btn.accent:hover{background:var(--accent-ink)}
+      @media(max-width:640px){.hero-session{margin-left:0;padding-left:0;border-left:none;width:100%;justify-content:flex-end}}
       .hero h1{margin:1rem 0 0;max-width:36rem;font-family:var(--font-display);font-size:28px;font-weight:900;line-height:1.05;letter-spacing:-.02em}
       @media(min-width:640px){.hero h1{font-size:40px}}
       .hero-stats{margin-top:1.5rem;display:flex;align-items:center;gap:.75rem}
@@ -74,6 +80,7 @@
         .stat .lbl{font-size:8px;letter-spacing:.01em;white-space:nowrap}
       }
       .livebar{margin-top:.75rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+      .livebar.is-hidden{display:none !important}
       .live-pill{display:inline-flex;align-items:center;gap:.45rem;border-radius:999px;padding:.4rem .75rem;font-size:12px;font-weight:800;background:#000;color:#fff}
       .live-pill .ldot{width:.55rem;height:.55rem;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.25)}
       .live-pill.connecting .ldot{background:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,.25)}
@@ -546,6 +553,10 @@
               <button type="button" id="weekPrev" aria-label="Semana anterior"></button>
               <button type="button" id="weekNext" aria-label="Semana siguiente"></button>
               <button type="button" id="weekToday" class="hoy-btn hidden">Hoy</button>
+              <div class="hero-session" aria-label="Sesión">
+                <button type="button" class="hero-session-btn" id="changePassBtn">Cambiar contraseña</button>
+                <button type="button" class="hero-session-btn accent" id="logoutBtn">Cerrar sesión</button>
+              </div>
             </div>
           </div>
           <h1 id="weekTitle">Semana</h1>
@@ -568,13 +579,11 @@
     </header>
 
     <div class="wrap">
-      <div class="livebar" aria-live="polite">
+      <div class="livebar is-hidden" id="liveBar" aria-live="polite">
         <span class="live-pill connecting" id="livePill"><span class="ldot" aria-hidden="true"></span><span id="liveText">Conectando en vivo…</span></span>
-        <span class="live-note" id="liveNote">Los cambios se guardan en Firestore y se ven al instante para el equipo con acceso.</span>
+        <span class="live-note" id="liveNote">Todo se guarda en Firestore y se ve al instante para el equipo con acceso.</span>
         <span class="lock-actions">
           <span class="lock-pill" id="lockPill">Sin sesión</span>
-          <button type="button" class="btn-lock is-editing" id="changePassBtn">Cambiar contraseña</button>
-          <button type="button" class="btn-lock" id="logoutBtn">Cerrar sesión</button>
           <span class="auth-identity hidden" id="authIdentity" aria-live="polite"></span>
         </span>
       </div>
@@ -949,6 +958,8 @@
       function updateLockUI(){
         document.body.classList.toggle("locked", !canEdit());
         document.body.classList.toggle("editing", canEdit());
+        var bar = $("liveBar");
+        if (bar) bar.classList.toggle("is-hidden", !isAdmin());
         var pill = $("lockPill"), ident = $("authIdentity");
         if (pill) {
           if (currentProfile) {
