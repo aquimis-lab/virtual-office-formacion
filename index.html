@@ -81,12 +81,15 @@
       }
       .livebar{margin-top:.75rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
       .livebar.is-hidden{display:none !important}
+      .hero-title-group{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;min-width:0}
       .live-pill{display:inline-flex;align-items:center;gap:.45rem;border-radius:999px;padding:.4rem .75rem;font-size:12px;font-weight:800;background:#000;color:#fff}
+      .live-pill.is-hidden{display:none !important}
+      .hero .live-pill{background:rgba(255,255,255,.12);box-shadow:inset 0 0 0 1px rgba(255,255,255,.18);color:#fff}
       .live-pill .ldot{width:.55rem;height:.55rem;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.25)}
       .live-pill.connecting .ldot{background:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,.25)}
       .live-pill.error{background:var(--accent)}
+      .hero .live-pill.error{background:var(--accent);box-shadow:none}
       .live-pill.error .ldot{background:#fff;box-shadow:none}
-      .live-note{font-size:12.5px;font-weight:600;color:var(--dim)}
       .phrase{position:relative;margin-top:.75rem;overflow:hidden;border-radius:var(--radius);border:1px solid var(--border);background:var(--accent-soft);padding:.875rem 1rem}
       @media(min-width:640px){.phrase{padding:.875rem 1.25rem}}
       .phrase::before{content:"";position:absolute;top:0;bottom:0;left:0;width:4px;background:var(--accent)}
@@ -578,7 +581,10 @@
         <span class="hero-glow" aria-hidden="true"></span>
         <div class="hero-inner">
           <div class="hero-top">
-            <p class="hero-badge"><span class="dot" aria-hidden="true"></span>Formación y Desarrollo</p>
+            <div class="hero-title-group">
+              <p class="hero-badge"><span class="dot" aria-hidden="true"></span>Formación y Desarrollo</p>
+              <span class="live-pill connecting is-hidden" id="livePill"><span class="ldot" aria-hidden="true"></span><span id="liveText">Conectando en vivo…</span></span>
+            </div>
             <div class="hero-nav">
               <button type="button" id="weekPrev" aria-label="Semana anterior"></button>
               <button type="button" id="weekNext" aria-label="Semana siguiente"></button>
@@ -610,8 +616,6 @@
 
     <div class="wrap">
       <div class="livebar is-hidden" id="liveBar" aria-live="polite">
-        <span class="live-pill connecting" id="livePill"><span class="ldot" aria-hidden="true"></span><span id="liveText">Conectando en vivo…</span></span>
-        <span class="live-note" id="liveNote">Todo se guarda en Firestore y se ve al instante para el equipo con acceso.</span>
         <span class="lock-actions">
           <span class="lock-pill" id="lockPill">Sin sesión</span>
           <span class="auth-identity hidden" id="authIdentity" aria-live="polite"></span>
@@ -990,6 +994,8 @@
         document.body.classList.toggle("editing", canEdit());
         var bar = $("liveBar");
         if (bar) bar.classList.toggle("is-hidden", !isAdmin());
+        var livePillEl = $("livePill");
+        if (livePillEl) livePillEl.classList.toggle("is-hidden", !isAdmin());
         var pill = $("lockPill"), ident = $("authIdentity");
         if (pill) {
           if (currentProfile) {
@@ -1107,14 +1113,14 @@
         setTimeout(function(){ var f = $("pCurrent"); if (f) f.focus(); }, 50);
       }
 
-      function setLiveStatus(status, note){
+      function setLiveStatus(status){
         liveStatus = status;
-        var pill = $("livePill"), txt = $("liveText"), noteEl = $("liveNote");
+        var pill = $("livePill"), txt = $("liveText");
         if (!pill) return;
         pill.classList.remove("connecting","error");
-        if (status === "live") { txt.textContent = "En vivo · Sincronizado"; if(note) noteEl.textContent = note; }
-        else if (status === "error") { pill.classList.add("error"); txt.textContent = "Sin conexión con Firestore"; if(note) noteEl.textContent = note; }
-        else { pill.classList.add("connecting"); txt.textContent = "Conectando en vivo…"; if(note) noteEl.textContent = note; }
+        if (status === "live") { txt.textContent = "En vivo · Sincronizado"; }
+        else if (status === "error") { pill.classList.add("error"); txt.textContent = "Sin conexión con Firestore"; }
+        else { pill.classList.add("connecting"); txt.textContent = "Conectando en vivo…"; }
       }
       function toast(msg, isErr){
         var t = $("toast"); t.textContent = msg; t.className = "toast show" + (isErr ? " err" : "");
@@ -1178,9 +1184,9 @@
                 arr.sort(function(a,b){ return a.date<b.date?-1:a.date>b.date?1:(a.title<b.title?-1:1); });
                 state.activities = arr;
               }
-              setLiveStatus("live","Todo se guarda en Firestore y se ve al instante para el equipo con acceso.");
+              setLiveStatus("live");
               render();
-            }, function(err){ console.error(err); setLiveStatus("error","Firestore devolvió un error (revisa las Reglas de Firestore por UID y rol)."); });
+            }, function(err){ console.error(err); setLiveStatus("error"); });
           }
 
           db.collection("equipo").onSnapshot(function(snap){
@@ -1194,9 +1200,9 @@
               state.members = arr;
             }
             startActivitiesListener();
-            setLiveStatus("live","Todo se guarda en Firestore y se ve al instante para el equipo con acceso.");
+            setLiveStatus("live");
             render();
-          }, function(err){ console.error(err); setLiveStatus("error","Firestore devolvió un error (revisa las Reglas de Firestore por UID y rol)."); });
+          }, function(err){ console.error(err); setLiveStatus("error"); });
 
           db.collection("objetivos").onSnapshot(function(snap){
             if (snap.empty) {
@@ -1268,10 +1274,10 @@
             }, function(err){ console.error(err); });
           }
 
-          setTimeout(function(){ if (liveStatus==="connecting") setLiveStatus("error","La conexión está tardando. Se muestran los datos de ejemplo; si guardas un cambio y no hay conexión, Firestore lo reintentará al volver internet."); }, 9000);
+          setTimeout(function(){ if (liveStatus==="connecting") setLiveStatus("error"); }, 9000);
         } catch(e) {
           console.error(e);
-          setLiveStatus("error","No se pudo cargar el tablero. Revisa tu conexión y recarga la página.");
+          setLiveStatus("error");
         }
       }
 
