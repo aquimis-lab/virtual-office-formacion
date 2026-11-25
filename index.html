@@ -11,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
     <style>
       :root{
         color-scheme: light;
@@ -443,6 +444,10 @@
       .lock-pill{display:inline-flex;align-items:center;gap:.4rem;border-radius:999px;padding:.4rem .75rem;font-size:12px;font-weight:800;background:#fff;color:#000;box-shadow:inset 0 0 0 1px var(--border-strong)}
       .lock-pill.editing{background:#000;color:#fff;box-shadow:none}
       .lock-pill.editing svg{color:var(--accent)}
+      .auth-identity{flex-basis:100%;text-align:right;font-size:11px;font-weight:600;line-height:1.5;color:var(--dim);word-break:break-all}
+      .auth-identity strong{color:#000;font-weight:800}
+      .auth-identity code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;background:var(--surface-2);border-radius:6px;padding:1px 5px;color:rgba(0,0,0,.75)}
+      @media(max-width:640px){.auth-identity{text-align:left}}
       .btn-lock{display:inline-flex;align-items:center;gap:.4rem;border-radius:999px;background:var(--accent);color:#fff;padding:.5rem .95rem;font-size:13px;font-weight:800;box-shadow:0 8px 20px -8px rgba(227,6,19,.6);min-height:2.25rem}
       .btn-lock.is-editing{background:#000;box-shadow:0 1px 3px rgba(0,0,0,.2)}
       body.locked .fab{display:none !important}
@@ -499,6 +504,7 @@
         <span class="lock-actions">
           <span class="lock-pill" id="lockPill">Solo lectura</span>
           <button type="button" class="btn-lock" id="editLockBtn">Editar</button>
+          <span class="auth-identity hidden" id="authIdentity" aria-live="polite"></span>
         </span>
       </div>
       <div class="phrase" id="phraseBox"></div>
@@ -770,45 +776,128 @@
       var seedAttempted = {};
       var listenersReady = 0;
 
-      /* ===== Candado de edición ===== */
+      /* ===== Edición segura con Firebase Authentication (Google) =====
+         Ruta segura: el tablero es público en solo lectura. Solo la
+         cuenta autorizada puede editar, iniciando sesión con Google.
+         Cualquier otra cuenta queda en solo lectura y su sesión se
+         cierra. «Bloquear edición» cierra la sesión de Google.
+         El documento antiguo config/editLock NO se borra ni se usa:
+         queda en Firestore sin cambios, solo deja de ser el acceso. */
+      var ALLOWED_EDITOR_EMAIL = "tonnylve2@gmail.com";
+      var auth = null;
+      var currentUser = null;
       var isEditing = false;
-      var editHash = "";
-      var editHashLoaded = false;
-      function canEdit(){ return isEditing; }
+      var authReady = false;
+      function isAllowedEditor(user){ return !!user && String(user.email || "").toLowerCase() === ALLOWED_EDITOR_EMAIL; }
+      function canEdit(){ return isEditing && isAllowedEditor(currentUser); }
       function guardEdit(){
-        if (isEditing) return true;
-        toast("Estás en modo solo lectura. Pulsa Editar e ingresa tu clave para hacer cambios.", true);
+        if (canEdit()) return true;
+        toast("Estás en modo solo lectura. Pulsa Editar e inicia sesión con la cuenta de Google autorizada para hacer cambios.", true);
         return false;
       }
-      function hashKey(text){
-        var enc = new TextEncoder().encode(String(text));
-        if (window.crypto && crypto.subtle && crypto.subtle.digest) {
-          return crypto.subtle.digest("SHA-256", enc).then(function(buf){
-            var bytes = new Uint8Array(buf); var hex = "";
-            for (var i=0;i<bytes.length;i++) hex += ("0"+bytes[i].toString(16)).slice(-2);
-            return hex;
-          });
-        }
-        return Promise.reject(new Error("no-subtle-crypto"));
-      }
       function updateLockUI(){
-        document.body.classList.toggle("locked", !isEditing);
-        document.body.classList.toggle("editing", isEditing);
-        var pill = $("lockPill"), btn = $("editLockBtn");
+        document.body.classList.toggle("locked", !canEdit());
+        document.body.classList.toggle("editing", canEdit());
+        var pill = $("lockPill"), btn = $("editLockBtn"), ident = $("authIdentity");
         if (pill) {
-          pill.classList.toggle("editing", isEditing);
-          pill.innerHTML = icon(isEditing ? "unlock" : "lock", 13, 2.4) + (isEditing ? "Editando" : "Solo lectura");
+          pill.classList.toggle("editing", canEdit());
+          pill.innerHTML = icon(canEdit() ? "unlock" : "lock", 13, 2.4) + (canEdit() ? "Editando" : "Solo lectura");
         }
         if (btn) {
-          btn.classList.toggle("is-editing", isEditing);
-          btn.innerHTML = icon(isEditing ? "lock" : "key", 14, 2.4) + (isEditing ? "Bloquear edición" : "Editar");
+          btn.classList.toggle("is-editing", canEdit());
+          btn.innerHTML = icon(canEdit() ? "lock" : "key", 14, 2.4) + (canEdit() ? "Bloquear edición" : "Editar con Google");
+        }
+        if (ident) {
+          /* Discreto y solo en modo edición: correo + UID de Auth.
+             Ese UID es el que se usará después en las reglas
+             permanentes de Firestore. Sin sesión no se muestra nada. */
+          if (canEdit() && currentUser) {
+            ident.innerHTML = "Sesión de edición: <strong>" + esc(currentUser.email) + "</strong> · UID: <code>" + esc(currentUser.uid) + "</code>";
+            ident.classList.remove("hidden");
+          } else {
+            ident.innerHTML = "";
+            ident.classList.add("hidden");
+          }
         }
       }
       function setEditing(v, silent){
-        isEditing = !!v;
+        /* La edición solo puede activarse con la cuenta autorizada. */
+        isEditing = !!v && isAllowedEditor(currentUser);
         updateLockUI();
         render();
-        if (!silent) toast(isEditing ? "Edición desbloqueada en este navegador" : "Edición bloqueada. El tablero quedó en solo lectura.");
+        if (!silent) toast(isEditing ? "Edición activada con tu cuenta de Google" : "Edición bloqueada. El tablero quedó en solo lectura.");
+      }
+      function applyAuthUser(user){
+        if (!user) {
+          currentUser = null;
+          isEditing = false;
+          authReady = true;
+          updateLockUI();
+          render();
+          return;
+        }
+        if (!isAllowedEditor(user)) {
+          var rejectedEmail = user.email || "sin correo";
+          currentUser = null;
+          isEditing = false;
+          authReady = true;
+          updateLockUI();
+          render();
+          toast("La cuenta " + rejectedEmail + " no tiene permiso de edición. Solo " + ALLOWED_EDITOR_EMAIL + " puede editar; esta sesión se cerrará y el tablero sigue en solo lectura.", true);
+          if (auth) auth.signOut().catch(function(err){ console.error(err); });
+          return;
+        }
+        currentUser = user;
+        isEditing = true;
+        authReady = true;
+        updateLockUI();
+        render();
+        toast("Edición activada · " + user.email);
+      }
+      function initAuth(){
+        if (!auth) return;
+        try {
+          /* Si se vuelve de un inicio de sesión por redirección, su
+             resultado (o su error) se recoge aquí sin bloquear nada. */
+          if (auth.getRedirectResult) {
+            auth.getRedirectResult().catch(function(err){ console.error(err); });
+          }
+          auth.onAuthStateChanged(function(user){ applyAuthUser(user); }, function(err){ console.error(err); authReady = true; updateLockUI(); });
+        } catch(e) { console.error(e); }
+      }
+      function signInWithGoogle(){
+        if (!auth) { toast("El acceso con Google todavía se está conectando. Espera un momento e inténtalo de nuevo.", true); return; }
+        var provider = new firebase.auth.GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: "select_account" });
+        toast("Abriendo el acceso seguro de Google…");
+        auth.signInWithPopup(provider).catch(function(err){
+          console.error(err);
+          if (err && (err.code === "auth/popup-blocked" || err.code === "auth/popup-closed-by-user" || err.code === "auth/cancelled-popup-request" || err.code === "auth/operation-not-supported-in-this-environment")) {
+            toast("La ventana de Google no se pudo abrir aquí. Intentando con redirección segura…");
+            auth.signInWithRedirect(provider).catch(function(err2){ console.error(err2); toast("No se pudo iniciar sesión con Google. Revisa tu conexión e inténtalo de nuevo.", true); });
+          } else if (err && err.code === "auth/unauthorized-domain") {
+            toast("Este dominio todavía no está autorizado en Firebase Authentication. El tablero sigue en solo lectura.", true);
+          } else {
+            toast("No se pudo iniciar sesión con Google. El tablero sigue en solo lectura.", true);
+          }
+        });
+      }
+      function signOutOfGoogle(silent){
+        if (!auth) { currentUser = null; isEditing = false; updateLockUI(); render(); return; }
+        auth.signOut().then(function(){
+          currentUser = null;
+          isEditing = false;
+          updateLockUI();
+          render();
+          if (!silent) toast("Sesión de Google cerrada. El tablero quedó en solo lectura.");
+        }).catch(function(err){
+          console.error(err);
+          currentUser = null;
+          isEditing = false;
+          updateLockUI();
+          render();
+          if (!silent) toast("Edición bloqueada. El tablero quedó en solo lectura.");
+        });
       }
 
       function setLiveStatus(status, note){
@@ -845,6 +934,7 @@
           if (typeof firebase === "undefined") { setLiveStatus("error","No se cargó Firebase. Se muestran los datos de ejemplo; recarga la página para sincronizar."); return; }
           if (!firebase.apps || !firebase.apps.length) firebase.initializeApp(firebaseConfig);
           db = firebase.firestore();
+          if (typeof firebase.auth === "function") { auth = firebase.auth(); initAuth(); }
 
           db.collection("equipo").onSnapshot(function(snap){
             listenersReady++;
@@ -858,7 +948,7 @@
             }
             setLiveStatus("live","Todo lo que cambies aquí se guarda en Firestore y se ve al instante para todos los que abran este enlace.");
             render();
-          }, function(err){ console.error(err); setLiveStatus("error","Firestore devolvió un error (revisa las Reglas: deben permitir lectura y escritura). Se muestran los datos de ejemplo."); });
+          }, function(err){ console.error(err); setLiveStatus("error","Firestore devolvió un error (revisa las Reglas: lectura pública y escritura solo con la cuenta autorizada). Se muestran los datos de ejemplo."); });
 
           db.collection("actividades").onSnapshot(function(snap){
             if (snap.empty) {
@@ -871,7 +961,7 @@
             }
             setLiveStatus("live","Todo lo que cambies aquí se guarda en Firestore y se ve al instante para todos los que abran este enlace.");
             render();
-          }, function(err){ console.error(err); setLiveStatus("error","Firestore devolvió un error (revisa las Reglas: deben permitir lectura y escritura). Se muestran los datos de ejemplo."); });
+          }, function(err){ console.error(err); setLiveStatus("error","Firestore devolvió un error (revisa las Reglas: lectura pública y escritura solo con la cuenta autorizada). Se muestran los datos de ejemplo."); });
 
           db.collection("objetivos").onSnapshot(function(snap){
             if (snap.empty) {
@@ -895,12 +985,8 @@
             render();
           }, function(err){ console.error(err); });
 
-          db.collection("config").doc("editLock").onSnapshot(function(docSnap){
-            editHashLoaded = true;
-            if (!docSnap.exists) { editHash = ""; }
-            else { var lv = docSnap.data(); editHash = (lv && lv.hash) ? String(lv.hash) : ""; }
-            updateLockUI();
-          }, function(err){ console.error(err); editHashLoaded = false; });
+          /* config/editLock (clave antigua) se conserva intacto en
+             Firestore, pero ya no se lee ni se usa para editar. */
 
           db.collection("config").doc("frase").onSnapshot(function(docSnap){
             if (!docSnap.exists) {
@@ -1764,65 +1850,11 @@
         }).join("");
       }
 
-      function openCreateKeyModal(){
-        var body = '<form class="form" id="lockForm">'
-          + '<p class="form-note">Todavía no hay una clave de edición. Crea la tuya: desde ahora, solo quien la escriba podrá editar el tablero. Todos los demás seguirán viendo todo en vivo, en solo lectura.</p>'
-          + '<div><label class="flabel" for="k1">Crea tu clave</label><input class="input" id="k1" type="password" autocomplete="new-password" placeholder="Escribe tu clave"></div>'
-          + '<div><label class="flabel" for="k2">Confírmala</label><input class="input" id="k2" type="password" autocomplete="new-password" placeholder="Escríbela otra vez"></div>'
-          + '<p class="form-note">Guárdala bien: la necesitarás para editar desde cualquier navegador.</p>'
-          + '<div class="form-error" id="formError"></div>'
-          + '<div class="form-actions"><button type="submit" class="btn-save" id="saveBtn">Crear clave y empezar a editar</button></div></form>';
-        openModal("Crear clave de edición", body);
-        $("lockForm").addEventListener("submit", function(ev){
-          ev.preventDefault();
-          var k1 = $("k1").value, k2 = $("k2").value;
-          if (!k1 || k1.length < 4) { formError("Usa una clave de al menos 4 caracteres."); return; }
-          if (k1 !== k2) { formError("Las claves no coinciden. Escríbelas igual en los dos campos."); return; }
-          if (!requireDb()) return;
-          var btn = $("saveBtn"); btn.disabled = true; btn.textContent = "Guardando…";
-          hashKey(k1).then(function(hex){
-            return db.collection("config").doc("editLock").set({ hash: hex, creada: new Date().toISOString() });
-          }).then(function(){
-            editHashLoaded = true;
-            closeModal();
-            setEditing(true);
-          }).catch(function(err){
-            console.error(err);
-            if (err && err.message === "no-subtle-crypto") formError("Este navegador no permite proteger la clave. Abre el tablero en Chrome o Safari actualizado e inténtalo de nuevo.");
-            else { writeError(err); btn.disabled = false; btn.textContent = "Crear clave y empezar a editar"; }
-          });
-        });
-        setTimeout(function(){ var f = $("k1"); if (f) f.focus(); }, 50);
-      }
-      function openUnlockModal(){
-        var body = '<form class="form" id="lockForm">'
-          + '<p class="form-note">Escribe la clave de edición para desbloquear los cambios en este navegador. Sin la clave, el tablero se sigue viendo en vivo en solo lectura.</p>'
-          + '<div><label class="flabel" for="k1">Clave de edición</label><input class="input" id="k1" type="password" autocomplete="current-password" placeholder="Tu clave"></div>'
-          + '<div class="form-error" id="formError"></div>'
-          + '<div class="form-actions"><button type="submit" class="btn-save" id="saveBtn">Desbloquear edición</button></div></form>';
-        openModal("Editar el tablero", body);
-        $("lockForm").addEventListener("submit", function(ev){
-          ev.preventDefault();
-          var k1 = $("k1").value;
-          if (!k1) { formError("Escribe tu clave."); return; }
-          var btn = $("saveBtn"); btn.disabled = true; btn.textContent = "Comprobando…";
-          hashKey(k1).then(function(hex){
-            if (hex === editHash) { closeModal(); setEditing(true); }
-            else { formError("Clave incorrecta. Inténtalo de nuevo."); btn.disabled = false; btn.textContent = "Desbloquear edición"; }
-          }).catch(function(err){
-            console.error(err);
-            formError("No se pudo comprobar la clave en este navegador. Inténtalo en Chrome o Safari actualizado.");
-            btn.disabled = false; btn.textContent = "Desbloquear edición";
-          });
-        });
-        setTimeout(function(){ var f = $("k1"); if (f) f.focus(); }, 50);
-      }
       function handleLockButton(){
-        if (isEditing) { setEditing(false); return; }
-        if (!db) { toast("Todavía no hay conexión con Firestore. Revisa tu internet e inténtalo de nuevo.", true); return; }
-        if (!editHashLoaded) { toast("Conectando con Firestore… espera un momento e inténtalo de nuevo.", true); return; }
-        if (!editHash) openCreateKeyModal();
-        else openUnlockModal();
+        if (canEdit()) { signOutOfGoogle(false); return; }
+        if (typeof firebase === "undefined" || typeof firebase.auth !== "function") { toast("El acceso con Google no se cargó. Recarga la página e inténtalo de nuevo; el tablero sigue en solo lectura.", true); return; }
+        if (!auth) { toast("El acceso con Google todavía se está conectando. Espera un momento e inténtalo de nuevo.", true); return; }
+        signInWithGoogle();
       }
 
       function phrasePlanAnchorMonday(){
