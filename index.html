@@ -578,6 +578,48 @@
       .repo-item .hist-main-btn{flex:1;min-width:0;text-align:left;display:flex;gap:.75rem;align-items:flex-start;padding:0;min-height:0;cursor:pointer}
       .repo-del{flex-shrink:0;display:inline-flex;align-items:center;gap:.35rem;border-radius:999px;padding:.5rem .8rem;font-size:12px;font-weight:800;background:#fff;color:var(--accent-ink);box-shadow:inset 0 0 0 1px #fecdd3;min-height:2.25rem;transition:all .15s}
       .repo-del:hover{background:var(--accent);color:#fff;box-shadow:none}
+      /* ---------- Guía para el Formador (contenido estático) ---------- */
+      .guia-intro{margin:-.5rem 0 1.25rem;font-size:13.5px;font-weight:600;line-height:1.55;color:var(--dim)}
+      .guia-seg{margin-bottom:1.25rem}
+      .tpl-card{padding:0;margin-bottom:.75rem}
+      .tpl-head{width:100%;display:flex;align-items:center;gap:.625rem;text-align:left;padding:1rem;min-height:3.5rem}
+      .tpl-head .tpl-ico{display:flex;width:2.5rem;height:2.5rem;flex-shrink:0;align-items:center;justify-content:center;border-radius:.65rem;background:var(--accent-soft);color:var(--accent)}
+      .tpl-head .tpl-title{flex:1;min-width:0;font-family:var(--font-display);font-size:15px;font-weight:800;line-height:1.35;color:#000}
+      .tpl-head .tpl-chev{flex-shrink:0;color:var(--dim);transition:transform .15s}
+      .tpl-card.open .tpl-head .tpl-chev{transform:rotate(180deg)}
+      .tpl-dur{flex-shrink:0;border-radius:999px;background:#000;color:#fff;padding:.3rem .65rem;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+      .tpl-body{border-top:1px solid var(--border);padding:1rem}
+      .tpl-meta{display:grid;gap:.15rem;margin-bottom:1rem}
+      @media(min-width:640px){.tpl-meta{grid-template-columns:1fr 1fr}}
+      .tpl-text{font-size:14.5px;line-height:1.65;color:rgba(10,10,10,.88)}
+      .tpl-text p{margin:0 0 .7rem}
+      .tpl-text p:last-child{margin-bottom:0}
+      .tpl-text ul{margin:.2rem 0 .8rem;padding-left:1.15rem}
+      .tpl-text li{margin-bottom:.45rem}
+      .tpl-text strong{color:#000}
+      .tpl-asunto{margin:0 0 1rem;border-radius:.75rem;background:var(--surface-2);padding:.7rem .85rem;font-size:14px;line-height:1.5;color:rgba(10,10,10,.85)}
+      .tpl-asunto strong{color:#000}
+      .guia-h3{margin:1.75rem 0 .35rem;display:flex;align-items:center;gap:.625rem;font-family:var(--font-display);font-size:1.05rem;font-weight:900}
+      .guia-note{margin:0 0 .85rem;font-size:13px;font-weight:600;line-height:1.55;color:var(--dim)}
+      .guia-table-card{padding:1rem;margin-bottom:1rem}
+      table.guia-table{width:100%;border-collapse:collapse;font-size:12.5px;line-height:1.45}
+      table.guia-table th{background:#000;color:#fff;text-align:left;padding:.55rem .6rem;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+      table.guia-table td{padding:.55rem .6rem;border-bottom:1px solid var(--border);color:rgba(10,10,10,.88);overflow-wrap:break-word}
+      table.guia-table tr:last-child td{border-bottom:none}
+      @media(max-width:640px){
+        table.guia-table thead{display:none}
+        table.guia-table,table.guia-table tbody,table.guia-table tr,table.guia-table td{display:block;width:100%}
+        table.guia-table tr{border:1px solid var(--border);border-radius:.75rem;margin-bottom:.6rem;padding:.35rem .7rem;background:var(--surface-3)}
+        table.guia-table tr:last-child{margin-bottom:0}
+        table.guia-table td{border-bottom:1px solid var(--border);padding:.45rem 0;display:flex;gap:.75rem;align-items:baseline;justify-content:space-between;text-align:right}
+        table.guia-table tr td:last-child{border-bottom:none}
+        table.guia-table td::before{content:attr(data-label);flex-shrink:0;font-size:10.5px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;color:var(--dim);text-align:left}
+      }
+      .guia-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+      .guia-list li{display:flex;gap:.65rem;align-items:flex-start;padding:.7rem 0;border-top:1px solid var(--border);font-size:14.5px;line-height:1.6;color:rgba(10,10,10,.88)}
+      .guia-list li:first-child{border-top:none;padding-top:.2rem}
+      .guia-list li:last-child{padding-bottom:0}
+      .guia-list li .gl-ico{display:flex;width:1.6rem;height:1.6rem;flex-shrink:0;align-items:center;justify-content:center;border-radius:50%;background:var(--accent);color:#fff;margin-top:.1rem}
       .hidden{display:none !important}
       /* ============================================================
          AJUSTES SOLO MÓVIL (≤640px) — el equipo usa celulares:
@@ -944,7 +986,10 @@
         camera:["M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z","M12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"],
         image:["M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Z","M8.5 10a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z","m21 15-5-5L5 21"],
         report:["M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z","M14 2v6h6","M16 13H8","M16 17H8","M10 9H8"],
-        idcard:["M2 5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z","M9 11a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z","M5.5 17c.6-1.7 1.9-2.5 3.5-2.5s2.9.8 3.5 2.5","M15 8h4","M15 12h4"]
+        idcard:["M2 5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z","M9 11a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z","M5.5 17c.6-1.7 1.9-2.5 3.5-2.5s2.9.8 3.5 2.5","M15 8h4","M15 12h4"],
+        book:["M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z","M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"],
+        copy:["M9 9h11a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2z","M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"],
+        chevD:["m6 9 6 6 6-6"]
       };
       function icon(name,size,sw){
         size=size||16; sw=sw||2;
@@ -1472,27 +1517,35 @@
       }
       /* ---------- Marcado del equipo (solo sus actividades) ----------
          Pendiente y En curso son AUTOMÁTICOS (flujo por fecha): el equipo
-         NO los elige. Los botones Completado / No Completado aparecen SOLO
-         cuando el día de la actividad ya pasó (fecha < hoy): en días
-         futuros la actividad se ve Pendiente y el día de hoy se ve
-         En curso, todavía sin botones, porque aún no se sabe si se cumplió.
-         Cuando el día ya pasó, cada persona marca SUS propias actividades
-         como Completado o No Completado. El marcado cierra el domingo
-         23:59 de la semana de la actividad; una actividad del domingo se
-         puede cerrar el lunes siguiente hasta las 23:59. Pasado ese plazo,
-         el estado queda fijo para el equipo («Semana cerrada»); los admins
-         pueden editar siempre. Marcar No Completado exige escribir la
-         novedad (por qué no se cumplió), que se guarda en
-         no_completado_motivo y se ve en la tarjeta; al marcar Completado,
-         el motivo se limpia. */
+         NO los elige. Los botones Completado / No Completado aparecen
+         desde las 18:00 DEL MISMO DÍA de la actividad (hora local del
+         dispositivo): antes de las 18:00 de hoy la actividad se ve
+         En curso, todavía sin botones; en días futuros se ve Pendiente,
+         también sin botones. Desde las 18:00 de hoy y en días pasados,
+         cada persona marca SUS propias actividades como Completado o
+         No Completado. El marcado cierra el domingo 23:59 de la semana
+         de la actividad; una actividad del domingo se puede cerrar el
+         lunes siguiente hasta las 23:59. Pasado ese plazo, el estado
+         queda fijo para el equipo («Semana cerrada»); los admins pueden
+         editar siempre. Marcar No Completado exige escribir la novedad
+         (por qué no se cumplió), que se guarda en no_completado_motivo
+         y se ve en la tarjeta; al marcar Completado, el motivo se limpia. */
       function actWeekSunday(a){ return addDaysISO(mondayOfISO(a.date), 6); }
       /* Último día en que el equipo puede marcar: el domingo de la semana
          de la actividad; si la actividad ES de ese domingo, el lunes
          siguiente (para que también se pueda cerrar). */
       function actMarkDeadline(a){ var sun = actWeekSunday(a); return a.date === sun ? addDaysISO(sun, 1) : sun; }
       function actWeekOpen(a){ return !!a && TODAY <= actMarkDeadline(a); }
-      /* El día de la actividad ya pasó: recién ahí se puede marcar. */
-      function actDayPassed(a){ return !!a && a.date < TODAY; }
+      /* ¿Ya son las 18:00 (hora local del dispositivo)? */
+      function markHourReached(){ return new Date().getHours() >= 18; }
+      /* La ventana de marcado ya abrió: días pasados siempre; hoy, desde
+         las 18:00; días futuros, todavía no. */
+      function actDayPassed(a){
+        if (!a) return false;
+        if (a.date < TODAY) return true;
+        if (a.date === TODAY) return markHourReached();
+        return false;
+      }
       function isOwnActivity(a){ return !!a && currentProfile && String(a.member_id) === String(myMemberOrden()); }
       function handleSetStatus(actId, status){
         if (isAdmin()) { fsSetStatus(actId, status); return; }
@@ -1506,7 +1559,7 @@
            Pendiente y En curso son automáticos y no se pueden elegir. */
         if (status !== "completada" && status !== "no_completado") { toast("Pendiente y En curso son automáticos. Solo puedes marcar tu actividad como Completado o No Completado.", true); return; }
         if (!isOwnActivity(a)) { toast("Solo puedes marcar tus propias actividades.", true); return; }
-        if (!actDayPassed(a)) { toast("Todavía no puedes marcar esta actividad: los botones de Completado / No Completado aparecen cuando ya pasó su día.", true); return; }
+        if (!actDayPassed(a)) { toast(a.date === TODAY ? "Todavía no puedes marcar esta actividad: los botones de Completado / No Completado aparecen desde las 18:00 de hoy." : "Todavía no puedes marcar esta actividad: los botones de Completado / No Completado aparecen el día de la actividad desde las 18:00.", true); return; }
         if (!actWeekOpen(a)) { toast("Semana cerrada: esa semana ya terminó y el estado ya no se puede cambiar.", true); return; }
         if (status === "no_completado") { openNoCompModal(a); return; }
         if (!requireDb()) return;
@@ -1625,7 +1678,8 @@
           { id:"objetivos", label:"Objetivos", ic:"target", count: isAdmin() ? state.members.length : 1 },
           { id:"temas", label:"Temas", ic:"bell", count: state.topics.length },
           { id:"equipo", label:"Equipo", ic:"users", count: state.members.length },
-          { id:"reporte", label:"Reporte", ic:"report", count: state.reportsResumen.length }
+          { id:"reporte", label:"Reporte", ic:"report", count: state.reportsResumen.length },
+          { id:"guia", label:"Guía", ic:"book", count: 0 }
         ];
         if (isAdmin()) tabs.push({ id:"datos", label:"Datos", ic:"idcard", count: state.members.length });
         $("tabs").innerHTML = tabs.map(function(t){
@@ -1634,7 +1688,7 @@
         var btns = $("tabs").querySelectorAll("[data-view]");
         for (var i=0;i<btns.length;i++) btns[i].addEventListener("click", function(){ view = this.getAttribute("data-view"); render(); });
         var fab = $("fab");
-        if (view === "equipo" || view === "reporte" || view === "datos" || view === "objetivos") { fab.classList.add("hidden"); }
+        if (view === "equipo" || view === "reporte" || view === "datos" || view === "objetivos" || view === "guia") { fab.classList.add("hidden"); }
         else {
           fab.classList.remove("hidden");
           var label = view === "temas" ? "Nuevo tema" : "Nueva actividad";
@@ -1884,11 +1938,12 @@
         var overdue = a.date < TODAY && !isClosedAct(a);
         var done = a.status === "completada";
         var noComp = isNoCompletado(a);
-        /* Sin marcar: actividad propia (vista del equipo) de un día que YA
-           PASÓ de esta semana que sigue en el estado automático
-           (Pendiente / En curso), sin elegir Completado ni No Completado.
-           Hoy y los días futuros no cuentan: todavía no se pueden marcar. */
-        var unmarked = !isAdmin() && isOwnActivity(a) && a.date >= mondayOfISO(TODAY) && a.date < TODAY && !isClosedAct(a);
+        /* Sin marcar: actividad propia (vista del equipo) de esta semana
+           cuya ventana de marcado YA abrió (días pasados, u hoy desde las
+           18:00) que sigue en el estado automático (Pendiente / En curso),
+           sin elegir Completado ni No Completado. Hoy antes de las 18:00
+           y los días futuros no cuentan: todavía no se pueden marcar. */
+        var unmarked = !isAdmin() && isOwnActivity(a) && a.date >= mondayOfISO(TODAY) && actDayPassed(a) && !isClosedAct(a);
         var barColor = noComp ? "var(--accent-ink)" : overdue ? "var(--accent)" : done ? "#000" : normPriority(a.priority) === "alta" ? "var(--accent)" : "#e4e4e7";
         var h = '<article class="card'+(overdue?" overdue":"")+(unmarked?" unmarked":"")+'"><span class="bar" style="background:'+barColor+'" aria-hidden="true"></span><div class="card-top">';
         h += m ? avatar(m,40) : '<span class="agenda-ico">'+icon("users",16)+'</span>';
@@ -1950,12 +2005,13 @@
           h += "</div>";
           h += '<p class="week-closed-note">'+icon("lock",12,2.4)+'Semana cerrada · ya no puedes cambiar el estado</p>';
         } else if (!actDayPassed(a)) {
-          /* Hoy o un día que aún no llega: se ve el estado automático
-             (Pendiente / En curso) y todavía NO hay botones de marcado. */
+          /* Hoy antes de las 18:00, o un día que aún no llega: se ve el
+             estado automático (Pendiente / En curso) y todavía NO hay
+             botones de marcado. */
           var autoStateFuture = !done && !noComp;
           h += '<div class="team-mark">'
             + '<p class="team-mark-state">'+icon("clock",12)+'Tu estado: <strong>'+STATUS_LABEL[a.status]+'</strong>'+(autoStateFuture ? ' · automático' : '')+'</p>'
-            + '<p class="team-mark-hint">Podrás marcar Completado o No Completado cuando ya pase este día.</p></div>';
+            + '<p class="team-mark-hint">'+(a.date === TODAY ? 'Podrás marcar Completado o No Completado desde las 18:00 de hoy.' : 'Podrás marcar Completado o No Completado el día de esta actividad, desde las 18:00.')+'</p></div>';
         } else {
           var autoState = !done && !noComp;
           h += '<div class="team-mark" role="group" aria-label="Marcar tu actividad '+esc(a.title)+'">'
@@ -1987,16 +2043,16 @@
         var visible = memberFilter == null ? wa : wa.filter(function(a){return a.member_id===memberFilter;});
         var ov = overdueActs();
         var h = "";
-        /* Recordatorio para el equipo: actividades propias de días que YA
-           PASARON de ESTA semana que siguen sin marcar (ni Completado
-           ni No Completado). Las de hoy y las futuras no cuentan, porque
-           todavía no se pueden marcar. Desaparece cuando todas las de
-           días pasados quedan marcadas. */
+        /* Recordatorio para el equipo: actividades propias de ESTA semana
+           cuya ventana de marcado YA abrió (días pasados, u hoy desde las
+           18:00) que siguen sin marcar (ni Completado ni No Completado).
+           Hoy antes de las 18:00 y las futuras no cuentan, porque todavía
+           no se pueden marcar. Desaparece cuando todas quedan marcadas. */
         if (!isAdmin()) {
           var moToday = mondayOfISO(TODAY);
-          var unmarkedMine = visibleActivities().filter(function(a){ return a.date >= moToday && a.date < TODAY && !isClosedAct(a); });
+          var unmarkedMine = visibleActivities().filter(function(a){ return a.date >= moToday && actDayPassed(a) && !isClosedAct(a); });
           if (unmarkedMine.length > 0) {
-            h += '<div class="reminder-banner" role="note"><span class="rb-ico">' + icon("bell", 17) + '</span><div class="rb-body"><p class="rb-title">Recuerda marcar como completa tu actividad</p><p class="rb-text">Tienes ' + unmarkedMine.length + (unmarkedMine.length === 1 ? " actividad" : " actividades") + ' de días ya pasados de esta semana sin marcar. En cada tarjeta elige <strong>Completado</strong> o <strong>No Completado</strong>; este aviso desaparece cuando todas queden marcadas.</p></div><span class="rb-count">' + unmarkedMine.length + ' sin marcar</span></div>';
+            h += '<div class="reminder-banner" role="note"><span class="rb-ico">' + icon("bell", 17) + '</span><div class="rb-body"><p class="rb-title">Recuerda marcar como completa tu actividad</p><p class="rb-text">Tienes ' + unmarkedMine.length + (unmarkedMine.length === 1 ? " actividad" : " actividades") + ' de esta semana sin marcar y ya puedes marcarlas (los días pasados y hoy desde las 18:00). En cada tarjeta elige <strong>Completado</strong> o <strong>No Completado</strong>; este aviso desaparece cuando todas queden marcadas.</p></div><span class="rb-count">' + unmarkedMine.length + ' sin marcar</span></div>';
           }
         }
         h += filterBarHTML(wa);
@@ -2125,14 +2181,16 @@
             if (_driA) h += '<span class="meta-days">'+icon("calendar",11,2.4)+esc(_driA.label)+"</span>";
             if (a.deliverable) h += '<span style="display:inline-flex;align-items:center;gap:.25rem">'+icon("box",12)+esc(a.deliverable)+"</span>";
             if (overdue) h += '<span class="venc">'+icon("alert",12)+"Vencida</span>";
-            if (!isAdmin() && isOwnActivity(a) && a.date >= mondayOfISO(TODAY) && a.date < TODAY && !isClosedAct(a)) h += '<span class="sinmarcar-tag">'+icon("alert",11,2.4)+"Sin marcar</span>";
+            if (!isAdmin() && isOwnActivity(a) && a.date >= mondayOfISO(TODAY) && actDayPassed(a) && !isClosedAct(a)) h += '<span class="sinmarcar-tag">'+icon("alert",11,2.4)+"Sin marcar</span>";
             if (!isAdmin() && !actWeekOpen(a)) h += '<span class="pill pill-meta">'+icon("lock",11,2.4)+"Semana cerrada</span>";
             h += '</p></div><button type="button" class="icon-btn" data-act-edit="'+esc(a.id)+'" aria-label="Editar '+esc(a.title)+'">'+icon("pencil",15)+'</button>';
             if (!isAdmin()) {
               /* Equipo: estado actual fijo + solo dos botones (Completado /
-                 No Completado) cuando el día de la actividad YA PASÓ y el
-                 plazo de marcado sigue abierto. Hoy y en días futuros no
-                 hay botones: el estado se ve Pendiente / En curso. */
+                 No Completado) cuando la ventana de marcado ya abrió (el
+                 día de la actividad desde las 18:00, o días pasados) y el
+                 plazo de marcado sigue abierto. Antes de las 18:00 de hoy
+                 y en días futuros no hay botones: el estado se ve
+                 Pendiente / En curso. */
               h += '<span class="status-pill '+(noComp ? "nocompletado" : pillCls)+'" aria-label="Estado de '+esc(a.title)+": "+STATUS_LABEL[a.status]+'">'+(noComp ? STATUS_LABEL.no_completado : STATUS_LABEL[a.status])+"</span>";
               if (actWeekOpen(a) && actDayPassed(a)) {
                 h += '<button type="button" class="mark-btn ok sm'+(done?" on":"")+'" data-act-id="'+esc(a.id)+'" data-act-status="completada" aria-pressed="'+done+'" aria-label="Marcar '+esc(a.title)+' como Completado">'+icon("check",12,3)+'Completado</button>';
@@ -3219,6 +3277,182 @@
         });
       }
 
+      /* ---------- view: Guía para el Formador (contenido estático) ----------
+         La pestaña se ve como «Guía»; dentro, el título es «Guía para el
+         Formador». Sub-pestañas: Correo, Entrenamiento y Seguimiento.
+         Todo el contenido vive aquí en el código: no usa Firestore. */
+      var guiaTab = "correo";        /* correo | entrenamiento | seguimiento */
+      var guiaCorreoSel = "valco";   /* valco | tienda */
+      var guiaEntrSel = "valco";     /* valco | tienda */
+      var guiaOpenTpl = "";          /* id de la plantilla abierta */
+      var GUIA_TEMPLATES = [
+        { id:"v1", grupo:"valco", titulo:"Coordinación de Horarios para inicio en Tienda", dur:"",
+          para:"Tiendas y Zonales", cc:"Distrital, Giovanna, Anthony, Gabriela Pontón",
+          adjuntos:"Base de colaboradores + Guía de Entrenamiento",
+          asunto:"Coordinación de Horarios para inicio en Tienda",
+          cuerpo:"Buen día, estimados.\n\nEl personal en mención finaliza su entrenamiento en VALCO el [fecha]. Queda a disposición desde el [fecha] para coordinar horarios en su tienda asignada.\n\n**Importante:** revisar OBSERVACIONES, donde consta el horario de estudio de ciertos colaboradores.\n\nAdjunto va la base con los contactos. Favor coordinar directamente con cada colaborador.\n\nTambién va la Guía de Entrenamiento: imprimirla y mantenerla en carpeta para seguimiento y control. Su ayuda con la creación de usuarios en GDN/POS/SIM.\n\nAgradecemos su apoyo. Quedamos atentos." },
+        { id:"v2", grupo:"valco", titulo:"Coordinación de Horarios para entrenamiento en Tienda", dur:"",
+          para:"Formador de Campo", cc:"Giovanna, Anthony, Gabriela Pontón",
+          adjuntos:"Base de colaboradores + Formato de horarios 2 semanas",
+          asunto:"Coordinación de Horarios para entrenamiento en Tienda",
+          cuerpo:"Estimados.\n\nEl personal en mención finaliza su entrenamiento en VALCO el [fecha]. Queda a disposición desde el [fecha] para coordinar horarios en su tienda asignada.\n\n**Importante:** revisar OBSERVACIONES, donde consta el horario de estudio de ciertos colaboradores.\n\nAdjunto va la base con los contactos. Favor coordinar directamente con cada colaborador.\n\nDirectrices:\n- **AVANTE:** registrar el horario de cada colaborador. Los locales nuevos mantienen el horario exclusivo de capacitación las primeras 2 semanas, según el formato adjunto.\n- **Accesos:** solicitar oportunamente las claves POS para las prácticas.\n\nAl terminar las 2 semanas, la tienda gestiona los horarios según su operación, hasta el traslado al local definitivo." },
+        { id:"t1", grupo:"tienda", titulo:"Entrega de Plantillas", dur:"",
+          para:"Zonal", cc:"Distrital, Giovanna, Anthony, Gabriela Pontón",
+          adjuntos:"Base de colaboradores + Guía de Entrenamiento",
+          asunto:"ENTREGA DE PLANTILLAS [locales]",
+          cuerpo:"Buenas tardes, estimada Zonal.\n\nEl personal en mención finalizó su entrenamiento. Queda a disposición desde el [fecha] para coordinar horarios en su tienda asignada.\n\nAdjunto va la base con los contactos. Favor coordinar directamente con cada colaborador.\n\nTambién va la Guía de Entrenamiento: imprimirla y mantenerla en carpeta para seguimiento y control. Su ayuda con la creación de usuarios en GDN/POS/SIM.\n\nAgradecemos su apoyo. Quedamos atentos." },
+        { id:"t2", grupo:"tienda", titulo:"Ingreso Plantilla Nueva Guayaquil", dur:"2 semanas",
+          para:"Tienda, Zonal", cc:"Distrital, Giovanna, Anthony, Gabriela Pontón",
+          adjuntos:"Base del personal + Formato de horarios",
+          asunto:"INGRESO PLANTILLA NUEVA [local] – [nombre]",
+          cuerpo:"Buenos días, estimados.\n\nAdjunto va la base del personal que inicia su formación en la tienda seleccionada de su zona, desde el [fecha], según la planificación establecida.\n\nDirectrices:\n- **AVANTE:** registrar el horario de cada colaborador. Durante las primeras 2 semanas se mantiene el horario exclusivo de capacitación, según el formato adjunto.\n- **Accesos:** solicitar oportunamente las claves POS para las prácticas.\n\nAl terminar las 2 semanas, la tienda gestiona los horarios según su operación, hasta el traslado al local definitivo.\n\nAgradezco de antemano su gestión." },
+        { id:"t3", grupo:"tienda", titulo:"Ingreso Plantilla Nueva Foránea", dur:"3 semanas",
+          para:"Tienda, Zonal", cc:"Distrital, Giovanna, Anthony, Gabriela Pontón",
+          adjuntos:"Base del personal + Formato de horarios",
+          asunto:"INGRESO PLANTILLA NUEVA [local] – [nombre]",
+          cuerpo:"Buenos días, estimados.\n\nAdjunto va la base del personal que inicia su formación en la tienda seleccionada de su zona, desde el [fecha], según la planificación establecida.\n\nDirectrices:\n- **AVANTE:** registrar el horario de cada colaborador. Durante las primeras 3 semanas se mantiene el horario exclusivo de capacitación, según el formato adjunto.\n- **Accesos:** solicitar oportunamente las claves POS para las prácticas.\n\nAl terminar las 3 semanas, la tienda gestiona los horarios según su operación, hasta el traslado al local definitivo.\n\nAgradezco de antemano su gestión." }
+      ];
+      var GUIA_ENTRENAMIENTO = {
+        valco: [
+          "Revisar la base y OBSERVACIONES antes de iniciar.",
+          "Coordinar horarios con cada colaborador y registrarlos en AVANTE.",
+          "Gestionar usuarios y claves (GDN/POS/SIM) a tiempo.",
+          "Mantener el horario de capacitación durante 2 semanas.",
+          "Al finalizar, enviar el correo de coordinación para inicio o entrenamiento en tienda."
+        ],
+        tienda: [
+          "Recibir la plantilla según el correo de Entrega o Ingreso.",
+          "Registrar horarios en AVANTE y gestionar claves POS.",
+          "Mantener el horario de capacitación: 2 semanas en Guayaquil, 3 semanas en foránea.",
+          "Acompañar prácticas y verificar Speech en caja y procedimiento correcto.",
+          "Mantener la Guía de Entrenamiento impresa en carpeta.",
+          "Registrar novedades en el Reporte de la Virtual Office."
+        ]
+      };
+      function guiaTemplateById(id){ for (var i = 0; i < GUIA_TEMPLATES.length; i++) if (GUIA_TEMPLATES[i].id === id) return GUIA_TEMPLATES[i]; return null; }
+      function guiaBodyHTML(text){
+        var lines = String(text || "").split("\n");
+        var h = "", inList = false;
+        function bold(s){ return esc(s).replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>"); }
+        lines.forEach(function(line){
+          var t = line.trim();
+          if (t.indexOf("- ") === 0) {
+            if (!inList) { h += "<ul>"; inList = true; }
+            h += "<li>" + bold(t.slice(2)) + "</li>";
+          } else {
+            if (inList) { h += "</ul>"; inList = false; }
+            if (t) h += "<p>" + bold(t) + "</p>";
+          }
+        });
+        if (inList) h += "</ul>";
+        return h;
+      }
+      function guiaTableHTML(headers, rows){
+        var h = '<table class="guia-table"><thead><tr>';
+        headers.forEach(function(x){ h += "<th>" + esc(x) + "</th>"; });
+        h += "</tr></thead><tbody>";
+        rows.forEach(function(r){
+          h += "<tr>";
+          r.forEach(function(c, i){ h += '<td data-label="' + esc(headers[i]) + '">' + esc(c) + "</td>"; });
+          h += "</tr>";
+        });
+        return h + "</tbody></table>";
+      }
+      function guiaCopyTemplate(id){
+        var t = guiaTemplateById(id);
+        if (!t) return;
+        var text = "Para: " + t.para + "\nCC: " + t.cc + "\nAdjuntos: " + t.adjuntos + "\nAsunto: " + t.asunto + "\n\n" + t.cuerpo.replace(/\*\*/g, "");
+        function done(){ toast("Correo copiado: " + t.titulo); }
+        function fallback(){
+          var ta = document.createElement("textarea");
+          ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+          document.body.appendChild(ta); ta.select();
+          try { document.execCommand("copy"); done(); }
+          catch(e){ toast("No se pudo copiar. Abre la plantilla y cópiala a mano.", true); }
+          document.body.removeChild(ta);
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done).catch(function(){ fallback(); });
+        else fallback();
+      }
+      function guiaListHTML(items){
+        var h = '<ul class="guia-list">';
+        items.forEach(function(it){ h += '<li><span class="gl-ico">' + icon("check", 12, 3) + "</span><span>" + esc(it) + "</span></li>"; });
+        return h + "</ul>";
+      }
+      function renderGuia(main){
+        var h = '<div class="sec-head"><h2>' + secBadge("book", true) + 'Guía para el Formador</h2></div>';
+        h += '<p class="guia-intro">Copiar la plantilla, llenar lo que va entre [ ] y enviar.</p>';
+        h += '<div class="rep-subtabs" role="group" aria-label="Apartados de la guía">'
+          + '<button type="button" class="rep-subtab' + (guiaTab === "correo" ? " active" : "") + '" data-guia-tab="correo" aria-pressed="' + (guiaTab === "correo") + '">' + icon("report", 15) + 'Correo</button>'
+          + '<button type="button" class="rep-subtab' + (guiaTab === "entrenamiento" ? " active" : "") + '" data-guia-tab="entrenamiento" aria-pressed="' + (guiaTab === "entrenamiento") + '">' + icon("target", 15) + 'Entrenamiento</button>'
+          + '<button type="button" class="rep-subtab' + (guiaTab === "seguimiento" ? " active" : "") + '" data-guia-tab="seguimiento" aria-pressed="' + (guiaTab === "seguimiento") + '">' + icon("trending", 15) + 'Seguimiento</button>'
+          + '</div>';
+        if (guiaTab === "correo") {
+          h += '<div class="seg-row guia-seg" role="group" aria-label="Tipo de correo"><button type="button" data-guia-correo="valco" class="' + (guiaCorreoSel === "valco" ? "on" : "") + '" aria-pressed="' + (guiaCorreoSel === "valco") + '">VALCO</button><button type="button" data-guia-correo="tienda" class="' + (guiaCorreoSel === "tienda" ? "on" : "") + '" aria-pressed="' + (guiaCorreoSel === "tienda") + '">TIENDA</button></div>';
+          GUIA_TEMPLATES.filter(function(t){ return t.grupo === guiaCorreoSel; }).forEach(function(t){
+            var open = guiaOpenTpl === t.id;
+            h += '<article class="card tpl-card' + (open ? " open" : "") + '"><button type="button" class="tpl-head" data-guia-tpl="' + t.id + '" aria-expanded="' + open + '"><span class="tpl-ico">' + icon("report", 17) + '</span><span class="tpl-title">' + esc(t.titulo) + '</span>' + (t.dur ? '<span class="tpl-dur">' + esc(t.dur) + '</span>' : "") + '<span class="tpl-chev">' + icon("chevD", 18) + '</span></button>';
+            if (open) {
+              h += '<div class="tpl-body"><div class="tpl-meta">'
+                + '<div class="detail-kv"><p class="dk">Para</p><p class="dv">' + esc(t.para) + '</p></div>'
+                + '<div class="detail-kv"><p class="dk">CC</p><p class="dv">' + esc(t.cc) + '</p></div>'
+                + '<div class="detail-kv"><p class="dk">Adjuntos</p><p class="dv">' + esc(t.adjuntos) + '</p></div>'
+                + '</div>'
+                + '<p class="tpl-asunto"><strong>Asunto:</strong> ' + esc(t.asunto) + '</p>'
+                + '<div class="tpl-text">' + guiaBodyHTML(t.cuerpo) + '</div>'
+                + '<div class="form-actions"><button type="button" class="btn-red" data-guia-copy="' + t.id + '">' + icon("copy", 15) + 'Copiar correo</button></div>'
+                + '</div>';
+            }
+            h += '</article>';
+          });
+          h += '<h3 class="guia-h3">' + icon("layers", 17) + 'Ejemplo: base de colaboradores</h3>';
+          h += '<p class="guia-note">Datos de ejemplo, no reales.</p>';
+          h += '<div class="card guia-table-card">' + guiaTableHTML(
+            ["Cédula", "Nombre de colaborador", "Cargo", "Jornada", "Celular", "Local de entrenamiento", "Local apertura", "Zonal", "Observaciones"],
+            [
+              ["0999999999", "NOMBRE APELLIDO", "TRABAJADOR OPERATIVO", "COMPLETO", "0999999999", "000-LOCAL EJEMPLO", "000-LOCAL EJEMPLO", "NOMBRE ZONAL", "Estudia 7:30-12:30"],
+              ["0999999998", "NOMBRE APELLIDO", "TRABAJADOR OPERATIVO", "PARCIAL", "0999999998", "000-LOCAL EJEMPLO", "000-LOCAL EJEMPLO", "NOMBRE ZONAL", ""]
+            ]) + '</div>';
+          h += '<h3 class="guia-h3">' + icon("clock", 17) + 'Ejemplo: formato de horarios de capacitación</h3>';
+          h += '<p class="guia-note">Horarios de ejemplo.</p>';
+          h += '<div class="card guia-table-card">' + guiaTableHTML(
+            ["Día", "Tiempo completo", "Tiempo parcial"],
+            [
+              ["1", "07:00 - 16:00", "07:00 - 12:00"],
+              ["2", "07:00 - 16:00", "07:00 - 12:00"],
+              ["3", "07:00 - 16:00", "07:00 - 12:00"],
+              ["...", "...", "..."],
+              ["Último día (2 o 3 semanas)", "07:00 - 16:00", "07:00 - 12:00"]
+            ]) + '</div>';
+        } else if (guiaTab === "entrenamiento") {
+          h += '<div class="seg-row guia-seg" role="group" aria-label="Tipo de entrenamiento"><button type="button" data-guia-entr="valco" class="' + (guiaEntrSel === "valco" ? "on" : "") + '" aria-pressed="' + (guiaEntrSel === "valco") + '">VALCO</button><button type="button" data-guia-entr="tienda" class="' + (guiaEntrSel === "tienda" ? "on" : "") + '" aria-pressed="' + (guiaEntrSel === "tienda") + '">TIENDA</button></div>';
+          h += '<div class="card" style="padding:1.25rem">' + guiaListHTML(GUIA_ENTRENAMIENTO[guiaEntrSel]) + '</div>';
+        } else {
+          h += '<p class="guia-intro">Registrar cada visita o novedad. Ejemplo:</p>';
+          h += '<div class="card guia-table-card">' + guiaTableHTML(
+            ["Fecha", "Formador", "Local / Actividad", "Novedad", "Gravedad", "Seguimiento", "Estado"],
+            [
+              ["2026-11-25", "NOMBRE", "000-LOCAL EJEMPLO", "Sin claves POS", "Media", "Lo sigue el responsable", "En revisión"]
+            ]) + '</div>';
+          h += '<div class="card" style="padding:1.25rem">' + guiaListHTML([
+            "Gravedad: Baja, Media o Alta.",
+            "Seguimiento: Resuelta en sitio, No requiere seguimiento, Lo sigue el responsable, Se escala a Gio o Anthony, Se escala al Adm. Zonal o Se escala al Distrital.",
+            "Escalar lo que no se resuelva en sitio."
+          ]) + '</div>';
+        }
+        main.innerHTML = h;
+        var tb = main.querySelectorAll("[data-guia-tab]");
+        for (var i = 0; i < tb.length; i++) tb[i].addEventListener("click", function(){ guiaTab = this.getAttribute("data-guia-tab"); render(); });
+        var cb = main.querySelectorAll("[data-guia-correo]");
+        for (var j = 0; j < cb.length; j++) cb[j].addEventListener("click", function(){ guiaCorreoSel = this.getAttribute("data-guia-correo"); guiaOpenTpl = ""; render(); });
+        var eb = main.querySelectorAll("[data-guia-entr]");
+        for (var k = 0; k < eb.length; k++) eb[k].addEventListener("click", function(){ guiaEntrSel = this.getAttribute("data-guia-entr"); render(); });
+        var pb = main.querySelectorAll("[data-guia-tpl]");
+        for (var n = 0; n < pb.length; n++) pb[n].addEventListener("click", function(){ var id = this.getAttribute("data-guia-tpl"); guiaOpenTpl = guiaOpenTpl === id ? "" : id; render(); });
+        var cp = main.querySelectorAll("[data-guia-copy]");
+        for (var m2 = 0; m2 < cp.length; m2++) cp[m2].addEventListener("click", function(){ guiaCopyTemplate(this.getAttribute("data-guia-copy")); });
+      }
+
       /* ---------- render root ---------- */
       function render(){
         renderHeader();
@@ -3235,6 +3469,7 @@
         else if (view === "temas") renderTemas(main);
         else if (view === "equipo") renderEquipo(main);
         else if (view === "reporte") renderReporte(main);
+        else if (view === "guia") renderGuia(main);
         else if (view === "datos") renderDatos(main);
       }
       document.getElementById("weekPrev").innerHTML = icon("chevL",18);
@@ -3257,6 +3492,14 @@
       updateLockUI();
       render();
       initFirebase();
+      /* Al llegar las 18:00 con la página abierta, la ventana de marcado
+         del equipo se abre sola: se vuelve a pintar para que aparezcan
+         los botones Completado / No Completado de las actividades de hoy. */
+      var _markWindowWas = markHourReached();
+      setInterval(function(){
+        var now18 = markHourReached();
+        if (now18 !== _markWindowWas) { _markWindowWas = now18; if (currentProfile) render(); }
+      }, 30000);
     </script>
   </body>
 </html>
