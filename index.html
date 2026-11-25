@@ -481,6 +481,7 @@
       .team-mark{margin:.875rem 0 0 .375rem}
       .team-mark-state{margin:0 0 .5rem;display:flex;align-items:center;gap:.35rem;font-size:12px;font-weight:700;color:var(--dim)}
       .team-mark-state strong{color:#000}
+      .team-mark-hint{margin:0;font-size:12px;font-weight:600;line-height:1.5;color:var(--dim)}
       .team-mark-btns{display:flex;gap:.5rem;flex-wrap:wrap}
       .mark-btn{display:inline-flex;align-items:center;gap:.35rem;border-radius:999px;padding:.55rem .95rem;font-size:12.5px;font-weight:800;min-height:2.25rem;background:#fff;color:#000;box-shadow:inset 0 0 0 1px var(--border-strong);transition:all .15s}
       .mark-btn:hover{box-shadow:inset 0 0 0 1px #000}
@@ -1286,16 +1287,27 @@
       }
       /* ---------- Marcado del equipo (solo sus actividades) ----------
          Pendiente y En curso son AUTOMÁTICOS (flujo por fecha): el equipo
-         NO los elige. Cada persona solo marca SUS propias actividades
-         como Completado o No Completado, y solo mientras la semana de la
-         actividad no haya terminado: la semana corre de lunes a domingo
-         y se cierra el domingo 23:59. Pasado ese domingo, el estado queda
-         fijo para el equipo («Semana cerrada»); los admins pueden editar
-         siempre. Marcar No Completado exige escribir la novedad (por qué
-         no se cumplió), que se guarda en no_completado_motivo y se ve en
-         la tarjeta; al marcar Completado, el motivo se limpia. */
+         NO los elige. Los botones Completado / No Completado aparecen SOLO
+         cuando el día de la actividad ya pasó (fecha < hoy): en días
+         futuros la actividad se ve Pendiente y el día de hoy se ve
+         En curso, todavía sin botones, porque aún no se sabe si se cumplió.
+         Cuando el día ya pasó, cada persona marca SUS propias actividades
+         como Completado o No Completado. El marcado cierra el domingo
+         23:59 de la semana de la actividad; una actividad del domingo se
+         puede cerrar el lunes siguiente hasta las 23:59. Pasado ese plazo,
+         el estado queda fijo para el equipo («Semana cerrada»); los admins
+         pueden editar siempre. Marcar No Completado exige escribir la
+         novedad (por qué no se cumplió), que se guarda en
+         no_completado_motivo y se ve en la tarjeta; al marcar Completado,
+         el motivo se limpia. */
       function actWeekSunday(a){ return addDaysISO(mondayOfISO(a.date), 6); }
-      function actWeekOpen(a){ return !!a && TODAY <= actWeekSunday(a); }
+      /* Último día en que el equipo puede marcar: el domingo de la semana
+         de la actividad; si la actividad ES de ese domingo, el lunes
+         siguiente (para que también se pueda cerrar). */
+      function actMarkDeadline(a){ var sun = actWeekSunday(a); return a.date === sun ? addDaysISO(sun, 1) : sun; }
+      function actWeekOpen(a){ return !!a && TODAY <= actMarkDeadline(a); }
+      /* El día de la actividad ya pasó: recién ahí se puede marcar. */
+      function actDayPassed(a){ return !!a && a.date < TODAY; }
       function isOwnActivity(a){ return !!a && currentProfile && String(a.member_id) === String(myMemberOrden()); }
       function handleSetStatus(actId, status){
         if (isAdmin()) { fsSetStatus(actId, status); return; }
@@ -1309,6 +1321,7 @@
            Pendiente y En curso son automáticos y no se pueden elegir. */
         if (status !== "completada" && status !== "no_completado") { toast("Pendiente y En curso son automáticos. Solo puedes marcar tu actividad como Completado o No Completado.", true); return; }
         if (!isOwnActivity(a)) { toast("Solo puedes marcar tus propias actividades.", true); return; }
+        if (!actDayPassed(a)) { toast("Todavía no puedes marcar esta actividad: los botones de Completado / No Completado aparecen cuando ya pasó su día.", true); return; }
         if (!actWeekOpen(a)) { toast("Semana cerrada: esa semana ya terminó y el estado ya no se puede cambiar.", true); return; }
         if (status === "no_completado") { openNoCompModal(a); return; }
         if (!requireDb()) return;
@@ -1686,10 +1699,11 @@
         var overdue = a.date < TODAY && !isClosedAct(a);
         var done = a.status === "completada";
         var noComp = isNoCompletado(a);
-        /* Sin marcar: actividad propia (vista del equipo) de hoy o de un
-           día anterior de ESTA semana que sigue en el estado automático
-           (Pendiente / En curso), sin elegir Completado ni No Completado. */
-        var unmarked = !isAdmin() && isOwnActivity(a) && a.date >= mondayOfISO(TODAY) && a.date <= TODAY && !isClosedAct(a);
+        /* Sin marcar: actividad propia (vista del equipo) de un día que YA
+           PASÓ de esta semana que sigue en el estado automático
+           (Pendiente / En curso), sin elegir Completado ni No Completado.
+           Hoy y los días futuros no cuentan: todavía no se pueden marcar. */
+        var unmarked = !isAdmin() && isOwnActivity(a) && a.date >= mondayOfISO(TODAY) && a.date < TODAY && !isClosedAct(a);
         var barColor = noComp ? "var(--accent-ink)" : overdue ? "var(--accent)" : done ? "#000" : normPriority(a.priority) === "alta" ? "var(--accent)" : "#e4e4e7";
         var h = '<article class="card'+(overdue?" overdue":"")+(unmarked?" unmarked":"")+'"><span class="bar" style="background:'+barColor+'" aria-hidden="true"></span><div class="card-top">';
         h += m ? avatar(m,40) : '<span class="agenda-ico">'+icon("users",16)+'</span>';
@@ -1711,10 +1725,12 @@
         /* Controles según rol:
            - Admins: el grupo de estados de siempre (Pendiente / En curso /
              Completada) más el botón No Completado existente.
-           - Equipo, semana abierta: solo dos botones, Completado y
-             No Completado; Pendiente y En curso son automáticos y solo se
-             muestran como estado actual.
-           - Equipo, semana cerrada: el estado queda fijo y se muestra la
+           - Equipo, día ya pasado y plazo abierto: solo dos botones,
+             Completado y No Completado; Pendiente y En curso son
+             automáticos y solo se muestran como estado actual.
+           - Equipo, hoy o día futuro: solo se muestra el estado automático
+             (Pendiente / En curso), sin botones de marcado todavía.
+           - Equipo, plazo cerrado: el estado queda fijo y se muestra la
              nota «Semana cerrada». */
         var weekClosedTeam = !isAdmin() && !actWeekOpen(a);
         if (isAdmin()) {
@@ -1748,6 +1764,13 @@
           });
           h += "</div>";
           h += '<p class="week-closed-note">'+icon("lock",12,2.4)+'Semana cerrada · ya no puedes cambiar el estado</p>';
+        } else if (!actDayPassed(a)) {
+          /* Hoy o un día que aún no llega: se ve el estado automático
+             (Pendiente / En curso) y todavía NO hay botones de marcado. */
+          var autoStateFuture = !done && !noComp;
+          h += '<div class="team-mark">'
+            + '<p class="team-mark-state">'+icon("clock",12)+'Tu estado: <strong>'+STATUS_LABEL[a.status]+'</strong>'+(autoStateFuture ? ' · automático' : '')+'</p>'
+            + '<p class="team-mark-hint">Podrás marcar Completado o No Completado cuando ya pase este día.</p></div>';
         } else {
           var autoState = !done && !noComp;
           h += '<div class="team-mark" role="group" aria-label="Marcar tu actividad '+esc(a.title)+'">'
@@ -1779,14 +1802,16 @@
         var visible = memberFilter == null ? wa : wa.filter(function(a){return a.member_id===memberFilter;});
         var ov = overdueActs();
         var h = "";
-        /* Recordatorio para el equipo: actividades propias de hoy o de días
-           anteriores de ESTA semana que siguen sin marcar (ni Completado
-           ni No Completado). Desaparece cuando todas quedan marcadas. */
+        /* Recordatorio para el equipo: actividades propias de días que YA
+           PASARON de ESTA semana que siguen sin marcar (ni Completado
+           ni No Completado). Las de hoy y las futuras no cuentan, porque
+           todavía no se pueden marcar. Desaparece cuando todas las de
+           días pasados quedan marcadas. */
         if (!isAdmin()) {
           var moToday = mondayOfISO(TODAY);
-          var unmarkedMine = visibleActivities().filter(function(a){ return a.date >= moToday && a.date <= TODAY && !isClosedAct(a); });
+          var unmarkedMine = visibleActivities().filter(function(a){ return a.date >= moToday && a.date < TODAY && !isClosedAct(a); });
           if (unmarkedMine.length > 0) {
-            h += '<div class="reminder-banner" role="note"><span class="rb-ico">' + icon("bell", 17) + '</span><div class="rb-body"><p class="rb-title">Recuerda marcar como completa tu actividad</p><p class="rb-text">Tienes ' + unmarkedMine.length + (unmarkedMine.length === 1 ? " actividad" : " actividades") + ' de hoy o de días anteriores de esta semana sin marcar. En cada tarjeta elige <strong>Completado</strong> o <strong>No Completado</strong>; este aviso desaparece cuando todas queden marcadas.</p></div><span class="rb-count">' + unmarkedMine.length + ' sin marcar</span></div>';
+            h += '<div class="reminder-banner" role="note"><span class="rb-ico">' + icon("bell", 17) + '</span><div class="rb-body"><p class="rb-title">Recuerda marcar como completa tu actividad</p><p class="rb-text">Tienes ' + unmarkedMine.length + (unmarkedMine.length === 1 ? " actividad" : " actividades") + ' de días ya pasados de esta semana sin marcar. En cada tarjeta elige <strong>Completado</strong> o <strong>No Completado</strong>; este aviso desaparece cuando todas queden marcadas.</p></div><span class="rb-count">' + unmarkedMine.length + ' sin marcar</span></div>';
           }
         }
         h += filterBarHTML(wa);
@@ -1915,14 +1940,16 @@
             if (_driA) h += '<span class="meta-days">'+icon("calendar",11,2.4)+esc(_driA.label)+"</span>";
             if (a.deliverable) h += '<span style="display:inline-flex;align-items:center;gap:.25rem">'+icon("box",12)+esc(a.deliverable)+"</span>";
             if (overdue) h += '<span class="venc">'+icon("alert",12)+"Vencida</span>";
-            if (!isAdmin() && isOwnActivity(a) && a.date >= mondayOfISO(TODAY) && a.date <= TODAY && !isClosedAct(a)) h += '<span class="sinmarcar-tag">'+icon("alert",11,2.4)+"Sin marcar</span>";
+            if (!isAdmin() && isOwnActivity(a) && a.date >= mondayOfISO(TODAY) && a.date < TODAY && !isClosedAct(a)) h += '<span class="sinmarcar-tag">'+icon("alert",11,2.4)+"Sin marcar</span>";
             if (!isAdmin() && !actWeekOpen(a)) h += '<span class="pill pill-meta">'+icon("lock",11,2.4)+"Semana cerrada</span>";
             h += '</p></div><button type="button" class="icon-btn" data-act-edit="'+esc(a.id)+'" aria-label="Editar '+esc(a.title)+'">'+icon("pencil",15)+'</button>';
             if (!isAdmin()) {
               /* Equipo: estado actual fijo + solo dos botones (Completado /
-                 No Completado) mientras la semana siga abierta. */
+                 No Completado) cuando el día de la actividad YA PASÓ y el
+                 plazo de marcado sigue abierto. Hoy y en días futuros no
+                 hay botones: el estado se ve Pendiente / En curso. */
               h += '<span class="status-pill '+(noComp ? "nocompletado" : pillCls)+'" aria-label="Estado de '+esc(a.title)+": "+STATUS_LABEL[a.status]+'">'+(noComp ? STATUS_LABEL.no_completado : STATUS_LABEL[a.status])+"</span>";
-              if (actWeekOpen(a)) {
+              if (actWeekOpen(a) && actDayPassed(a)) {
                 h += '<button type="button" class="mark-btn ok sm'+(done?" on":"")+'" data-act-id="'+esc(a.id)+'" data-act-status="completada" aria-pressed="'+done+'" aria-label="Marcar '+esc(a.title)+' como Completado">'+icon("check",12,3)+'Completado</button>';
                 h += '<button type="button" class="mark-btn no sm'+(noComp?" on":"")+'" data-act-nocomp="'+esc(a.id)+'" aria-pressed="'+noComp+'" aria-label="Marcar '+esc(a.title)+' como No Completado">'+icon("x",12,3)+'No Completado</button>';
               }
