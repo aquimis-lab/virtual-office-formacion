@@ -155,6 +155,14 @@
       .status-group button.on-completada{background:#000;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2)}
       .status-group .status-static{flex:1;display:flex;align-items:center;justify-content:center;gap:.25rem;border-radius:999px;padding:.375rem .5rem;font-size:.75rem;font-weight:800;min-height:2rem}
       .status-group .status-static.on-nocompletado{background:var(--accent-soft);color:var(--accent-ink);box-shadow:inset 0 0 0 1.5px var(--accent)}
+      .nocomp-row{margin:.5rem 0 0 .375rem;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+      .nocomp-btn{display:inline-flex;align-items:center;gap:.35rem;border-radius:999px;padding:.45rem .8rem;font-size:12px;font-weight:800;background:#fff;color:var(--accent-ink);box-shadow:inset 0 0 0 1px #fecdd3;min-height:2rem;transition:all .15s}
+      .nocomp-btn:hover{background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
+      .nocomp-btn.revert{background:#000;color:#fff;box-shadow:none}
+      .nocomp-btn.revert:hover{background:#27272a}
+      .nocomp-note{font-size:12px;font-weight:600;color:var(--dim);line-height:1.4}
+      .agenda-nocomp-btn{display:flex;width:2.25rem;height:2.25rem;flex-shrink:0;align-items:center;justify-content:center;border-radius:50%;background:#fff;color:var(--accent-ink);box-shadow:inset 0 0 0 1px #fecdd3;transition:all .15s}
+      .agenda-nocomp-btn:hover{background:var(--accent);color:#fff;box-shadow:none}
       .overdue-box{margin-bottom:2rem;border-radius:var(--radius);background:var(--accent-soft);padding:1rem;box-shadow:inset 0 0 0 1px #fecdd3}
       .overdue-box h2{margin:0 0 .75rem;display:flex;align-items:center;gap:.625rem;font-family:var(--font-display);font-size:1rem;font-weight:800;color:var(--accent-ink)}
       .overdue-box h2 .ob-ico{display:flex;width:2rem;height:2rem;align-items:center;justify-content:center;border-radius:.5rem;background:var(--accent);color:#fff}
@@ -447,6 +455,8 @@
       body.locked .status-group button{pointer-events:none}
       body.locked .status-pill{pointer-events:none}
       body.locked .agenda-row-title{pointer-events:none;cursor:default}
+      body.locked .nocomp-row{display:none !important}
+      body.locked .agenda-nocomp-btn{display:none !important}
       .hidden{display:none !important}
     </style>
   </head>
@@ -636,16 +646,18 @@
         return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="'+sw+'" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+ps+'</svg>';
       }
       var STATUS_LABEL={pendiente:"Pendiente",en_curso:"En curso",completada:"Completada",no_completado:"No Completado"};
-      /* "No Completado" solo se muestra: llega desde Firestore (lo marca el
-         tablero Muse) y en esta página no existe ninguna opción para
-         ponerlo. No forma parte del flujo de tres estados de arriba. */
+      /* "No Completado": una actividad que estaba Completada puede marcarse
+         así también desde este tablero compartido (solo con la edición
+         desbloqueada). Reescribe la etiqueta «Completada», no cuenta como
+         hecha en avances ni objetivos, y es reversible: se puede volver a
+         Completada, o pasar a Pendiente / En curso desde el grupo de estados. */
       function normActStatus(s){var v=String(s==null?"":s).toLowerCase().trim().replace(/[\s-]+/g,"_");if(v==="no_completada")v="no_completado";return v;}
       function isNoCompletado(a){return !!a&&a.status==="no_completado";}
       function isClosedAct(a){return !!a&&(a.status==="completada"||a.status==="no_completado");}
       var PRIORITY_LABEL={alta:"Alta",media:"Media",baja:"Baja",ninguna:"Sin prioridad"};
       function normPriority(p){return String(p==null?"":p).toLowerCase().trim();}
       function hasPriority(p){var n=normPriority(p);return n==="alta"||n==="media"||n==="baja";}
-      var NEXT_STATUS={pendiente:"en_curso",en_curso:"completada",completada:"pendiente"};
+      var NEXT_STATUS={pendiente:"en_curso",en_curso:"completada",completada:"pendiente",no_completado:"completada"};
 
       function memberByOrden(orden){for(var i=0;i<state.members.length;i++)if(state.members[i].orden===orden)return state.members[i];return undefined;}
       function memberById(id){for(var i=0;i<state.members.length;i++)if(state.members[i].id===id||state.members[i].orden===id)return state.members[i];return undefined;}
@@ -928,7 +940,7 @@
       /* ================= ESCRITURAS (CRUD) ================= */
       function fsSetStatus(actId, status){
         if (!guardEdit()) return;
-        if (status === "no_completado") return; /* En esta página nunca se marca "No Completado": solo se muestra. */
+        if (!STATUS_LABEL[status]) return;
         if (!requireDb()) return;
         db.collection("actividades").doc(String(actId)).update({ status: status }).then(function(){ toast("Estado actualizado · "+STATUS_LABEL[status]); }).catch(writeError);
       }
@@ -1075,7 +1087,11 @@
         var sts = root.querySelectorAll("[data-act-status]");
         for (var j=0;j<sts.length;j++) sts[j].addEventListener("click", function(){ fsSetStatus(this.getAttribute("data-act-id"), this.getAttribute("data-act-status")); });
         var cyc = root.querySelectorAll("[data-act-cycle]");
-        for (var k=0;k<cyc.length;k++) cyc[k].addEventListener("click", function(){ var a = activityById(this.getAttribute("data-act-cycle")); if (a) fsSetStatus(a.id, NEXT_STATUS[a.status]); });
+        for (var k=0;k<cyc.length;k++) cyc[k].addEventListener("click", function(){ var a = activityById(this.getAttribute("data-act-cycle")); if (a) fsSetStatus(a.id, NEXT_STATUS[a.status] || "pendiente"); });
+        var ncb = root.querySelectorAll("[data-act-nocomp]");
+        for (var n=0;n<ncb.length;n++) ncb[n].addEventListener("click", function(e){ e.stopPropagation(); fsSetStatus(this.getAttribute("data-act-nocomp"), "no_completado"); });
+        var rvb = root.querySelectorAll("[data-act-revert]");
+        for (var r=0;r<rvb.length;r++) rvb[r].addEventListener("click", function(e){ e.stopPropagation(); fsSetStatus(this.getAttribute("data-act-revert"), "completada"); });
       }
       /* ----- Detalle de visitas / recorridos: un local debajo del otro -----
          Igual que en el tema de Próximas aperturas: el detalle puede venir
@@ -1297,8 +1313,7 @@
         h += '<div class="status-group" role="group" aria-label="Cambiar estado de '+esc(a.title)+'">';
         ["pendiente","en_curso","completada"].forEach(function(st){
           if (st === "completada" && noComp) {
-            /* La etiqueta «Completada» se reescribe por «No Completado»:
-               es solo lectura, no un botón para marcar ese estado. */
+            /* La etiqueta «Completada» se reescribe por «No Completado». */
             h += '<span class="status-static on-nocompletado" aria-current="true">'+icon("x",12,3)+STATUS_LABEL.no_completado+'</span>';
             return;
           }
@@ -1306,7 +1321,13 @@
           var ic = st==="completada" ? icon("check",12,3) : st==="en_curso" ? icon("clock",12) : icon("dot",12,2.6);
           h += '<button type="button" class="'+cls+'" data-act-id="'+esc(a.id)+'" data-act-status="'+st+'" aria-pressed="'+(a.status===st)+'">'+ic+STATUS_LABEL[st]+'</button>';
         });
-        h += "</div></article>";
+        h += "</div>";
+        if (done) {
+          h += '<div class="nocomp-row"><button type="button" class="nocomp-btn" data-act-nocomp="'+esc(a.id)+'" aria-label="Marcar '+esc(a.title)+' como No Completado">'+icon("x",12,3)+'Marcar No Completado</button><span class="nocomp-note">Solo si al revisarla no se hizo.</span></div>';
+        } else if (noComp) {
+          h += '<div class="nocomp-row"><button type="button" class="nocomp-btn revert" data-act-revert="'+esc(a.id)+'" aria-label="Volver '+esc(a.title)+' a Completada">'+icon("check",12,3)+'Volver a Completado</button><span class="nocomp-note">O usa Pendiente / En curso arriba para reabrirla.</span></div>';
+        }
+        h += "</article>";
         return h;
       }
       function emptyHTML(ic, title, desc, small){
@@ -1450,11 +1471,11 @@
             if (overdue) h += '<span class="venc">'+icon("alert",12)+"Vencida</span>";
             h += '</p></div><button type="button" class="icon-btn" data-act-edit="'+esc(a.id)+'" aria-label="Editar '+esc(a.title)+'">'+icon("pencil",15)+'</button>';
             if (noComp) {
-              /* Solo lectura: la píldora muestra «No Completado» y no cambia
-                 de estado al tocarla (ese estado no se marca en esta página). */
-              h += '<span class="status-pill nocompletado" aria-label="Estado de '+esc(a.title)+": "+STATUS_LABEL.no_completado+'">'+STATUS_LABEL.no_completado+"</span>";
+              /* Reversible: tocar la píldora vuelve la actividad a Completada. */
+              h += '<button type="button" class="status-pill nocompletado" data-act-cycle="'+esc(a.id)+'" aria-label="Cambiar estado de '+esc(a.title)+', ahora '+STATUS_LABEL.no_completado+'. Toca para volver a Completada">'+STATUS_LABEL.no_completado+"</button>";
             } else {
               h += '<button type="button" class="status-pill '+pillCls+'" data-act-cycle="'+esc(a.id)+'" aria-label="Cambiar estado de '+esc(a.title)+", ahora "+STATUS_LABEL[a.status]+'">'+STATUS_LABEL[a.status]+"</button>";
+              if (done) h += '<button type="button" class="agenda-nocomp-btn" data-act-nocomp="'+esc(a.id)+'" aria-label="Marcar '+esc(a.title)+' como No Completado" title="Marcar No Completado">'+icon("x",14,2.8)+'</button>';
             }
             h += "</article>";
           });
@@ -1731,7 +1752,7 @@
         return h;
       }
       function statusOptions(selected){
-        return ["pendiente","en_curso","completada"].map(function(s){
+        return ["pendiente","en_curso","completada","no_completado"].map(function(s){
           return '<option value="' + s + '"' + (selected === s ? " selected" : "") + '>' + STATUS_LABEL[s] + '</option>';
         }).join("");
       }
@@ -1862,7 +1883,7 @@
           + '<div><label class="flabel" for="fDate">Fecha *</label><input class="input" id="fDate" type="date" value="' + esc(a.date) + '"></div></div>'
           + '<div class="form-2"><div><label class="flabel" for="fPlace">Lugar</label><input class="input" id="fPlace" type="text" placeholder="Ej.: Valco, Santa Elena…" value="' + esc(a.place) + '"></div>'
           + '<div><label class="flabel" for="fDeliv">Entregable</label><input class="input" id="fDeliv" type="text" placeholder="Ej.: Reporte de visita" value="' + esc(a.deliverable) + '"></div></div>'
-          + '<div class="form-2"><div><label class="flabel" for="fStatus">Estado</label>' + (isNoCompletado(a) ? '<div class="input" style="display:flex;align-items:center"><span class="status-pill nocompletado">' + STATUS_LABEL.no_completado + '</span></div><input type="hidden" id="fStatus" value="no_completado">' : '<select class="input" id="fStatus">' + statusOptions(a.status) + '</select>') + '</div>'
+          + '<div class="form-2"><div><label class="flabel" for="fStatus">Estado</label><select class="input" id="fStatus">' + statusOptions(a.status) + '</select><p class="form-note" style="margin-top:.35rem">«No Completado» es para una actividad que quedó como Completada pero al revisarla no se hizo. No cuenta como hecha y se puede revertir.</p></div>'
           + '<div><label class="flabel" for="fPrio">Prioridad</label><select class="input" id="fPrio">' + priorityOptions(a.priority) + '</select></div></div>'
           + '<div class="form-error" id="formError"></div>'
           + '<div class="form-actions"><button type="submit" class="btn-save" id="saveBtn">' + (isEdit ? "Guardar cambios" : "Agregar actividad") + '</button></div></form>'
