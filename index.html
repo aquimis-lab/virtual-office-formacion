@@ -3536,7 +3536,7 @@
           var un = unmarkedActionable();
           if (un.length) list.push({ ic: "bell", title: "Tienes " + un.length + (un.length === 1 ? " actividad sin marcar" : " actividades sin marcar"), sub: "Ya puedes marcarlas: Completado o No Completado", go: "semana" });
           state.reportsResumen.filter(function(r){ return currentUser && r.reporter_uid === currentUser.uid && (r.estado || "Recibido") !== "Cerrado"; }).slice(0, 5).forEach(function(r){
-            list.push({ ic: "report", title: "Tu reporte sigue abierto · " + reportLugar(r), sub: "Estado: " + (r.estado || "Recibido") + " · " + (r.fecha || ""), id: r.id });
+            list.push({ ic: "report", title: "Tu reporte sigue abierto · " + reportLugar(r), sub: "Estado: " + estadoLabel(r.estado) + " · " + (r.fecha || ""), id: r.id });
           });
         }
         return list;
@@ -3939,7 +3939,17 @@
       }
       function reportWeekActs(){ var mo = monday(), su = addDaysISO(mo, 6); return visibleActivities().filter(function(a){ return a.date >= mo && a.date <= su; }); }
       function gravedadPillHTML(g){ var st = g === "Alta" ? "background:var(--accent);color:#fff" : g === "Media" ? "background:#000;color:#fff" : "background:var(--surface-2);color:rgba(0,0,0,.75)"; return '<span class="pill" style="' + st + '">' + esc(g || "—") + "</span>"; }
-      function estadoPillHTML(e){ var st = e === "Cerrado" ? "background:#000;color:#fff" : e === "En revisión" ? "background:var(--accent);color:#fff" : "background:var(--surface-2);color:rgba(0,0,0,.75)"; return '<span class="pill" style="' + st + '">' + esc(e || "Recibido") + "</span>"; }
+      /* Estados de reporte: en Firestore se guardan "Recibido" (la regla
+         publicada exige ese valor al crear), "En revisión" y "Cerrado",
+         pero en pantalla se muestran como Pendiente (rojo), En revisión
+         (azul) y Concluido (verde). estadoLabel traduce el valor guardado
+         a la etiqueta visible; nunca se guarda la etiqueta. */
+      function estadoLabel(e){ var v = e || "Recibido"; return v === "Cerrado" ? "Concluido" : v === "En revisión" ? "En revisión" : "Pendiente"; }
+      function estadoPillHTML(e){ var v = e || "Recibido"; var st = v === "Cerrado" ? "background:#16a34a;color:#fff" : v === "En revisión" ? "background:#2563eb;color:#fff" : "background:var(--accent);color:#fff"; return '<span class="pill" style="' + st + '">' + estadoLabel(v) + "</span>"; }
+      /* Quién concluyó (cerró) un reporte: solo tiene sentido con el
+         estado guardado "Cerrado" y el campo concluido_por presente. */
+      function concluidoPorDe(r, d){ if (!r || (r.estado || "Recibido") !== "Cerrado") return ""; return r.concluido_por || (d && d.concluido_por) || ""; }
+      function concluidoPorPillHTML(r){ var quien = concluidoPorDe(r); return quien ? '<span class="pill pill-meta">' + icon("checkCircle", 11) + "Concluido por: " + esc(quien) + "</span>" : ""; }
       /* Comprime una foto a JPEG de menos de ~850 KB en el cliente. */
       function compressPhoto(file){
         return new Promise(function(resolve, reject){
@@ -4014,7 +4024,7 @@
               + '<span class="pill pill-meta">' + icon("users", 11) + "Reportó: " + esc(r.reporter_nombre || "") + "</span>"
               + (r.responsable_nombre ? '<span class="pill pill-meta">' + icon("checkCircle", 11) + "Responsable: " + esc(r.responsable_nombre) + "</span>" : "")
               + '<span class="pill pill-meta">' + esc(r.tipo || "—") + "</span>"
-              + gravedadPillHTML(r.gravedad) + estadoPillHTML(r.estado)
+              + gravedadPillHTML(r.gravedad) + estadoPillHTML(r.estado) + concluidoPorPillHTML(r)
               + (r.foto_count ? '<span class="pill pill-meta">' + icon("camera", 11) + r.foto_count + (r.foto_count === 1 ? " foto" : " fotos") + "</span>" : "")
               + (own ? '<span class="pill" style="background:#000;color:#fff">Tu reporte</span>' : "")
               + "</span></span></button>"
@@ -4270,14 +4280,15 @@
           body += kv("¿Qué pasó?", d.que_paso);
           body += kv("Acción tomada", d.accion_tomada);
           body += kv("Seguimiento", d.seguimiento);
-          body += kv("Estado", resumen.estado || d.estado || "Recibido");
+          body += kv("Estado", estadoLabel(resumen.estado || d.estado || "Recibido"));
+          body += kv("Concluido por", concluidoPorDe(resumen, d));
           /* Solo se renderizan fotos guardadas como data URL de imagen
              (así las escribe el formulario) y el valor va escapado: el
              contenido viene de Firestore y lo pudo crear otro usuario. */
           var safePhotos = res.photos.filter(function(p){ return typeof p === "string" && p.indexOf("data:image/") === 0; });
           if (safePhotos.length) body += '<div class="detail-kv"><p class="dk">Evidencia</p><div class="detail-photos" style="margin-top:.5rem">' + safePhotos.map(function(p){ return '<img src="' + esc(p) + '" alt="Foto de evidencia del reporte">'; }).join("") + "</div></div>";
           if (isAdmin()) {
-            body += '<form class="form" id="repEstadoForm" style="margin-top:1rem"><div><label class="flabel" for="repEstado">Cambiar estado</label><select class="input" id="repEstado">' + ["Recibido", "En revisión", "Cerrado"].map(function(e){ return '<option value="' + e + '"' + ((resumen.estado || "Recibido") === e ? " selected" : "") + ">" + e + "</option>"; }).join("") + '</select></div><div class="form-actions"><button type="submit" class="btn-save" id="repEstadoBtn">Guardar estado</button></div></form>';
+            body += '<form class="form" id="repEstadoForm" style="margin-top:1rem"><div><label class="flabel" for="repEstado">Cambiar estado</label><select class="input" id="repEstado">' + [["Recibido", "Pendiente"], ["En revisión", "En revisión"], ["Cerrado", "Concluido"]].map(function(par){ return '<option value="' + par[0] + '"' + ((resumen.estado || "Recibido") === par[0] ? " selected" : "") + ">" + par[1] + "</option>"; }).join("") + '</select></div><div class="form-actions"><button type="submit" class="btn-save" id="repEstadoBtn">Guardar estado</button></div></form>';
             body += '<p class="form-note" style="margin-top:1rem">Si este reporte está mal o sobra, puedes borrarlo: se elimina con su detalle y sus fotos, y desaparece del historial para todos.</p>' + deleteBlockHTML().replace("Eliminar", "Borrar reporte").replace("Sí, eliminar", "Sí, borrar");
           } else {
             body += '<p class="form-note" style="margin-top:1rem">Es tu reporte: puedes verlo completo con sus fotos, pero no editarlo. Solo Anthony y Gio pueden cambiar su estado.</p>';
@@ -4289,10 +4300,23 @@
               ev.preventDefault();
               var nuevo = $("repEstado").value;
               var btn = $("repEstadoBtn"); btn.disabled = true; btn.textContent = "Guardando…";
+              /* Al concluir (guardar "Cerrado") queda registrado qué admin
+                 lo concluyó —su primer nombre, p. ej. Anthony o Giovanna—
+                 para que en el Repositorio se sepa que se recibió y se
+                 actuó. Si el reporte se reabre (Pendiente o En revisión),
+                 ese dato se borra de ambos documentos. */
+              var updResumen = { estado: nuevo }, updDetalle = { estado: nuevo };
+              if (nuevo === "Cerrado") {
+                var quien = currentProfile && currentProfile.name ? String(currentProfile.name).trim().split(/\s+/)[0] : "";
+                if (quien) { updResumen.concluido_por = quien; updDetalle.concluido_por = quien; }
+              } else {
+                var limpiar = firebase.firestore.FieldValue.delete();
+                updResumen.concluido_por = limpiar; updDetalle.concluido_por = limpiar;
+              }
               var batch = db.batch();
-              batch.update(db.collection("reportes_resumen").doc(id), { estado: nuevo });
-              batch.update(db.collection("reportes_detalle").doc(id), { estado: nuevo });
-              batch.commit().then(function(){ toast("Estado del reporte: " + nuevo); closeModal(); }).catch(function(err){ console.error(err); btn.disabled = false; btn.textContent = "Guardar estado"; toast("No se pudo guardar el estado del reporte.", true); });
+              batch.update(db.collection("reportes_resumen").doc(id), updResumen);
+              batch.update(db.collection("reportes_detalle").doc(id), updDetalle);
+              batch.commit().then(function(){ toast("Estado del reporte: " + estadoLabel(nuevo)); closeModal(); }).catch(function(err){ console.error(err); btn.disabled = false; btn.textContent = "Guardar estado"; toast("No se pudo guardar el estado del reporte.", true); });
             });
           }
         }).catch(function(err){
@@ -4420,7 +4444,8 @@
           kv("¿Qué pasó?", d.que_paso);
           kv("Acción tomada", d.accion_tomada);
           kv("Seguimiento", d.seguimiento);
-          kv("Estado", r.estado || d.estado || "Recibido");
+          kv("Estado", estadoLabel(r.estado || d.estado || "Recibido"));
+          kv("Concluido por", concluidoPorDe(r, d));
           if (it.photos.length) {
             doc.setFont("helvetica", "bold"); doc.setFontSize(10.5); doc.setTextColor(113, 113, 122);
             newPageIf(16);
