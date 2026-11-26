@@ -1051,6 +1051,33 @@
       .age-tag{flex-shrink:0;border-radius:999px;background:var(--accent-soft);color:var(--accent-ink);box-shadow:inset 0 0 0 1px #fecdd3;padding:.2rem .6rem;font-size:11px;font-weight:900;white-space:nowrap}
       .perfil-photo-row{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
       .perfil-photo-row img{border-radius:50%;object-fit:cover}
+      /* Perfil de Equipo (solo web): tarjeta tocable, vista de perfil
+         y mensajes de ánimo predeterminados */
+      .team-card-btn{display:block;width:100%;text-align:left;font:inherit;transition:box-shadow .15s}
+      .team-card-btn:hover{box-shadow:0 14px 30px -12px rgba(0,0,0,.28)}
+      .team-card-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+      .team-card-foot{margin-top:1rem;display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+      .team-card-love{display:inline-flex;align-items:center;gap:.35rem;font-size:12.5px;font-weight:700;color:var(--dim)}
+      .team-card-open{display:inline-flex;align-items:center;gap:.2rem;font-size:12.5px;font-weight:800;color:var(--accent-ink)}
+      .pv-head{display:flex;align-items:center;gap:1rem;margin-bottom:1.25rem}
+      .pv-head h4{margin:0;font-family:var(--font-display);font-size:1.15rem;font-weight:800;line-height:1.25}
+      .pv-head p{margin:.15rem 0 0;font-size:13px;font-weight:600;color:var(--dim)}
+      .pv-rows{display:grid;gap:.9rem}
+      .pv-row span{display:block;font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--dim);margin-bottom:.2rem}
+      .pv-row p{margin:0;font-size:15px;line-height:1.55;font-weight:600}
+      .pv-empty{font-size:14px;font-weight:600;line-height:1.55;color:var(--dim)}
+      .pv-sec{margin-top:1.5rem;border-top:1px solid var(--border);padding-top:1.25rem}
+      .pv-sec h4{margin:0 0 .5rem;display:flex;align-items:center;gap:.45rem;font-family:var(--font-display);font-size:1rem;font-weight:800}
+      .pv-sub{margin:0 0 .9rem;font-size:13px;font-weight:600;color:var(--dim);line-height:1.5}
+      .react-got{display:grid;gap:.45rem}
+      .react-got p{margin:0;display:flex;align-items:baseline;gap:.5rem;font-size:13.5px;font-weight:600;line-height:1.45}
+      .react-got .rg-emoji{font-size:16px;line-height:1}
+      .react-got .rg-names{color:var(--dim);font-size:12.5px}
+      .react-grid{display:flex;flex-wrap:wrap;gap:.5rem}
+      .react-btn{display:inline-flex;align-items:center;gap:.45rem;border-radius:999px;padding:.55rem .9rem;font-size:13.5px;font-weight:800;background:#fff;color:var(--text);box-shadow:inset 0 0 0 1px var(--border);min-height:2.5rem;transition:all .15s}
+      .react-btn:hover{box-shadow:inset 0 0 0 1px rgba(0,0,0,.35)}
+      .react-btn.active{background:#000;color:#fff;box-shadow:0 4px 12px -4px rgba(0,0,0,.4)}
+      .react-btn .rg-emoji{font-size:16px;line-height:1}
       @media(min-width:1280px){
         html:not(.app-mode) .grid-2{grid-template-columns:repeat(3,1fr)}
       }
@@ -1273,7 +1300,7 @@
       var semQuery = "";            /* buscador de la tabla */
       var webSideCollapsed = false; /* barra lateral retraída (solo memoria) */
       var webNotifOpen = false;     /* panel de notificaciones abierto */
-      var perfiles = {};            /* perfiles/{uid} de Firestore: foto, frase, gustos */
+      var perfiles = {};            /* perfiles/{uid} de Firestore: foto, frase, gustos, signo, reacciones_dadas */
       var perfilFotoDraft = "";     /* foto en edición dentro del modal Mi perfil */
       var weekOffset = 0;
       var memberFilter = null;
@@ -1329,6 +1356,7 @@
         quote:["M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z","M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"],
         checkCircle:["M22 11.08V12a10 10 0 1 1-5.93-9.14","m9 11 3 3L22 4"],
         dot:["M12 13a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"],
+        heart:["M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 5.5c0 2.3 1.5 4.05 3 5.5l7 7Z"],
         trash:["M3 6h18","M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6","M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"],
         lock:["M19 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2Z","M7 11V7a5 5 0 0 1 10 0v4"],
         unlock:["M19 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2Z","M7 11V7a5 5 0 0 1 9.9-1"],
@@ -3111,7 +3139,7 @@
          ============================================================ */
 
       /* ---------- Perfil personal (colección perfiles/{uid}) ---------- */
-      function perfilDeMember(m){
+      function profileEntryDeMember(m){
         if (!m) return null;
         var nn = normName(m.name), first = nn.split(" ")[0], found = null;
         PROFILES.forEach(function(p){
@@ -3119,12 +3147,139 @@
           if (pn === nn) found = p;
           else if (!found && pn.split(" ")[0] === first) found = p;
         });
-        return found ? (perfiles[found.uid] || null) : null;
+        return found;
+      }
+      function uidDeMember(m){ var e = profileEntryDeMember(m); return e ? e.uid : null; }
+      function perfilDeMember(m){
+        var e = profileEntryDeMember(m);
+        return e ? (perfiles[e.uid] || null) : null;
       }
       function perfilAvatarHTML(m, size){
         var pf = perfilDeMember(m);
         if (pf && pf.foto) return '<img class="avatar avatar-photo" src="' + esc(pf.foto) + '" alt="" style="width:' + size + "px;height:" + size + 'px" loading="lazy">';
         return avatar(m, size);
+      }
+      /* ---------- Signo (opcional) y mensajes de ánimo ----------
+         El signo lo elige cada persona en Mi perfil; nunca se deriva
+         de su fecha de nacimiento. Los mensajes de ánimo son SOLO
+         opciones predeterminadas (sin texto libre): la reacción de
+         cada quien se guarda en SU propio documento perfiles/{uid},
+         en el mapa reacciones_dadas { uidDestino: idReaccion }, para
+         respetar la regla de escritura solo del documento propio.
+         Los conteos se calculan leyendo ese mapa en todos los
+         perfiles. Una sola reacción por persona y perfil: tocar
+         otra la cambia y tocar la misma la quita. */
+      var SIGNOS = ["Aries","Tauro","Géminis","Cáncer","Leo","Virgo","Libra","Escorpio","Sagitario","Capricornio","Acuario","Piscis"];
+      var REACCIONES = [
+        { id:"vamos", emoji:"💪", label:"¡Vamos, tú puedes!" },
+        { id:"sigue", emoji:"🌟", label:"¡Sigue así!" },
+        { id:"bravo", emoji:"👏", label:"¡Buen trabajo!" },
+        { id:"gracias", emoji:"🙌", label:"¡Gracias por tu apoyo!" },
+        { id:"celebra", emoji:"🎉", label:"¡A celebrar!" }
+      ];
+      function reaccionById(id){
+        for (var i = 0; i < REACCIONES.length; i++) if (REACCIONES[i].id === id) return REACCIONES[i];
+        return null;
+      }
+      function reaccionesRecibidas(uid){
+        var counts = {}, givers = {}, total = 0;
+        if (!uid) return { counts: counts, givers: givers, total: 0 };
+        Object.keys(perfiles).forEach(function(gid){
+          var dadas = (perfiles[gid] || {}).reacciones_dadas || {};
+          var rid = dadas[uid];
+          if (!rid || !reaccionById(rid)) return;
+          counts[rid] = (counts[rid] || 0) + 1;
+          total++;
+          var gp = PROFILES_BY_UID[gid];
+          var gname = (perfiles[gid] && perfiles[gid].nombre) || (gp ? gp.name : "Alguien del equipo");
+          (givers[rid] = givers[rid] || []).push(String(gname).split(" ")[0]);
+        });
+        return { counts: counts, givers: givers, total: total };
+      }
+      function miReaccionA(uid){
+        if (!currentUser || !uid) return null;
+        var dadas = (perfiles[currentUser.uid] || {}).reacciones_dadas || {};
+        return dadas[uid] || null;
+      }
+      function guardarReaccion(m, rid){
+        if (!currentUser || !currentProfile) return;
+        if (!requireDb()) return;
+        var targetUid = uidDeMember(m);
+        if (!targetUid || targetUid === currentUser.uid) return;
+        /* Actualización optimista local: la vista se refresca al
+           instante y el snapshot de perfiles lo confirma después. */
+        if (!perfiles[currentUser.uid]) perfiles[currentUser.uid] = { nombre: currentProfile.name };
+        var next = {};
+        var cur = perfiles[currentUser.uid].reacciones_dadas || {};
+        Object.keys(cur).forEach(function(k){ next[k] = cur[k]; });
+        if (rid) next[targetUid] = rid; else delete next[targetUid];
+        perfiles[currentUser.uid].reacciones_dadas = next;
+        openPerfilView(m);
+        render();
+        var patch = { nombre: currentProfile.name, updated_at: new Date().toISOString() };
+        patch["reacciones_dadas." + targetUid] = rid ? rid : firebase.firestore.FieldValue.delete();
+        var ref = db.collection("perfiles").doc(currentUser.uid);
+        ref.update(patch).catch(function(err){
+          if (err && err.code === "not-found" && rid) {
+            /* La persona aún no tenía documento de perfil: se crea
+               con solo su nombre y su mapa de reacciones dadas. */
+            var data = { nombre: currentProfile.name, updated_at: new Date().toISOString(), reacciones_dadas: {} };
+            data.reacciones_dadas[targetUid] = rid;
+            return ref.set(data, { merge: true });
+          }
+          console.error(err);
+          toast("No se pudo guardar tu mensaje de ánimo. Inténtalo de nuevo.", true);
+        });
+      }
+      /* Vista de perfil al tocar una tarjeta de Equipo (solo web):
+         lo que la persona quiso compartir de sí misma (cómo se
+         identifica, qué le gusta y su signo si lo puso), los
+         mensajes de ánimo recibidos y el selector para dejarle uno. */
+      function openPerfilView(m){
+        if (!m) return;
+        var pf = perfilDeMember(m) || {};
+        var uid = uidDeMember(m);
+        var isMe = !!uid && !!currentUser && uid === currentUser.uid;
+        var rec = reaccionesRecibidas(uid);
+        var mine = miReaccionA(uid);
+        var body = '<div class="pv-head">' + perfilAvatarHTML(m, 76) + "<div><h4>" + esc(m.name) + (isMe ? " · Tú" : "") + "</h4><p>" + esc(m.role || "Equipo de Formación") + "</p></div></div>";
+        var rows = "";
+        if (pf.frase) rows += '<div class="pv-row"><span>Cómo se identifica</span><p>' + esc(pf.frase) + "</p></div>";
+        if (pf.gustos) rows += '<div class="pv-row"><span>Qué le gusta</span><p>' + esc(pf.gustos) + "</p></div>";
+        if (pf.signo) rows += '<div class="pv-row"><span>Signo</span><p>' + esc(pf.signo) + "</p></div>";
+        body += rows ? '<div class="pv-rows">' + rows + "</div>"
+          : '<p class="pv-empty">' + (isMe ? "Todavía no completaste tu perfil personal. Edítalo y comparte cómo te identificas, qué te gusta y, si quieres, tu signo." : "Todavía no completó su perfil personal.") + "</p>";
+        body += '<div class="pv-sec"><h4>' + icon("heart", 16, 2.2) + " Mensajes de ánimo</h4>";
+        if (rec.total) {
+          body += '<div class="react-got">';
+          REACCIONES.forEach(function(r){
+            if (!rec.counts[r.id]) return;
+            body += '<p><span class="rg-emoji">' + r.emoji + "</span><span><strong>" + esc(r.label) + "</strong> × " + rec.counts[r.id] + ' <span class="rg-names">· ' + esc((rec.givers[r.id] || []).join(", ")) + "</span></span></p>";
+          });
+          body += "</div>";
+        } else {
+          body += '<p class="pv-sub">' + (isMe ? "Todavía no recibiste mensajes de ánimo." : "Todavía no recibió mensajes de ánimo. ¡Sé la primera persona en dejarle uno!") + "</p>";
+        }
+        if (isMe) {
+          body += '<div class="form-actions"><button type="button" class="btn-save" id="pvEditBtn">Editar mi perfil</button></div>';
+        } else if (uid) {
+          body += '<p class="pv-sub" style="margin-top:1rem">Déjale un mensaje de ánimo: elige uno. Puedes cambiarlo o quitarlo cuando quieras.</p><div class="react-grid">';
+          REACCIONES.forEach(function(r){
+            body += '<button type="button" class="react-btn' + (mine === r.id ? " active" : "") + '" data-reaccion="' + r.id + '" aria-pressed="' + (mine === r.id ? "true" : "false") + '"><span class="rg-emoji">' + r.emoji + "</span>" + esc(r.label) + (rec.counts[r.id] ? " · " + rec.counts[r.id] : "") + "</button>";
+          });
+          body += "</div>";
+          if (mine) body += '<p class="pv-sub" style="margin:.75rem 0 0">Ya le dejaste «' + esc((reaccionById(mine) || {}).label || "") + "». Tócalo de nuevo para quitarlo.</p>";
+        }
+        body += "</div>";
+        openModal("Perfil", body);
+        var eb = $("pvEditBtn");
+        if (eb) eb.addEventListener("click", openPerfilModal);
+        Array.prototype.forEach.call(document.querySelectorAll("[data-reaccion]"), function(btn){
+          btn.addEventListener("click", function(){
+            var rid = btn.getAttribute("data-reaccion");
+            guardarReaccion(m, mine === rid ? null : rid);
+          });
+        });
       }
       function openPerfilModal(){
         if (!currentUser || !currentProfile) return;
@@ -3135,10 +3290,11 @@
           ? '<img id="pfPreviewImg" src="' + esc(perfilFotoDraft) + '" alt="Tu foto de perfil" style="width:76px;height:76px">'
           : (meM ? avatar(meM, 76) : avatar({ name: currentProfile.name, color: "#0A0A0A" }, 76));
         var body = '<form class="form" id="perfilForm">'
-          + '<p class="form-note">Este es <strong>tu perfil personal</strong>: lo que pongas aquí se ve junto a tu nombre y tu rol en Equipo, y Anthony y Gio lo ven en Datos del equipo. No tiene nada que ver con tus datos administrativos.</p>'
+          + '<p class="form-note">Este es <strong>tu perfil personal</strong>: lo que pongas aquí se ve cuando alguien toca tu tarjeta en Equipo, y Anthony y Gio lo ven en Datos del equipo. No tiene nada que ver con tus datos administrativos.</p>'
           + '<div><span style="display:block;margin-bottom:.5rem;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#52525b">Tu foto</span><div class="perfil-photo-row"><span id="pfPreview">' + preview + '</span><label class="rep-photo-btn">' + icon("camera", 15) + 'Subir mi foto<input type="file" id="pfFoto" accept="image/*" class="hidden"></label></div><p class="form-note" style="margin-top:.5rem">La foto se comprime automáticamente para que pese poco.</p></div>'
           + '<div><label class="flabel" for="pfFrase">Cómo me identifico</label><input class="input" id="pfFrase" type="text" maxlength="120" placeholder="Ej.: Aprendo rápido y me encanta estar en tienda." value="' + esc(pf.frase || "") + '"></div>'
           + '<div><label class="flabel" for="pfGustos">Qué me gusta</label><textarea class="input" id="pfGustos" placeholder="Ej.: El mar, la fotografía y el vóley.">' + esc(pf.gustos || "") + "</textarea></div>"
+          + '<div><label class="flabel" for="pfSigno">Mi signo (opcional)</label><select class="input" id="pfSigno"><option value="">Prefiero no decirlo</option>' + SIGNOS.map(function(s){ return '<option value="' + esc(s) + '"' + (pf.signo === s ? " selected" : "") + ">" + esc(s) + "</option>"; }).join("") + '</select><p class="form-note" style="margin-top:.4rem">Solo si quieres compartirlo: tú lo eliges aquí y se verá en tu perfil de Equipo.</p></div>'
           + '<div class="form-error" id="formError"></div>'
           + '<div class="form-actions"><button type="submit" class="btn-save" id="pfSaveBtn">Guardar mi perfil</button></div></form>';
         openModal("Mi perfil", body);
@@ -3166,11 +3322,12 @@
             nombre: currentProfile.name,
             frase: $("pfFrase").value.trim(),
             gustos: $("pfGustos").value.trim(),
+            signo: $("pfSigno").value,
             foto: perfilFotoDraft || "",
             member_orden: myMemberOrden(),
             updated_at: new Date().toISOString()
           }, { merge: true }).then(function(){
-            toast("Perfil guardado. Ya se ve junto a tu nombre en Equipo.");
+            toast("Perfil guardado. Ya se ve en tu tarjeta de Equipo.");
             closeModal();
             render();
           }).catch(function(err){
@@ -3189,8 +3346,8 @@
         state.members.forEach(function(m){
           var pf = perfilDeMember(m);
           h += '<article class="card datos-card"><div class="team-who">' + perfilAvatarHTML(m, 48) + "<div><h3>" + esc(m.name) + "</h3><p>" + esc(m.role || "Equipo de Formación") + "</p></div></div>"
-            + (pf && (pf.frase || pf.gustos)
-              ? '<div class="datos-rows">' + (pf.frase ? "<p><strong>Cómo se identifica:</strong> " + esc(pf.frase) + "</p>" : "") + (pf.gustos ? "<p><strong>Qué le gusta:</strong> " + esc(pf.gustos) + "</p>" : "") + "</div>"
+            + (pf && (pf.frase || pf.gustos || pf.signo)
+              ? '<div class="datos-rows">' + (pf.frase ? "<p><strong>Cómo se identifica:</strong> " + esc(pf.frase) + "</p>" : "") + (pf.gustos ? "<p><strong>Qué le gusta:</strong> " + esc(pf.gustos) + "</p>" : "") + (pf.signo ? "<p><strong>Signo:</strong> " + esc(pf.signo) + "</p>" : "") + "</div>"
               : '<p class="team-note" style="margin-top:.85rem">Todavía no completó su perfil personal.</p>')
             + "</article>";
         });
@@ -3198,17 +3355,25 @@
         return h;
       }
 
-      /* ---------- Equipo web: solo foto + nombre + rol ---------- */
+      /* ---------- Equipo web: tarjeta limpia (foto + nombre + rol);
+         al tocarla se abre el perfil personal de la persona ---------- */
       function renderEquipoWeb(main){
         var h = '<section aria-label="Equipo"><div class="sec-head"><h2>' + secBadge("users") + 'Equipo de Formación</h2><button type="button" class="btn-red" id="btnMiPerfil">' + icon("pencil", 14, 2.4) + ' Editar mi perfil</button></div>';
-        h += '<p class="team-sub">Todas las personas del equipo de Formación y Desarrollo, con la foto de su perfil personal.</p><div class="grid-3">';
+        h += '<p class="team-sub">Todas las personas del equipo de Formación y Desarrollo. Toca una tarjeta para ver su perfil y dejarle un mensaje de ánimo.</p><div class="grid-3">';
         state.members.forEach(function(m){
-          h += '<article class="card team-card" style="--team-color:' + m.color + '"><div class="team-top"><div class="team-who">' + perfilAvatarHTML(m, 52) + "<div><h3>" + esc(m.name) + "</h3><p>" + esc(m.role || "Equipo de Formación") + "</p></div></div></div></article>";
+          var rec = reaccionesRecibidas(uidDeMember(m));
+          h += '<button type="button" class="card team-card team-card-btn" style="--team-color:' + m.color + '" data-perfil-orden="' + m.orden + '" aria-label="Ver el perfil de ' + esc(m.name) + '"><span class="team-top"><span class="team-who">' + perfilAvatarHTML(m, 52) + "<span><h3>" + esc(m.name) + "</h3><p>" + esc(m.role || "Equipo de Formación") + "</p></span></span></span>"
+            + '<span class="team-card-foot"><span class="team-card-love">' + (rec.total ? icon("heart", 14, 2.2) + rec.total + (rec.total === 1 ? " mensaje de ánimo" : " mensajes de ánimo") : "") + '</span><span class="team-card-open">Ver perfil ' + icon("chevR", 14, 2.4) + "</span></span></button>";
         });
         h += "</div></section>";
         main.innerHTML = h;
         var b = $("btnMiPerfil");
         if (b) b.addEventListener("click", openPerfilModal);
+        Array.prototype.forEach.call(main.querySelectorAll("[data-perfil-orden]"), function(btn){
+          btn.addEventListener("click", function(){
+            openPerfilView(memberByOrden(Number(btn.getAttribute("data-perfil-orden"))));
+          });
+        });
       }
 
       /* ---------- Hoy web, por rol ----------
