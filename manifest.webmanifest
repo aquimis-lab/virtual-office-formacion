@@ -1,6 +1,6 @@
 {
-  "name": "Virtual Office Formación",
-  "short_name": "Formación",
+  "name": "Virtual Office",
+  "short_name": "Office V",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",
