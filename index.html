@@ -9,7 +9,30 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Office V" />
-    <script>(function(){var l=document.createElement("link");l.rel="manifest";l.href="manifest.webmanifest";(document.head||document.getElementsByTagName("head")[0]).appendChild(l);})();</script>
+    <link rel="manifest" id="appManifest" href="manifest.webmanifest" />
+    <script>/* PWA — preparación temprana, antes de que cargue el resto:
+       1) El manifiesto va enlazado en el HTML desde el inicio (no
+          inyectado tarde): Chrome lo necesita así para ofrecer la
+          instalación. Si el exportador lo convirtió en data: URI, se
+          restaura la URL real.
+       2) beforeinstallprompt se captura AQUÍ, apenas el navegador lo
+          dispara, y se guarda: si se escucha recién al final del body
+          el evento se pierde y el botón «Descargar app» ya no puede
+          abrir la instalación nativa de un toque.
+       3) El service worker se registra de inmediato, no al final. */
+    (function(){
+      var l=document.getElementById("appManifest");
+      if(l&&/^data:/i.test(l.getAttribute("href")||""))l.setAttribute("href","manifest.webmanifest");
+      window.__installPromptEvent=null;
+      window.__appInstalledFlag=false;
+      window.__swRegistrationTried=false;
+      function notify(){if(typeof window.__refreshInstallUI==="function"){try{window.__refreshInstallUI();}catch(e){}}}
+      window.__notifyInstallChange=notify;
+      window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();window.__installPromptEvent=e;notify();});
+      window.addEventListener("appinstalled",function(){window.__installPromptEvent=null;window.__appInstalledFlag=true;notify();});
+      if("serviceWorker" in navigator){window.__swRegistrationTried=true;try{navigator.serviceWorker.register("sw.js").catch(function(){});}catch(e){}}
+      if(navigator.getInstalledRelatedApps){navigator.getInstalledRelatedApps().then(function(apps){if(apps&&apps.length){window.__appInstalledFlag=true;notify();}}).catch(function(){});}
+    })();</script>
     <script>/* Modo app: standalone (app instalada Android/Chrome) o navigator.standalone (iOS),
        o vista previa con ?app=1 en la URL para validar la experiencia real de la app
        desde el navegador. Solo en ese modo se activa la experiencia nueva;
@@ -535,12 +558,19 @@
       .login-download{margin-top:1.25rem;border-top:1px solid rgba(255,255,255,.14);padding-top:1.1rem}
       .login-download .install-btn-login{margin-top:0}
       .login-download-note{margin:.6rem 0 0;font-size:12.5px;line-height:1.5;color:rgba(255,255,255,.55);font-weight:600;text-align:center}
-      .ios-help{margin:.75rem 0 0;border-radius:.75rem;padding:.7rem .85rem;font-size:13px;font-weight:600;line-height:1.55}
+      /* Ayuda de instalación manual: SOLO último recurso y discreta.
+         El camino principal es la ventana nativa que abre el botón
+         con un toque; esto ya no compite con él. */
+      .ios-help{margin:.6rem 0 0;padding:0 .25rem;font-size:12px;font-weight:600;line-height:1.5;text-align:center}
       .ios-help strong{font-weight:800}
-      .ios-help-login{background:rgba(255,255,255,.09);color:rgba(255,255,255,.88);box-shadow:inset 0 0 0 1px rgba(255,255,255,.16)}
-      .ios-help-login strong{color:#fff}
-      .hero-session .ios-help{flex-basis:100%;margin:.25rem 0 0;background:rgba(255,255,255,.1);color:rgba(255,255,255,.88);box-shadow:inset 0 0 0 1px rgba(255,255,255,.16);text-align:left}
-      .hero-session .ios-help strong{color:#fff}
+      .ios-help-login{color:rgba(255,255,255,.5)}
+      .ios-help-login strong{color:rgba(255,255,255,.82)}
+      .hero-session .ios-help{flex-basis:100%;margin:.25rem 0 0;color:rgba(255,255,255,.55);text-align:left}
+      .hero-session .ios-help strong{color:rgba(255,255,255,.85)}
+      .install-btn.is-installed{cursor:default}
+      .install-btn-login.is-installed{background:#fff;color:#000;box-shadow:none}
+      .install-btn-login.is-installed:hover{background:#fff}
+      .install-btn-header.is-installed{background:rgba(255,255,255,.18)}
       @media(max-width:640px){.install-btn-login{font-size:14px;min-height:2.9rem}}
       .seg-row{display:flex;border-radius:999px;background:var(--surface-2);padding:.25rem;gap:.25rem}
       .seg-row button{flex:1;border-radius:999px;padding:.55rem .5rem;font-size:13px;font-weight:800;color:var(--dim);min-height:2.5rem}
@@ -1248,10 +1278,10 @@
           <button type="submit" class="btn-save" id="loginBtn">Ingresar</button>
         </form>
         <div class="login-download">
-          <button type="button" class="install-btn install-btn-login" id="installBtnLogin"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>Descargar app</button>
+          <button type="button" class="install-btn install-btn-login" id="installBtnLogin"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg><span class="install-btn-label">Descargar app</span></button>
           <p class="login-download-note">Instala Office V en tu celular o computadora y entra al tablero con un solo toque, sin abrir el navegador.</p>
-          <p class="ios-help ios-help-login hidden" id="iosHelpLogin">En Safari toca <strong>Compartir</strong> y luego <strong>«Añadir a pantalla de inicio»</strong> para instalarla como app.</p>
-          <p class="ios-help ios-help-login hidden" id="installHelpLogin">Si no se abre la ventana de instalación, abre el <strong>menú del navegador (⋮)</strong> y toca <strong>«Instalar app»</strong> o <strong>«Añadir a pantalla de inicio»</strong>.</p>
+          <p class="ios-help ios-help-login hidden" id="iosHelpLogin">En iPhone: toca <strong>Compartir</strong> y luego <strong>«Añadir a pantalla de inicio»</strong>.</p>
+          <p class="ios-help ios-help-login hidden" id="installHelpLogin">Si no se abrió la ventana de instalación: menú del navegador <strong>(⋮)</strong> → <strong>«Instalar app»</strong>.</p>
         </div>
         <p class="login-note">Puedes escribir solo tu usuario (nombre.apellido) o el correo completo. ¿Olvidaste tu contraseña? Pídele a Anthony que te asigne una nueva; una vez dentro, podrás cambiarla tú mismo.</p>
       </div>
@@ -1305,11 +1335,11 @@
               <button type="button" id="weekNext" aria-label="Semana siguiente"></button>
               <button type="button" id="weekToday" class="hoy-btn hidden">Hoy</button>
               <div class="hero-session" aria-label="Sesión">
-                <button type="button" class="hero-session-btn install-btn-header" id="installBtnHeader"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>Descargar app</button>
+                <button type="button" class="hero-session-btn install-btn-header" id="installBtnHeader"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg><span class="install-btn-label">Descargar app</span></button>
                 <button type="button" class="hero-session-btn" id="changePassBtn">Cambiar contraseña</button>
                 <button type="button" class="hero-session-btn accent" id="logoutBtn">Cerrar sesión</button>
-                <p class="ios-help hidden" id="iosHelpHeader">En Safari toca <strong>Compartir</strong> y luego <strong>«Añadir a pantalla de inicio»</strong> para instalarla como app.</p>
-                <p class="ios-help hidden" id="installHelpHeader">Si no se abre la ventana de instalación, abre el <strong>menú del navegador (⋮)</strong> y toca <strong>«Instalar app»</strong> o <strong>«Añadir a pantalla de inicio»</strong>.</p>
+                <p class="ios-help hidden" id="iosHelpHeader">En iPhone: toca <strong>Compartir</strong> y luego <strong>«Añadir a pantalla de inicio»</strong>.</p>
+                <p class="ios-help hidden" id="installHelpHeader">Si no se abrió la ventana de instalación: menú del navegador <strong>(⋮)</strong> → <strong>«Instalar app»</strong>.</p>
               </div>
             </div>
           </div>
@@ -5351,27 +5381,30 @@
     </script>
     <script>
       /* ===== App instalable (PWA) =====
-         - Registra el service worker (sw.js, junto al index.html).
-         - Botón «Descargar app»: SIEMPRE visible en la pantalla de
-           ingreso (antes de iniciar sesión) y en el encabezado con
-           sesión, en web y móvil, mientras la app no esté instalada
-           (nunca en modo standalone). No depende de que el navegador
-           dispare beforeinstallprompt: ese evento es irregular (no
-           llega si ya se descartó la instalación, en navegadores sin
-           soporte o dentro de otras apps) y el botón desaparecía.
-         - Al tocarlo: si hay beforeinstallprompt guardado, abre la
-           instalación nativa; si no, muestra la ayuda manual según el
-           equipo: iPhone/iPad → «Compartir → Añadir a pantalla de
-           inicio»; el resto → menú del navegador (⋮) → «Instalar app». */
+         - El manifiesto está enlazado en el HTML desde el inicio, el
+           service worker se registra en el <head> y beforeinstallprompt
+           se captura allí mismo, apenas el navegador lo dispara, y se
+           guarda en window.__installPromptEvent. Escucharlo recién
+           aquí (al final del body) perdía el evento y el botón no
+           podía abrir la instalación nativa.
+         - Botón «Descargar app»: visible en la pantalla de ingreso
+           (antes de iniciar sesión) y en el encabezado con sesión.
+           Al tocarlo abre DIRECTAMENTE la ventana nativa de
+           instalación con el prompt guardado (un toque, sin pasos).
+         - Si la app ya está instalada en el equipo (appinstalled,
+           modo standalone o getInstalledRelatedApps), el botón pasa a
+           decir «App ya instalada» y deja de ofrecer la instalación.
+         - La ayuda del menú del navegador queda solo como último
+           recurso discreto, cuando el navegador aún no ofrece la
+           ventana nativa; en iPhone se muestra la ruta de Safari. */
       (function () {
         "use strict";
 
-        if ("serviceWorker" in navigator) {
-          window.addEventListener("load", function () {
-            navigator.serviceWorker.register("sw.js").catch(function () {
-              /* Sin service worker la web sigue funcionando igual en el navegador */
-            });
-          });
+        /* Respaldo: el service worker ya se registró en el <head>;
+           esto solo actúa si aquella registración no ocurrió. */
+        if ("serviceWorker" in navigator && !window.__swRegistrationTried) {
+          window.__swRegistrationTried = true;
+          try { navigator.serviceWorker.register("sw.js").catch(function () {}); } catch (e) {}
         }
 
         function isStandalone() {
@@ -5380,8 +5413,6 @@
         var ua = window.navigator.userAgent || "";
         var isIOS = /iphone|ipad|ipod/i.test(ua) || (window.navigator.platform === "MacIntel" && window.navigator.maxTouchPoints > 1);
 
-        var deferredPrompt = null;
-        var appInstalled = false;
         var btns = [document.getElementById("installBtnLogin"), document.getElementById("installBtnHeader")].filter(Boolean);
         var helps = {
           installBtnLogin: { ios: document.getElementById("iosHelpLogin"), generic: document.getElementById("installHelpLogin") },
@@ -5395,45 +5426,81 @@
           });
         }
 
-        function refreshInstallUI() {
-          /* El botón se muestra siempre que la app no esté instalada,
-             haya o no evento de instalación del navegador. */
-          var show = !isStandalone() && !appInstalled;
-          btns.forEach(function (b) { b.classList.toggle("hidden", !show); });
-          if (!show) hideAllHelps();
+        function isInstalled() { return !!window.__appInstalledFlag; }
+
+        function setBtnInstalled(b) {
+          b.classList.add("is-installed");
+          b.disabled = true;
+          var lbl = b.querySelector(".install-btn-label");
+          if (lbl) lbl.textContent = "App ya instalada";
+        }
+        function setBtnDownload(b) {
+          b.classList.remove("is-installed");
+          b.disabled = false;
+          var lbl = b.querySelector(".install-btn-label");
+          if (lbl) lbl.textContent = "Descargar app";
         }
 
-        window.addEventListener("beforeinstallprompt", function (e) {
-          e.preventDefault();
-          deferredPrompt = e;
-          refreshInstallUI();
-        });
+        function refreshInstallUI() {
+          if (isStandalone()) {
+            btns.forEach(function (b) { b.classList.add("hidden"); });
+            hideAllHelps();
+            return;
+          }
+          if (isInstalled()) {
+            /* Ya instalada en este equipo: se dice claro y no se
+               manda a nadie al menú del navegador. */
+            btns.forEach(function (b) { b.classList.remove("hidden"); setBtnInstalled(b); });
+            hideAllHelps();
+            return;
+          }
+          btns.forEach(function (b) { b.classList.remove("hidden"); setBtnDownload(b); });
+        }
+        /* El <head> avisa por aquí cuando llega beforeinstallprompt,
+           cuando se instala la app o cuando se detecta ya instalada. */
+        window.__refreshInstallUI = refreshInstallUI;
 
-        window.addEventListener("appinstalled", function () {
-          deferredPrompt = null;
-          appInstalled = true;
-          refreshInstallUI();
-        });
+        function showFallbackHelp(btn) {
+          /* Último recurso, discreto: solo si el navegador todavía no
+             ofrece la ventana nativa de instalación. */
+          var pair = helps[btn.id] || {};
+          var help = isIOS ? pair.ios : pair.generic;
+          var other = isIOS ? pair.generic : pair.ios;
+          if (other) other.classList.add("hidden");
+          if (help) help.classList.remove("hidden");
+        }
 
         btns.forEach(function (btn) {
           btn.addEventListener("click", function () {
-            if (deferredPrompt) {
-              var p = deferredPrompt;
-              deferredPrompt = null;
+            if (isInstalled() || isStandalone()) return;
+            var p = window.__installPromptEvent || null;
+            if (p) {
+              /* UN TOQUE: ventana nativa de instalación directa.
+                 El método de instalación del evento guardado se
+                 invoca síncrono dentro del toque, sin awaits delante
+                 que hagan perder el gesto del usuario. */
+              window.__installPromptEvent = null;
+              hideAllHelps();
               var showNativeInstall = p.prompt.bind(p);
-              showNativeInstall();
-              if (p.userChoice && p.userChoice.then) p.userChoice.then(function () { refreshInstallUI(); });
-              refreshInstallUI();
+              try { showNativeInstall(); } catch (e) { showFallbackHelp(btn); return; }
+              if (p.userChoice && p.userChoice.then) {
+                p.userChoice.then(function (choice) {
+                  if (choice && choice.outcome === "accepted") window.__appInstalledFlag = true;
+                  refreshInstallUI();
+                }).catch(function () { refreshInstallUI(); });
+              }
               return;
             }
-            /* Sin instalación nativa disponible (iPhone/Safari o el
-               navegador aún no la ofrece): mostrar la ayuda manual
-               que corresponde al equipo y ocultar la otra. */
-            var pair = helps[btn.id] || {};
-            var help = isIOS ? pair.ios : pair.generic;
-            var other = isIOS ? pair.generic : pair.ios;
-            if (other) other.classList.add("hidden");
-            if (help) help.classList.toggle("hidden");
+            /* Aún no hay ventana nativa: antes de mostrar cualquier
+               ayuda, comprobar si la app ya está instalada. */
+            if (navigator.getInstalledRelatedApps) {
+              navigator.getInstalledRelatedApps().then(function (apps) {
+                if (apps && apps.length) { window.__appInstalledFlag = true; refreshInstallUI(); return; }
+                showFallbackHelp(btn);
+              }).catch(function () { showFallbackHelp(btn); });
+            } else {
+              showFallbackHelp(btn);
+            }
           });
         });
 
