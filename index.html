@@ -740,6 +740,122 @@
       .help-card h3{margin:0 0 .6rem;font-family:var(--font-display);font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.06em}
       .help-row{display:flex;gap:.6rem;align-items:flex-start;font-size:13.5px;font-weight:600;line-height:1.5;color:rgba(10,10,10,.85);padding:.3rem 0}
       .help-row svg{color:var(--accent);flex-shrink:0;margin-top:2px}
+      /* ================= REDISEÑO APP APROBADO (muestra) =================
+         Solo html.app-mode: encabezado compacto translúcido, tipografía
+         pequeña, superficies claras y ligeras tipo WhatsApp, listas con
+         avatar/título/detalle y barra inferior baja translúcida.
+         El modo web no usa ninguna de estas reglas. */
+      html.app-mode{background:#f6f6f8}
+      html.app-mode body{background:#f6f6f8}
+      /* Encabezado compacto y translúcido, fijo arriba */
+      html.app-mode .hero-outer{position:sticky;top:0;z-index:42;padding:0;background:rgba(247,247,249,.86);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid #efeff2}
+      html.app-mode .hero{background:transparent;color:var(--ink);box-shadow:none;border-radius:0}
+      html.app-mode .hero::before{display:none}
+      html.app-mode .hero-glow{display:none}
+      html.app-mode .hero-inner{padding:.55rem .9rem .6rem}
+      html.app-mode .hero-top{gap:.4rem}
+      html.app-mode .hero-badge{background:rgba(10,10,10,.06);color:#6e6e78;font-size:9.5px;letter-spacing:.1em;padding:.3rem .55rem}
+      html.app-mode .hero-badge .dot{box-shadow:none;width:.42rem;height:.42rem}
+      html.app-mode .hero .live-pill{background:rgba(10,10,10,.05);color:#6e6e78;box-shadow:inset 0 0 0 1px var(--border);font-size:10.5px;padding:.28rem .55rem}
+      html.app-mode .hero-nav{gap:.3rem}
+      html.app-mode .hero-nav button{width:2.05rem;height:2.05rem;background:rgba(10,10,10,.06);color:var(--ink)}
+      html.app-mode .hero-nav button:hover{background:var(--accent);color:#fff}
+      html.app-mode .hero-nav .hoy-btn{width:auto;height:auto;background:var(--accent);color:#fff;padding:.42rem .75rem;font-size:.78rem;margin-left:0}
+      html.app-mode .hero h1{font-size:15.5px;font-weight:700;letter-spacing:0;margin-top:.45rem;color:var(--ink)}
+      /* Frase compacta (en la app solo se ve en Hoy, como ya estaba) */
+      html.app-mode .phrase{margin-top:.55rem;background:#fff;border:1px solid #efeff2;border-left:3px solid var(--accent);border-radius:12px;padding:.6rem .8rem}
+      html.app-mode .phrase-row{flex-wrap:nowrap;gap:.6rem;padding-left:0}
+      html.app-mode .phrase-ico{width:1.8rem;height:1.8rem;border-radius:.55rem}
+      html.app-mode .phrase-kicker{font-size:9.5px;letter-spacing:.12em}
+      html.app-mode .phrase-text{font-family:var(--font-sans);font-size:13.5px;font-weight:600;font-style:italic}
+      html.app-mode .phrase-empty{font-size:12.5px}
+      html.app-mode .phrase .btn-black{flex:none;width:auto;padding:.45rem .7rem;font-size:11.5px;border-radius:.6rem}
+      /* Barra inferior baja y translúcida */
+      html.app-mode .app-nav{background:rgba(255,255,255,.88);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid #efeff2;box-shadow:none;padding:.3rem .5rem calc(.3rem + env(safe-area-inset-bottom));gap:2px}
+      html.app-mode .app-nav-btn{min-height:3.05rem;border-radius:12px;font-size:10.5px;font-weight:700;color:#6e6e78;gap:1px;padding:.3rem .15rem}
+      html.app-mode .app-nav-btn.active{background:var(--accent-soft);color:var(--accent-ink)}
+      html.app-mode .app-nav-badge{top:1px;right:calc(50% - 20px);min-width:17px;height:17px;padding:0 4px;font-size:10px;box-shadow:0 0 0 2px #fff}
+      html.app-mode main{padding-top:.85rem;padding-bottom:calc(5.2rem + env(safe-area-inset-bottom))}
+      html.app-mode .fab{bottom:calc(4.6rem + env(safe-area-inset-bottom))}
+      html.app-mode .toast{bottom:calc(5.1rem + env(safe-area-inset-bottom))}
+      /* Tipografía pequeña y superficies ligeras */
+      html.app-mode .sec-head{margin-bottom:.9rem}
+      html.app-mode .sec-head h2{font-size:16.5px;font-weight:800;gap:.55rem}
+      html.app-mode .card{border:1px solid #efeff2;border-radius:14px;box-shadow:0 1px 2px rgba(16,16,20,.04)}
+      html.app-mode .app-card{padding:.8rem .9rem .8rem}
+      html.app-mode .app-card-head h4{font-size:14.5px;font-weight:700}
+      html.app-mode .app-state-chip{font-size:9.5px;padding:.26rem .55rem;letter-spacing:.04em}
+      html.app-mode .app-card-who{font-size:12.5px;margin-top:.3rem}
+      html.app-mode .hoy-greet{margin-bottom:.8rem}
+      html.app-mode .hoy-date{font-size:12.5px}
+      html.app-mode .hoy-greet h2{font-size:20px;font-weight:800}
+      html.app-mode .hoy-progress{border-radius:14px;border-color:#efeff2;padding:.85rem .95rem;box-shadow:0 1px 2px rgba(16,16,20,.04)}
+      html.app-mode .hoy-bar{height:7px;margin-top:.5rem}
+      html.app-mode .hoy-group{font-size:13.5px;margin:.95rem 0 .5rem}
+      html.app-mode .kpi{border-radius:12px;border-color:#efeff2;box-shadow:0 1px 2px rgba(16,16,20,.04)}
+      html.app-mode .kpi .num{font-size:21px}
+      html.app-mode .panel-row{border-radius:12px;border-color:#efeff2;box-shadow:0 1px 2px rgba(16,16,20,.04)}
+      html.app-mode .hist-item{border-radius:14px;border-color:#efeff2}
+      /* Encabezado de vista y títulos de sección (de la muestra) */
+      .view-head-app{margin:2px 0 10px}
+      .view-head-app h2{margin:0;font-family:var(--font-display);font-size:19px;font-weight:800;letter-spacing:-.01em}
+      .view-head-app p{margin:2px 0 0;color:var(--dim);font-size:13px;font-weight:500}
+      .app-sec-title{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--dim);margin:16px 0 8px}
+      .app-note{font-size:12.5px;color:var(--dim);font-weight:500;text-align:center;line-height:1.5;margin-top:.25rem}
+      /* Accesos rápidos de Hoy */
+      .quick-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.1rem}
+      .quick{background:#fff;color:var(--ink);border:1px solid var(--border);border-radius:12px;min-height:50px;display:flex;align-items:center;gap:9px;padding:10px 12px;font-weight:700;font-size:13.5px;text-align:left}
+      .quick.red{background:var(--accent-soft);border-color:#f3b7c1;color:var(--accent-ink)}
+      .quick small{display:block;font-weight:500;font-size:11px;opacity:.7}
+      .quick svg{flex:none}
+      /* Lista tipo WhatsApp: avatar · título · detalle */
+      .wa-list{background:#fff;border:1px solid #efeff2;border-radius:14px;overflow:hidden;margin-bottom:10px}
+      .wa-row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:#fff;border:0;border-bottom:1px solid #efeff2;padding:11px 13px;min-height:60px;color:var(--ink)}
+      .wa-row:last-child{border-bottom:0}
+      button.wa-row:active{background:#f2f2f5}
+      .wa-row .avatar{box-shadow:none}
+      .wa-main{flex:1;min-width:0}
+      .wa-t{display:block;font-weight:600;font-size:15px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .wa-s{display:block;font-size:13px;color:var(--dim);margin-top:2px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .wa-love{display:inline-flex;align-items:center;gap:.3rem;font-size:12px;font-weight:800;color:var(--accent-ink);flex:none}
+      .wa-chev{color:#b9b9c0;flex:none;display:flex}
+      /* Perfil de la app: cabecera con foto y menú por grupos */
+      .profile-head{background:#fff;border:1px solid #efeff2;border-radius:14px;padding:18px 14px 14px;text-align:center;margin-bottom:12px}
+      .profile-head .pname{font-family:var(--font-display);font-size:18px;font-weight:800;margin:9px 0 0;line-height:1.2}
+      .profile-head .prole{color:var(--dim);font-size:13px;font-weight:600;margin:2px 0 0}
+      .profile-head .pmeta{font-size:12.5px;color:rgba(10,10,10,.85);margin-top:10px;background:#f6f6f8;border-radius:10px;padding:9px 11px;text-align:left;line-height:1.5}
+      .profile-head .pmeta p{margin:0 0 3px}
+      .profile-head .pmeta p:last-child{margin-bottom:0}
+      .perfil-edit-btn{margin-top:12px;display:inline-flex;align-items:center;gap:.45rem;border-radius:10px;background:#fff;box-shadow:inset 0 0 0 1.5px var(--border);padding:.5rem .9rem;font-size:13px;font-weight:700;min-height:2.4rem;color:var(--ink)}
+      .menu-group{background:#fff;border:1px solid #efeff2;border-radius:14px;overflow:hidden;margin-bottom:6px}
+      .menu-row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:#fff;border:0;border-bottom:1px solid #efeff2;padding:10px 13px;min-height:54px;color:var(--ink)}
+      .menu-row:last-child{border-bottom:0}
+      button.menu-row:active{background:#f2f2f5}
+      .menu-row .ic{width:36px;height:36px;border-radius:50%;background:#eff0f3;display:flex;align-items:center;justify-content:center;flex:none;color:var(--ink)}
+      .menu-row .ic.red{background:var(--accent-soft);color:var(--accent)}
+      .menu-row .ic.blue{background:#e3edfb;color:#0b57d0}
+      .menu-row .ic.green{background:#e7f4eb;color:#137333}
+      .menu-row .mt{flex:1;min-width:0}
+      .menu-row .tt{display:block;font-weight:600;font-size:14.5px;line-height:1.25}
+      .menu-row .ds{display:block;font-size:12.5px;color:var(--dim);margin-top:1px}
+      .menu-row .chev{margin-left:auto;color:#b9b9c0;flex:none;display:flex}
+      .menu-badge{margin-left:auto;background:var(--accent);color:#fff;font-size:11px;font-weight:800;min-width:20px;height:20px;border-radius:99px;display:inline-flex;align-items:center;justify-content:center;padding:0 6px;flex:none}
+      .perfil-react{padding:1rem;margin-bottom:.5rem}
+      .perfil-react h3{margin:0 0 .5rem;display:flex;align-items:center;gap:.45rem;font-family:var(--font-display);font-size:14.5px;font-weight:800}
+      /* Chips de día (Semana de la app) */
+      .day-chips{display:flex;gap:6px;padding:2px 0 10px}
+      .day-chip{flex:1 1 0;min-width:0;border:1.5px solid var(--border);background:#fff;border-radius:11px;min-height:48px;padding:5px 2px;text-align:center;color:rgba(10,10,10,.75)}
+      .day-chip .d{display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+      .day-chip .n{display:block;font-family:var(--font-display);font-size:16px;font-weight:700;line-height:1.15}
+      .day-chip[aria-pressed="true"]{background:#0a0a0a;border-color:#0a0a0a;color:#fff}
+      .day-chip.today{border-color:var(--accent)}
+      .day-chip.today .d{color:var(--accent)}
+      .day-chip.today[aria-pressed="true"] .d{color:#ff8296}
+      .rules-note{font-size:12.5px;color:var(--dim);font-weight:500;background:#fff;border:1px dashed var(--border);border-radius:12px;padding:9px 12px;margin-bottom:6px;line-height:1.5}
+      /* Subpestañas de Reporte en la app: píldoras claras */
+      html.app-mode .rep-subtabs{background:transparent;padding:0;gap:7px;border-radius:0}
+      html.app-mode .rep-subtab{flex:none;border:1.5px solid var(--border);background:#fff;border-radius:999px;min-height:38px;padding:7px 14px;font-size:13px;color:var(--ink)}
+      html.app-mode .rep-subtab.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:none}
 
       .guia-vis-card h3{margin:0 0 .35rem;display:flex;align-items:center;gap:.5rem;font-family:var(--font-display);font-size:1rem;font-weight:900}
       .guia-vis-card .toggle-row{margin-top:.6rem}
@@ -1378,7 +1494,8 @@
         home:["m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z","M9 22V12h6v10"],
         grid:["M3 3h7v7H3z","M14 3h7v7h-7z","M14 14h7v7h-7z","M3 14h7v7H3z"],
         chart:["M3 3v18h18","M8 17v-6","M13 17V7","M18 17v-9"],
-        logout:["M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4","m16 17 5-5-5-5","M21 12H9"]
+        logout:["M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4","m16 17 5-5-5-5","M21 12H9"],
+        user:["M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2","M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"]
       };
       function icon(name,size,sw){
         size=size||16; sw=sw||2;
@@ -2107,7 +2224,7 @@
         var btns = $("tabs").querySelectorAll("[data-view]");
         for (var i=0;i<btns.length;i++) btns[i].addEventListener("click", function(){ view = this.getAttribute("data-view"); render(); });
         var fab = $("fab");
-        if (view === "equipo" || view === "reporte" || view === "datos" || view === "objetivos" || view === "guia" || (APP_MODE && (view === "hoy" || view === "panel" || view === "mas"))) { fab.classList.add("hidden"); }
+        if (view === "equipo" || view === "reporte" || view === "datos" || view === "objetivos" || view === "guia" || (APP_MODE && (view === "hoy" || view === "panel" || view === "mas" || view === "perfil"))) { fab.classList.add("hidden"); }
         else {
           fab.classList.remove("hidden");
           var label = view === "temas" ? "Nuevo tema" : "Nueva actividad";
@@ -2502,6 +2619,9 @@
       "use strict";
       /* ---------- view: Semana ---------- */
       function renderSemana(main){
+        /* Modo app: la Semana de la muestra aprobada (chips de día +
+           lista de ese día). La web sigue con su vista de siempre. */
+        if (APP_MODE) { renderSemanaApp(main); return; }
         var mo = monday();
         var wa = weekActs();
         if (!isAdmin()) memberFilter = myMemberOrden();
@@ -2606,6 +2726,47 @@
           render();
         });
       }
+      /* ---------- Semana del modo app (muestra aprobada) ----------
+         Chips Lun–Dom de la semana en pantalla y, debajo, solo las
+         actividades del día elegido (las mismas tarjetas de la app,
+         con el mismo marcado). El equipo ve solo lo suyo y los admins
+         todo el equipo, como siempre (visibleActivities/weekActs). */
+      function renderSemanaApp(main){
+        var mo = monday();
+        var wa = weekActs();
+        var days = [];
+        for (var i = 0; i < 7; i++) days.push(addDaysISO(mo, i));
+        if (!appSemanaDay || days.indexOf(appSemanaDay) === -1) appSemanaDay = days.indexOf(TODAY) !== -1 ? TODAY : mo;
+        var sel = appSemanaDay;
+        var selIdx = days.indexOf(sel);
+        var h = '<section aria-label="Semana"><div class="view-head-app"><h2>Semana</h2><p>' + (isAdmin() ? "Toda la planificación del equipo." : "Solo tus actividades.") + "</p></div>";
+        if (!isAdmin()) {
+          var un = unmarkedActionable();
+          if (un.length > 0) {
+            h += '<div class="reminder-banner" role="note"><span class="rb-ico">' + icon("bell", 17) + '</span><div class="rb-body"><p class="rb-title">Recuerda marcar como completa tu actividad</p><p class="rb-text">Tienes ' + un.length + (un.length === 1 ? " actividad" : " actividades") + ' de esta semana sin marcar y ya puedes marcarlas (los días pasados y hoy desde las 18:00).</p></div><span class="rb-count">' + un.length + ' sin marcar</span></div>';
+          }
+        }
+        h += '<div class="day-chips" role="group" aria-label="Días de la semana">';
+        days.forEach(function(dISO, i){
+          h += '<button type="button" class="day-chip' + (dISO === TODAY ? " today" : "") + '" data-semday="' + dISO + '" aria-pressed="' + (dISO === sel) + '"><span class="d">' + DAYS_SHORT[i] + '</span><span class="n">' + parseISO(dISO).getDate() + "</span></button>";
+        });
+        h += "</div>";
+        h += '<p class="rules-note">Se marca el mismo día desde las <strong>18:00</strong>. La semana se cierra el <strong>domingo</strong>: después ya no se puede marcar.</p>';
+        var list = wa.filter(function(a){ return a.date === sel; });
+        var hol = holidayOf(sel);
+        h += '<h3 class="app-sec-title">' + DAYS[selIdx] + " " + fmtShort(sel) + " · " + list.length + (list.length === 1 ? " actividad" : " actividades") + "</h3>";
+        if (hol) h += '<div class="holiday-banner" role="note"><strong>Feriado</strong><span>' + esc(hol.detail) + "</span></div>";
+        if (!list.length) {
+          h += emptyHTML("sun", hol ? "Feriado · Día de descanso" : "Día de descanso", "Sin actividades programadas para este día.", true);
+        } else {
+          list.forEach(function(a){ h += appActivityCardHTML(a, false); });
+        }
+        h += "</section>";
+        main.innerHTML = h;
+        bindActivityControls(main);
+        var chips = main.querySelectorAll("[data-semday]");
+        for (var c = 0; c < chips.length; c++) chips[c].addEventListener("click", function(){ appSemanaDay = this.getAttribute("data-semday"); render(); });
+      }
       function renderHoy(main){
         if (!currentProfile) { main.innerHTML = ""; return; }
         var first = currentProfile.name.split(" ")[0];
@@ -2624,7 +2785,7 @@
             : "Tienes " + aviso.length + (aviso.length === 1 ? " actividad" : " actividades") + " sin marcar y ya puedes marcarlas (los días pasados y hoy desde las 18:00). En cada tarjeta elige <strong>Completado</strong> o <strong>No Completado</strong>.") + '</p></div><span class="rb-count">' + aviso.length + " sin marcar</span></div>";
         }
         h += '<div class="hoy-help">' + icon("clock", 15) + "<span>Se marca desde las 18:00 · La semana se cierra el domingo</span></div>";
-        h += '<button type="button" class="btn-red hoy-report-btn" data-goto="reporte">' + icon("report", 16, 2.2) + "Reportar una novedad</button>";
+        h += '<div class="quick-row"><button type="button" class="quick red" data-goto="reporte">' + icon("report", 20, 2) + '<span>Reportar novedad<small>Formulario corto con foto</small></span></button><button type="button" class="quick" data-goto="semana">' + icon("calendar", 20, 2) + '<span>' + (isAdmin() ? "Ver la semana" : "Ver mi semana") + "<small>" + esc(weekLabel(monday())) + "</small></span></button></div>";
         if (isAdmin()) h += filterBarHTML(allToday);
         if (!todayActs.length) {
           h += emptyHTML("sun", "Hoy no hay actividades", isAdmin() ? "Ninguna persona del equipo tiene actividades programadas para hoy." : "No tienes actividades programadas para hoy. ¡Día de descanso!", true);
@@ -2718,31 +2879,54 @@
         var opens = main.querySelectorAll("[data-panel-report]");
         for (var i = 0; i < opens.length; i++) opens[i].addEventListener("click", function(){ handleReportOpen(this.getAttribute("data-panel-report")); });
       }
-      /* ---------- view: Más (modo app) ---------- */
-      function renderMas(main){
+      /* ---------- view: Perfil (modo app, muestra aprobada) ----------
+         Cabecera con foto y datos del perfil personal, y menú por
+         grupos (Trabajo · Administración · Cuenta) que conserva el
+         acceso a Agenda, Objetivos, Temas, Equipo y —según el rol—
+         Panel, Repositorio y Datos del equipo. */
+      function perfilMenuItem(id, ic, cls, label, sub, badge){
+        return '<button type="button" class="menu-row" data-goto="' + id + '"><span class="ic ' + cls + '">' + icon(ic, 19, 2) + '</span><span class="mt"><span class="tt">' + label + '</span><span class="ds">' + sub + "</span></span>"
+          + (badge ? '<span class="menu-badge">' + badge + "</span>" : '<span class="chev">' + icon("chevR", 18, 2.2) + "</span>") + "</button>";
+      }
+      function renderPerfil(main){
         if (!currentProfile) { main.innerHTML = ""; return; }
-        var items = [
-          { id: "agenda", label: "Agenda", sub: "Calendario mensual de actividades", ic: "agenda" },
-          { id: "objetivos", label: "Objetivos", sub: "Avance individual de la semana", ic: "target" },
-          { id: "temas", label: "Temas", sub: "Temas y avisos del equipo", ic: "bell" },
-          { id: "equipo", label: "Equipo", sub: "Todas las personas del equipo", ic: "users" }
-        ];
-        if (isAdmin()) {
-          items.push({ id: "panel", label: "Panel", sub: "Sin marcar, reportes abiertos y cumplimiento", ic: "chart" });
-          items.push({ id: "datos", label: "Datos del equipo", sub: "Datos personales y postulación · solo admins", ic: "idcard" });
-        }
         var meM = memberByOrden(myMemberOrden());
-        var h = '<section aria-label="Más"><div class="sec-head"><h2>' + secBadge("grid") + "Más</h2></div>";
-        h += '<div class="mas-list">';
-        items.forEach(function(it){
-          h += '<button type="button" class="mas-item" data-goto="' + it.id + '"><span class="mas-item-ico">' + icon(it.ic, 20, 2.1) + '</span><span class="mas-item-txt"><strong>' + it.label + "</strong><span>" + it.sub + "</span></span>" + icon("chevR", 18, 2.2) + "</button>";
-        });
-        h += "</div>";
-        h += '<div class="sec-head"><h2>' + secBadge("users") + "Cuenta</h2></div>";
-        h += '<div class="mas-cuenta">' + (meM ? avatar(meM, 46) : avatar({ name: currentProfile.name, color: "#0A0A0A" }, 46)) + '<span class="mc-main"><strong>' + esc(currentProfile.name) + "</strong><span>" + esc(currentProfile.email) + "</span></span></div>";
-        h += '<div class="mas-list">'
-          + '<button type="button" class="mas-item" id="masPass"><span class="mas-item-ico">' + icon("key", 20, 2.1) + '</span><span class="mas-item-txt"><strong>Cambiar contraseña</strong><span>Actualiza la contraseña de tu cuenta</span></span>' + icon("chevR", 18, 2.2) + "</button>"
-          + '<button type="button" class="mas-item" id="masLogout"><span class="mas-item-ico red">' + icon("logout", 20, 2.1) + '</span><span class="mas-item-txt"><strong>Cerrar sesión</strong><span>Salir de tu cuenta en este dispositivo</span></span>' + icon("chevR", 18, 2.2) + "</button></div>";
+        var pf = (currentUser && perfiles[currentUser.uid]) || {};
+        var h = '<section aria-label="Perfil">';
+        h += '<div class="profile-head">' + (meM ? perfilAvatarHTML(meM, 76) : avatar({ name: currentProfile.name, color: "#0A0A0A" }, 76))
+          + '<p class="pname">' + esc(currentProfile.name) + '</p><p class="prole">' + esc(meM ? (meM.role || "Equipo de Formación") : "Equipo de Formación") + "</p>"
+          + '<div class="pmeta">'
+          + "<p><strong>Correo:</strong> " + esc(currentProfile.email) + "</p>"
+          + "<p><strong>Cómo me identifico:</strong> " + esc(pf.frase || "—") + "</p>"
+          + "<p><strong>Me gusta:</strong> " + esc(pf.gustos || "—") + "</p>"
+          + "<p><strong>Mi signo:</strong> " + (pf.signo ? esc(pf.signo) : "No lo comparto (es opcional)") + "</p></div>"
+          + '<button type="button" class="perfil-edit-btn" id="perfilEditBtn">' + icon("pencil", 14, 2.4) + " Editar mi perfil</button></div>";
+        var rec = reaccionesRecibidas(currentUser ? currentUser.uid : null);
+        if (rec.total) {
+          h += '<div class="card perfil-react"><h3>' + icon("heart", 15, 2.2) + " Mensajes de ánimo recibidos</h3><div class=\"react-got\">";
+          REACCIONES.forEach(function(r){
+            if (!rec.counts[r.id]) return;
+            h += '<p><span class="rg-emoji">' + r.emoji + "</span><span><strong>" + esc(r.label) + "</strong> × " + rec.counts[r.id] + ' <span class="rg-names">· ' + esc((rec.givers[r.id] || []).join(", ")) + "</span></span></p>";
+          });
+          h += "</div></div>";
+        }
+        h += '<h3 class="app-sec-title">Trabajo</h3><div class="menu-group">'
+          + perfilMenuItem("agenda", "agenda", "", "Agenda", "Calendario mensual de la planificación", 0)
+          + perfilMenuItem("objetivos", "target", "green", "Objetivos", isAdmin() ? "Avance individual de todo el equipo" : "Tu avance de la semana", 0)
+          + perfilMenuItem("temas", "bell", "red", "Temas", "Temas y fijados de la semana", 0)
+          + perfilMenuItem("equipo", "users", "", "Equipo", "Las personas de Formación y Desarrollo", 0)
+          + "</div>";
+        if (isAdmin()) {
+          var pendN = state.reportsResumen.filter(function(r){ return (r.estado || "Recibido") === "Recibido"; }).length;
+          h += '<h3 class="app-sec-title">Administración</h3><div class="menu-group">'
+            + perfilMenuItem("panel", "chart", "red", "Panel", "Sin marcar, reportes abiertos y cumplimiento", pendN)
+            + '<button type="button" class="menu-row" data-goto="reporte" data-repo="1"><span class="ic blue">' + icon("report", 19, 2) + '</span><span class="mt"><span class="tt">Repositorio de novedades</span><span class="ds">Todos los reportes, filtros y PDF por fechas</span></span><span class="chev">' + icon("chevR", 18, 2.2) + "</span></button>"
+            + perfilMenuItem("datos", "idcard", "blue", "Datos del equipo", "Roles, postulación y datos personales", 0)
+            + "</div>";
+        }
+        h += '<h3 class="app-sec-title">Cuenta</h3><div class="menu-group">'
+          + '<button type="button" class="menu-row" id="perfilPass"><span class="ic">' + icon("key", 19, 2) + '</span><span class="mt"><span class="tt">Cambiar contraseña</span><span class="ds">Actualiza la contraseña de tu cuenta</span></span><span class="chev">' + icon("chevR", 18, 2.2) + '</span></button>'
+          + '<button type="button" class="menu-row" id="perfilLogout"><span class="ic red">' + icon("logout", 19, 2) + '</span><span class="mt"><span class="tt" style="color:var(--accent-ink)">Cerrar sesión</span><span class="ds">Salir de tu cuenta en este dispositivo</span></span></button></div>';
         h += '<div class="help-card"><h3>Cómo funciona el marcado</h3>'
           + '<div class="help-row">' + icon("clock", 16) + "<span><strong>Se marca desde las 18:00</strong> del día de la actividad. Antes, el estado se ve Pendiente o En curso de forma automática.</span></div>"
           + '<div class="help-row">' + icon("calendar", 16) + "<span><strong>La semana se cierra el domingo:</strong> después, el estado de esa semana ya no se puede cambiar.</span></div>"
@@ -2750,20 +2934,34 @@
         h += "</section>";
         main.innerHTML = h;
         bindGoto(main);
-        $("masPass").addEventListener("click", function(){ openChangePasswordModal(); });
-        $("masLogout").addEventListener("click", function(){ signOutSession(false); });
+        $("perfilEditBtn").addEventListener("click", openPerfilModal);
+        $("perfilPass").addEventListener("click", function(){ openChangePasswordModal(); });
+        $("perfilLogout").addEventListener("click", function(){ signOutSession(false); });
       }
-      /* ---------- Equipo en modo app: solo nombre y rol ----------
-         Sin insignias «Admin», «Postulando» ni «Con cargo»: eso solo
-         vive en Datos del equipo (solo admins). */
+      /* ---------- Equipo en modo app: lista limpia tipo WhatsApp ----------
+         Solo foto, nombre y rol (sin insignias «Admin», «Postulando» ni
+         «Con cargo»: eso solo vive en Datos del equipo, solo admins).
+         Al tocar a alguien se abre su perfil personal —cómo se
+         identifica, qué le gusta y su signo si lo comparte— con los
+         mensajes de ánimo predeterminados, usando el MISMO guardado
+         de perfiles de la web (colección perfiles/{uid}). */
       function renderEquipoApp(main){
-        var h = '<section aria-label="Equipo"><div class="sec-head" style="margin-bottom:.5rem"><h2>' + secBadge("users") + "Equipo de Formación</h2></div>";
-        h += '<p class="team-sub">Todas las personas del equipo de Formación y Desarrollo.</p><div class="grid-3">';
+        var h = '<section aria-label="Equipo"><div class="view-head-app"><h2>Equipo</h2><p>Formación y Desarrollo · ' + state.members.length + ' personas. Toca a alguien para ver su perfil.</p></div>';
+        h += '<div class="wa-list">';
         state.members.forEach(function(m){
-          h += '<article class="card team-card" style="--team-color:' + m.color + '"><div class="team-top"><div class="team-who">' + avatar(m, 52) + "<div><h3>" + esc(m.name) + "</h3><p>" + esc(m.role || "Equipo de Formación") + "</p></div></div></div></article>";
+          var rec = reaccionesRecibidas(uidDeMember(m));
+          h += '<button type="button" class="wa-row" data-perfil-orden="' + m.orden + '" aria-label="Ver el perfil de ' + esc(m.name) + '">' + perfilAvatarHTML(m, 44)
+            + '<span class="wa-main"><span class="wa-t">' + esc(m.name) + '</span><span class="wa-s">' + esc(m.role || "Equipo de Formación") + "</span></span>"
+            + (rec.total ? '<span class="wa-love">' + icon("heart", 13, 2.2) + rec.total + "</span>" : "")
+            + '<span class="wa-chev">' + icon("chevR", 17, 2.2) + "</span></button>";
         });
-        h += "</div></section>";
+        h += '</div><p class="app-note">En el perfil de cada persona ves cómo se identifica, qué le gusta y su signo si lo comparte, y puedes dejarle un mensaje de ánimo predeterminado.</p></section>';
         main.innerHTML = h;
+        Array.prototype.forEach.call(main.querySelectorAll("[data-perfil-orden]"), function(btn){
+          btn.addEventListener("click", function(){
+            openPerfilView(memberByOrden(Number(btn.getAttribute("data-perfil-orden"))));
+          });
+        });
       }
       /* ---------- Navegación inferior del modo app ---------- */
       function renderAppNav(){
@@ -2776,16 +2974,23 @@
             ? visibleActivities().filter(function(a){ return a.date === TODAY && !isClosedAct(a); }).length
             : unmarkedActionable().length;
         }
-        var masActive = ["agenda", "objetivos", "temas", "equipo", "panel", "datos", "mas"].indexOf(view) !== -1;
+        var repBadge = 0;
+        if (currentProfile) {
+          repBadge = state.reportsResumen.filter(function(r){
+            if ((r.estado || "Recibido") !== "Recibido") return false;
+            return isAdmin() || (currentUser && r.reporter_uid === currentUser.uid);
+          }).length;
+        }
+        var perfilActive = ["agenda", "objetivos", "temas", "equipo", "panel", "datos", "perfil", "mas"].indexOf(view) !== -1;
         var items = [
           { id: "hoy", label: "Hoy", ic: "sun", badge: badge },
           { id: "semana", label: "Semana", ic: "calendar", badge: 0 },
-          { id: "reporte", label: "Reporte", ic: "report", badge: 0 },
+          { id: "reporte", label: "Reporte", ic: "report", badge: repBadge },
           { id: "guia", label: "Guía", ic: "book", badge: 0 },
-          { id: "mas", label: "Más", ic: "grid", badge: 0 }
+          { id: "perfil", label: "Perfil", ic: "user", badge: 0 }
         ];
         nav.innerHTML = items.map(function(it){
-          var active = it.id === "mas" ? masActive : view === it.id;
+          var active = it.id === "perfil" ? perfilActive : view === it.id;
           return '<button type="button" class="app-nav-btn' + (active ? " active" : "") + '" data-appnav="' + it.id + '" aria-pressed="' + active + '">' + icon(it.ic, 21, 2.1) + "<span>" + it.label + "</span>" + (it.badge ? '<span class="app-nav-badge">' + it.badge + "</span>" : "") + "</button>";
         }).join("");
         var btns = nav.querySelectorAll("[data-appnav]");
@@ -4087,6 +4292,7 @@
          subpestañas se mantienen porque no hay barra lateral.
          El equipo no ve subpestañas: sigue con formulario + historial. */
       var reportSubTab = "novedades";
+      var appSemanaDay = null; /* día seleccionado en la Semana del modo app (chips) */
       /* Filtros combinables del Repositorio (admins): "" = sin filtro. */
       var repoFilterDay = "";       /* un día ISO concreto, o "" = Todos */
       var repoFilterReporter = "";  /* reporter_nombre exacto, o "" = Todos */
@@ -5092,7 +5298,7 @@
         renderAppNav();
         if (view === "hoy") { if (APP_MODE) renderHoy(main); else renderHoyWeb(main); }
         else if (view === "panel") { if (APP_MODE) renderPanel(main); else renderPanelWeb(main); }
-        else if (view === "mas") renderMas(main);
+        else if (view === "perfil" || view === "mas") renderPerfil(main);
         else if (view === "semana") renderSemana(main);
         else if (view === "agenda") renderAgenda(main);
         else if (view === "objetivos") renderObjetivos(main);
