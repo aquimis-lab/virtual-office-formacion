@@ -10,6 +10,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Office V" />
     <script>(function(){var l=document.createElement("link");l.rel="manifest";l.href="manifest.webmanifest";(document.head||document.getElementsByTagName("head")[0]).appendChild(l);})();</script>
+    <script>/* Modo app instalada: standalone (Android/Chrome) o navigator.standalone (iOS).
+       Solo en ese modo se activa la experiencia nueva; en el navegador no cambia nada. */
+    (function(){function s(){return (window.matchMedia&&window.matchMedia("(display-mode: standalone)").matches)||window.navigator.standalone===true;}window.__APP_MODE__=s();if(window.__APP_MODE__)document.documentElement.classList.add("app-mode");})();</script>
     <link rel="apple-touch-icon" href="data:image/png;base64,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" />
     <link rel="icon" href="data:," />
     <title>Virtual Office Formación — en vivo</title>
@@ -644,6 +647,91 @@
          y marca «Oculta» en las sub-pestañas que el equipo no ve. */
       .guia-oculta-tag{flex-shrink:0;border-radius:999px;background:var(--accent);color:#fff;padding:2px .5rem;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;line-height:1.35}
       .guia-vis-card{padding:1.25rem;margin-bottom:1.25rem}
+      /* ================= MODO APP INSTALADA (standalone) =================
+         Experiencia nueva SOLO cuando la página se abre como app
+         instalada (html.app-mode). En el navegador ninguna de estas
+         reglas aplica y la web se ve exactamente como siempre. */
+      html.app-mode .tabs{display:none !important}
+      html.app-mode .hero-session{display:none !important}
+      html.app-mode .livebar{display:none !important}
+      html.app-mode .install-btn{display:none !important}
+      html.app-mode .ios-help{display:none !important}
+      html.app-mode .hero-outer{padding:.5rem .5rem 0}
+      html.app-mode .hero{border-radius:22px}
+      html.app-mode .hero-inner{padding:1rem 1rem 1.05rem}
+      html.app-mode .hero h1{font-size:21px;margin-top:.55rem}
+      html.app-mode .hero-stats{display:none}
+      html.app-mode main{padding-bottom:9rem}
+      html.app-mode .fab{bottom:calc(5.6rem + env(safe-area-inset-bottom))}
+      html.app-mode .toast{bottom:calc(6.1rem + env(safe-area-inset-bottom))}
+      html.app-mode .grid-2{grid-template-columns:1fr}
+      html.app-mode .tag-days,html.app-mode .meta-days{white-space:nowrap}
+      /* Navegación inferior de la app: Hoy · Semana · Reporte · Guía · Más */
+      .app-nav{display:none}
+      html.app-mode .app-nav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:40;gap:.25rem;background:rgba(255,255,255,.97);border-top:1px solid var(--border);box-shadow:0 -8px 24px rgba(0,0,0,.08);padding:.4rem .5rem calc(.4rem + env(safe-area-inset-bottom))}
+      .app-nav-btn{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:3.4rem;border-radius:.8rem;padding:.45rem .25rem;font-size:11px;font-weight:800;color:var(--dim);transition:all .15s}
+      .app-nav-btn.active{background:#000;color:#fff}
+      .app-nav-badge{position:absolute;top:2px;right:calc(50% - 21px);display:flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:999px;background:var(--accent);color:#fff;padding:0 5px;font-size:10.5px;font-weight:900;box-shadow:0 0 0 2px #fff}
+      /* Tarjeta del modo app: título completo primero; debajo persona,
+         lugar y detalle; chip de estado compacto a la derecha. */
+      .app-card{padding:1rem 1rem .9rem}
+      .app-card-head{display:flex;align-items:flex-start;gap:.5rem}
+      .app-card-head h4{flex:1;min-width:0;margin:0;font-family:var(--font-display);font-size:15.5px;font-weight:800;line-height:1.35;color:#000}
+      .app-card-head h4.done{color:var(--dim);text-decoration:line-through;text-decoration-color:var(--accent);text-decoration-thickness:2px}
+      .app-state-chip{flex-shrink:0;display:inline-flex;align-items:center;gap:.3rem;border-radius:999px;background:var(--surface-2);color:#52525b;padding:.3rem .6rem;font-size:10.5px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+      .app-state-chip.done{background:#000;color:#fff}
+      .app-state-chip.curso{background:var(--accent);color:#fff}
+      .app-state-chip.nocomp{background:var(--accent-soft);color:var(--accent-ink);box-shadow:inset 0 0 0 1.5px var(--accent)}
+      .app-state-chip.over{background:var(--accent);color:#fff}
+      .app-card-who{margin-top:.35rem;display:flex;flex-wrap:wrap;align-items:center;gap:.45rem;font-size:13px;font-weight:600;color:var(--dim)}
+      .app-card-who .who-name{color:rgba(0,0,0,.8);font-weight:700}
+      .app-card-date{display:inline-flex;align-items:center;gap:.25rem}
+      .app-card .act-detail{margin-top:.55rem}
+      .app-card .status-group,.app-card .team-mark,.app-card .nocomp-row,.app-card .nocomp-motivo,.app-card .week-closed-note{margin-left:0}
+      /* Vista Hoy */
+      .hoy-greet{margin-bottom:1rem}
+      .hoy-date{font-size:13px;font-weight:700;text-transform:capitalize;color:var(--dim)}
+      .hoy-greet h2{margin:.15rem 0 0;font-family:var(--font-display);font-size:25px;font-weight:900;letter-spacing:-.02em}
+      .hoy-progress{border-radius:var(--radius);border:1px solid var(--border);background:#fff;padding:1rem;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:1rem}
+      .hoy-progress-top{display:flex;align-items:baseline;justify-content:space-between;gap:.75rem;font-size:13.5px;font-weight:700;color:var(--dim)}
+      .hoy-progress-top strong{font-family:var(--font-display);font-size:17px;font-weight:900;color:#000;white-space:nowrap}
+      .hoy-bar{margin-top:.6rem;height:10px;border-radius:999px;background:var(--surface-2);overflow:hidden}
+      .hoy-bar>div{height:100%;border-radius:999px;background:var(--accent);transition:width .3s}
+      .hoy-bar>div.full{background:#000}
+      .hoy-progress-note{margin-top:.5rem;font-size:12.5px;font-weight:700;color:var(--dim)}
+      .hoy-help{display:flex;align-items:center;gap:.5rem;border-radius:.75rem;background:var(--surface-2);padding:.65rem .8rem;font-size:12.5px;font-weight:700;color:#52525b;margin-bottom:1rem}
+      .hoy-help svg{color:var(--accent);flex-shrink:0}
+      .hoy-report-btn{width:100%;justify-content:center;margin-bottom:1.25rem;padding:.8rem 1rem;font-size:15px}
+      .hoy-group{display:flex;align-items:center;gap:.5rem;margin:1.1rem 0 .6rem;font-family:var(--font-display);font-size:14.5px;font-weight:800}
+      /* Panel (solo admin) */
+      .kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:1.25rem}
+      .kpi{border-radius:14px;border:1px solid var(--border);background:#fff;padding:.8rem .7rem;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+      .kpi .num{font-family:var(--font-display);font-size:23px;font-weight:900;line-height:1}
+      .kpi .num.red{color:var(--accent-ink)}
+      .kpi .lbl{margin-top:.35rem;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;line-height:1.3;color:var(--dim)}
+      .panel-row{display:flex;align-items:center;gap:.65rem;border-radius:14px;border:1px solid var(--border);background:#fff;padding:.7rem .85rem;margin-bottom:.5rem;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+      .panel-row .pr-main{flex:1;min-width:0;font-size:13.5px;font-weight:600;line-height:1.45}
+      .panel-row .pr-main strong{font-weight:800}
+      .panel-count{flex-shrink:0;border-radius:999px;background:var(--accent);color:#fff;padding:.2rem .6rem;font-size:11.5px;font-weight:900;white-space:nowrap}
+      .panel-count.dark{background:#000}
+      /* Vista Más */
+      .mas-list{display:grid;gap:.6rem;margin-bottom:1.5rem}
+      .mas-item{display:flex;align-items:center;gap:.8rem;width:100%;text-align:left;border-radius:14px;border:1px solid var(--border);background:#fff;padding:.9rem 1rem;box-shadow:0 1px 3px rgba(0,0,0,.04);min-height:3.6rem}
+      .mas-item-ico{display:flex;width:2.5rem;height:2.5rem;flex-shrink:0;align-items:center;justify-content:center;border-radius:.7rem;background:var(--surface-2);color:#000}
+      .mas-item-ico.red{background:var(--accent);color:#fff}
+      .mas-item-txt{flex:1;min-width:0}
+      .mas-item-txt strong{display:block;font-family:var(--font-display);font-size:15px;font-weight:800;line-height:1.25}
+      .mas-item-txt span{display:block;font-size:12.5px;font-weight:600;color:var(--dim);line-height:1.35;margin-top:1px}
+      .mas-item>svg{color:var(--dim-2);flex-shrink:0}
+      .mas-cuenta{display:flex;align-items:center;gap:.8rem;border-radius:14px;border:1px solid var(--border);background:#fff;padding:1rem;margin-bottom:.6rem}
+      .mas-cuenta .mc-main{flex:1;min-width:0}
+      .mas-cuenta .mc-main strong{display:block;font-family:var(--font-display);font-size:15.5px;font-weight:800}
+      .mas-cuenta .mc-main span{display:block;font-size:12.5px;font-weight:600;color:var(--dim);overflow-wrap:anywhere}
+      .help-card{border-radius:14px;border:1px solid var(--border);background:var(--surface-3);padding:1rem;margin-top:1.5rem}
+      .help-card h3{margin:0 0 .6rem;font-family:var(--font-display);font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.06em}
+      .help-row{display:flex;gap:.6rem;align-items:flex-start;font-size:13.5px;font-weight:600;line-height:1.5;color:rgba(10,10,10,.85);padding:.3rem 0}
+      .help-row svg{color:var(--accent);flex-shrink:0;margin-top:2px}
+
       .guia-vis-card h3{margin:0 0 .35rem;display:flex;align-items:center;gap:.5rem;font-family:var(--font-display);font-size:1rem;font-weight:900}
       .guia-vis-card .toggle-row{margin-top:.6rem}
       .guia-edit-card{padding:1.25rem}
@@ -912,6 +1000,7 @@
     <main class="wrap" id="main"></main>
 
     <button type="button" class="fab" id="fab"></button>
+    <nav class="app-nav" id="appNav" aria-label="Navegación principal de la app"></nav>
     </div>
     <div id="modalRoot"></div>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -988,7 +1077,8 @@
       }
       var state = seedState();
 
-      var view = "semana";
+      var APP_MODE = !!window.__APP_MODE__;
+      var view = APP_MODE ? "hoy" : "semana";
       var weekOffset = 0;
       var memberFilter = null;
       var agendaMonthOffset = 0;
@@ -1053,7 +1143,11 @@
         idcard:["M2 5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z","M9 11a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z","M5.5 17c.6-1.7 1.9-2.5 3.5-2.5s2.9.8 3.5 2.5","M15 8h4","M15 12h4"],
         book:["M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z","M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"],
         copy:["M9 9h11a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2z","M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"],
-        chevD:["m6 9 6 6 6-6"]
+        chevD:["m6 9 6 6 6-6"],
+        home:["m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z","M9 22V12h6v10"],
+        grid:["M3 3h7v7H3z","M14 3h7v7h-7z","M14 14h7v7h-7z","M3 14h7v7H3z"],
+        chart:["M3 3v18h18","M8 17v-6","M13 17V7","M18 17v-9"],
+        logout:["M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4","m16 17 5-5-5-5","M21 12H9"]
       };
       function icon(name,size,sw){
         size=size||16; sw=sw||2;
@@ -1761,7 +1855,7 @@
         var btns = $("tabs").querySelectorAll("[data-view]");
         for (var i=0;i<btns.length;i++) btns[i].addEventListener("click", function(){ view = this.getAttribute("data-view"); render(); });
         var fab = $("fab");
-        if (view === "equipo" || view === "reporte" || view === "datos" || view === "objetivos" || view === "guia") { fab.classList.add("hidden"); }
+        if (view === "equipo" || view === "reporte" || view === "datos" || view === "objetivos" || view === "guia" || (APP_MODE && (view === "hoy" || view === "panel" || view === "mas"))) { fab.classList.add("hidden"); }
         else {
           fab.classList.remove("hidden");
           var label = view === "temas" ? "Nuevo tema" : "Nueva actividad";
@@ -2006,35 +2100,15 @@
         if (idx < 0) return null;
         return { x: idx+1, n: group.length, label: "Día " + (idx+1) + " de " + group.length + " · " + fmtShort(group[0].date) + "–" + fmtShort(group[group.length-1].date) };
       }
-      function activityCardHTML(a, showDate){
-        var m = a.member_id != null ? memberByOrden(a.member_id) : undefined;
-        var overdue = a.date < TODAY && !isClosedAct(a);
+      /* Controles de estado de la tarjeta, compartidos por la tarjeta
+         web de siempre y por la tarjeta del modo app: admins eligen
+         Pendiente / En curso / Completada o No Completado; el equipo
+         solo marca Completado / No Completado cuando la ventana abrió
+         y con el motivo obligatorio para No Completado. */
+      function activityControlsHTML(a){
         var done = a.status === "completada";
         var noComp = isNoCompletado(a);
-        /* Sin marcar: actividad propia (vista del equipo) de esta semana
-           cuya ventana de marcado YA abrió (días pasados, u hoy desde las
-           18:00) que sigue en el estado automático (Pendiente / En curso),
-           sin elegir Completado ni No Completado. Hoy antes de las 18:00
-           y los días futuros no cuentan: todavía no se pueden marcar. */
-        var unmarked = !isAdmin() && isOwnActivity(a) && a.date >= mondayOfISO(TODAY) && actDayPassed(a) && !isClosedAct(a);
-        var barColor = noComp ? "var(--accent-ink)" : overdue ? "var(--accent)" : done ? "#000" : normPriority(a.priority) === "alta" ? "var(--accent)" : "#e4e4e7";
-        var h = '<article class="card'+(overdue?" overdue":"")+(unmarked?" unmarked":"")+'"><span class="bar" style="background:'+barColor+'" aria-hidden="true"></span><div class="card-top">';
-        h += m ? avatar(m,40) : '<span class="agenda-ico">'+icon("users",16)+'</span>';
-        h += '<div class="card-main"><div class="card-title-row"><h4 class="'+(done?"done":"")+'">'+esc(a.title)+'</h4><button type="button" class="icon-btn" data-act-edit="'+esc(a.id)+'" aria-label="Editar '+esc(a.title)+'">'+icon("pencil",15)+'</button></div>';
-        h += '<p class="card-who"><span class="who-name">'+esc(m?m.name:"Sin asignar")+'</span>';
-        if (showDate) h += '<span style="display:inline-flex;align-items:center;gap:.25rem">'+icon("calendar",12)+esc(fmtShort(a.date))+(overdue?" · vencida":"")+'</span>';
-        if (overdue) h += icon("alert",13);
-        h += "</p>";
-        if (a.detail) h += renderActivityDetail(a);
-        h += '<div class="tags">';
-        if (a.place) h += '<span class="tag tag-place">'+icon("pin",12)+esc(a.place)+'</span>';
-        var _dri = dayRangeInfo(a);
-        if (_dri) h += '<span class="tag tag-days">'+icon("calendar",11,2.4)+esc(_dri.label)+'</span>';
-        if (a.deliverable) h += '<span class="tag tag-deliv">'+icon("box",12)+esc(a.deliverable)+'</span>';
-        if (hasPriority(a.priority)) { var _prio = normPriority(a.priority); h += '<span class="tag tag-prio '+_prio+'">'+icon("flag",11,2.4)+PRIORITY_LABEL[_prio]+'</span>'; }
-        if (unmarked) h += '<span class="tag tag-sinmarcar">'+icon("alert",11,2.4)+'Sin marcar</span>';
-        h += '</div>';
-        h += "</div></div>";
+        var h = "";
         /* Controles según rol:
            - Admins: el grupo de estados de siempre (Pendiente / En curso /
              Completada) más el botón No Completado existente.
@@ -2094,9 +2168,76 @@
             + '<button type="button" class="mark-btn no'+(noComp?" on":"")+'" data-act-nocomp="'+esc(a.id)+'" aria-pressed="'+noComp+'">'+icon("x",13,3)+'No Completado</button>'
             + '</div></div>';
         }
+        return h;
+      }
+      function activityCardHTML(a, showDate){
+        var m = a.member_id != null ? memberByOrden(a.member_id) : undefined;
+        var overdue = a.date < TODAY && !isClosedAct(a);
+        var done = a.status === "completada";
+        var noComp = isNoCompletado(a);
+        /* Sin marcar: actividad propia (vista del equipo) de esta semana
+           cuya ventana de marcado YA abrió (días pasados, u hoy desde las
+           18:00) que sigue en el estado automático (Pendiente / En curso),
+           sin elegir Completado ni No Completado. Hoy antes de las 18:00
+           y los días futuros no cuentan: todavía no se pueden marcar. */
+        var unmarked = !isAdmin() && isOwnActivity(a) && a.date >= mondayOfISO(TODAY) && actDayPassed(a) && !isClosedAct(a);
+        var barColor = noComp ? "var(--accent-ink)" : overdue ? "var(--accent)" : done ? "#000" : normPriority(a.priority) === "alta" ? "var(--accent)" : "#e4e4e7";
+        var h = '<article class="card'+(overdue?" overdue":"")+(unmarked?" unmarked":"")+'"><span class="bar" style="background:'+barColor+'" aria-hidden="true"></span><div class="card-top">';
+        h += m ? avatar(m,40) : '<span class="agenda-ico">'+icon("users",16)+'</span>';
+        h += '<div class="card-main"><div class="card-title-row"><h4 class="'+(done?"done":"")+'">'+esc(a.title)+'</h4><button type="button" class="icon-btn" data-act-edit="'+esc(a.id)+'" aria-label="Editar '+esc(a.title)+'">'+icon("pencil",15)+'</button></div>';
+        h += '<p class="card-who"><span class="who-name">'+esc(m?m.name:"Sin asignar")+'</span>';
+        if (showDate) h += '<span style="display:inline-flex;align-items:center;gap:.25rem">'+icon("calendar",12)+esc(fmtShort(a.date))+(overdue?" · vencida":"")+'</span>';
+        if (overdue) h += icon("alert",13);
+        h += "</p>";
+        if (a.detail) h += renderActivityDetail(a);
+        h += '<div class="tags">';
+        if (a.place) h += '<span class="tag tag-place">'+icon("pin",12)+esc(a.place)+'</span>';
+        var _dri = dayRangeInfo(a);
+        if (_dri) h += '<span class="tag tag-days">'+icon("calendar",11,2.4)+esc(_dri.label)+'</span>';
+        if (a.deliverable) h += '<span class="tag tag-deliv">'+icon("box",12)+esc(a.deliverable)+'</span>';
+        if (hasPriority(a.priority)) { var _prio = normPriority(a.priority); h += '<span class="tag tag-prio '+_prio+'">'+icon("flag",11,2.4)+PRIORITY_LABEL[_prio]+'</span>'; }
+        if (unmarked) h += '<span class="tag tag-sinmarcar">'+icon("alert",11,2.4)+'Sin marcar</span>';
+        h += '</div>';
+        h += "</div></div>";
+        h += activityControlsHTML(a);
         if (noComp && a.no_completado_motivo) {
           h += '<div class="nocomp-motivo"><strong>Novedad — por qué no se cumplió:</strong> '+esc(a.no_completado_motivo)+'</div>';
         }
+        h += "</article>";
+        return h;
+      }
+      /* En modo app las tarjetas usan la jerarquía limpia aprobada;
+         en la web se usa la tarjeta de siempre. */
+      function cardHTML(a, showDate){ return APP_MODE ? appActivityCardHTML(a, showDate) : activityCardHTML(a, showDate); }
+      function appStateChip(a){
+        if (isNoCompletado(a)) return '<span class="app-state-chip nocomp">' + icon("x", 11, 3) + STATUS_LABEL.no_completado + "</span>";
+        if (a.status === "completada") return '<span class="app-state-chip done">' + icon("check", 11, 3) + STATUS_LABEL.completada + "</span>";
+        if (a.date < TODAY && !isClosedAct(a)) return '<span class="app-state-chip over">' + icon("alert", 11, 2.6) + "Vencida</span>";
+        if (a.status === "en_curso") return '<span class="app-state-chip curso">' + icon("clock", 11, 2.6) + STATUS_LABEL.en_curso + "</span>";
+        return '<span class="app-state-chip">' + icon("dot", 11, 2.6) + STATUS_LABEL.pendiente + "</span>";
+      }
+      function appActivityCardHTML(a, showDate){
+        var m = a.member_id != null ? memberByOrden(a.member_id) : undefined;
+        var overdue = a.date < TODAY && !isClosedAct(a);
+        var done = a.status === "completada";
+        var noComp = isNoCompletado(a);
+        var unmarked = !isAdmin() && isOwnActivity(a) && a.date >= mondayOfISO(TODAY) && actDayPassed(a) && !isClosedAct(a);
+        var h = '<article class="card app-card' + (overdue ? " overdue" : "") + (unmarked ? " unmarked" : "") + '">';
+        h += '<div class="app-card-head"><h4 class="' + (done ? "done" : "") + '">' + esc(a.title) + "</h4>" + appStateChip(a) + '<button type="button" class="icon-btn" data-act-edit="' + esc(a.id) + '" aria-label="Editar ' + esc(a.title) + '">' + icon("pencil", 15) + "</button></div>";
+        h += '<p class="app-card-who">' + (m ? avatar(m, 22) : "") + '<span class="who-name">' + esc(m ? m.name : "Sin asignar") + "</span>";
+        if (showDate) h += '<span class="app-card-date">' + icon("calendar", 12) + esc(fmtShort(a.date)) + "</span>";
+        h += "</p>";
+        if (a.detail) h += renderActivityDetail(a);
+        h += '<div class="tags">';
+        if (a.place) h += '<span class="tag tag-place">' + icon("pin", 12) + esc(a.place) + "</span>";
+        var dri = dayRangeInfo(a);
+        if (dri) h += '<span class="tag tag-days">' + icon("calendar", 11, 2.4) + esc(dri.label) + "</span>";
+        if (a.deliverable) h += '<span class="tag tag-deliv">' + icon("box", 12) + esc(a.deliverable) + "</span>";
+        if (hasPriority(a.priority)) { var pr = normPriority(a.priority); h += '<span class="tag tag-prio ' + pr + '">' + icon("flag", 11, 2.4) + PRIORITY_LABEL[pr] + "</span>"; }
+        if (unmarked) h += '<span class="tag tag-sinmarcar">' + icon("alert", 11, 2.4) + "Sin marcar</span>";
+        h += "</div>";
+        h += activityControlsHTML(a);
+        if (noComp && a.no_completado_motivo) h += '<div class="nocomp-motivo"><strong>Novedad — por qué no se cumplió:</strong> ' + esc(a.no_completado_motivo) + "</div>";
         h += "</article>";
         return h;
       }
@@ -2148,7 +2289,7 @@
         }
         if (ov.length > 0) {
           h += '<section class="overdue-box" aria-label="Actividades vencidas"><h2><span class="ob-ico">'+icon("alert",16)+'</span>Vencidas sin completar<span class="ob-count">'+ov.length+'</span></h2><div class="grid-2">';
-          ov.forEach(function(a){ h += activityCardHTML(a, true); });
+          ov.forEach(function(a){ h += cardHTML(a, true); });
           h += "</div></section>";
         }
         if (visible.length === 0 && ov.length === 0) {
@@ -2173,7 +2314,7 @@
             if (isRest) h += '<div class="rest-banner" role="note"><span class="rb-ico" aria-hidden="true">'+icon("sun",19,2.1)+'</span><div><strong>¡Día de descanso!</strong><span>Hoy no hay actividades programadas. A descansar, recargar energías y disfrutar — mañana seguimos con todo.</span></div></div>';
             if (dayActs.length > 0) {
               h += '<div class="grid-2">';
-              dayActs.forEach(function(a){ h += activityCardHTML(a, false); });
+              dayActs.forEach(function(a){ h += cardHTML(a, false); });
               h += "</div>";
             }
             h += "</section>";
@@ -2184,6 +2325,209 @@
         bindActivityControls(main);
         var adds = main.querySelectorAll("[data-add-day]");
         for (var i=0;i<adds.length;i++) adds[i].addEventListener("click", function(){ openActivityModal(null, this.getAttribute("data-add-day")); });
+      }
+
+      /* ================= MODO APP: vistas nuevas =================
+         Solo se llega a ellas en modo app (la navegación inferior no
+         existe en la web). Reutilizan los mismos datos en vivo, el
+         mismo marcado y las mismas reglas; no tocan Firestore. */
+      function unmarkedActionable(){
+        var moToday = mondayOfISO(TODAY);
+        return visibleActivities().filter(function(a){ return a.date >= moToday && actDayPassed(a) && !isClosedAct(a); });
+      }
+      function bindGoto(root){
+        var gs = root.querySelectorAll("[data-goto]");
+        for (var i = 0; i < gs.length; i++) gs[i].addEventListener("click", function(){
+          if (this.getAttribute("data-repo")) reportSubTab = "repositorio";
+          view = this.getAttribute("data-goto");
+          window.scrollTo(0, 0);
+          render();
+        });
+      }
+      function renderHoy(main){
+        if (!currentProfile) { main.innerHTML = ""; return; }
+        var first = currentProfile.name.split(" ")[0];
+        var allToday = visibleActivities().filter(function(a){ return a.date === TODAY; });
+        var todayActs = (isAdmin() && memberFilter != null) ? allToday.filter(function(a){ return a.member_id === memberFilter; }) : allToday;
+        var done = todayActs.filter(function(a){ return a.status === "completada"; }).length;
+        var pct = todayActs.length ? Math.round(done / todayActs.length * 100) : 0;
+        var aviso = isAdmin()
+          ? todayActs.filter(function(a){ return !isClosedAct(a); })
+          : unmarkedActionable();
+        var h = '<section aria-label="Hoy"><div class="hoy-greet"><p class="hoy-date">' + esc(fmtFull(TODAY)) + '</p><h2>Hola, ' + esc(first) + "</h2></div>";
+        h += '<div class="hoy-progress"><div class="hoy-progress-top"><span>' + (isAdmin() ? "Actividades del equipo hoy" : "Tus actividades de hoy") + "</span><strong>" + done + " de " + todayActs.length + '</strong></div><div class="hoy-bar"><div class="' + (pct === 100 && todayActs.length ? "full" : "") + '" style="width:' + pct + '%"></div></div><p class="hoy-progress-note">' + (todayActs.length ? "Progreso del día: " + pct + "% completado." : "Hoy no hay actividades programadas.") + "</p></div>";
+        if (aviso.length > 0) {
+          h += '<div class="reminder-banner" role="note"><span class="rb-ico">' + icon("bell", 17) + '</span><div class="rb-body"><p class="rb-title">' + (isAdmin() ? "Actividades de hoy sin cerrar" : "Recuerda marcar como completa tu actividad") + '</p><p class="rb-text">' + (isAdmin()
+            ? "Quedan " + aviso.length + (aviso.length === 1 ? " actividad de hoy" : " actividades de hoy") + " sin marcar como Completada o No Completado."
+            : "Tienes " + aviso.length + (aviso.length === 1 ? " actividad" : " actividades") + " sin marcar y ya puedes marcarlas (los días pasados y hoy desde las 18:00). En cada tarjeta elige <strong>Completado</strong> o <strong>No Completado</strong>.") + '</p></div><span class="rb-count">' + aviso.length + " sin marcar</span></div>";
+        }
+        h += '<div class="hoy-help">' + icon("clock", 15) + "<span>Se marca desde las 18:00 · La semana se cierra el domingo</span></div>";
+        h += '<button type="button" class="btn-red hoy-report-btn" data-goto="reporte">' + icon("report", 16, 2.2) + "Reportar una novedad</button>";
+        if (isAdmin()) h += filterBarHTML(allToday);
+        if (!todayActs.length) {
+          h += emptyHTML("sun", "Hoy no hay actividades", isAdmin() ? "Ninguna persona del equipo tiene actividades programadas para hoy." : "No tienes actividades programadas para hoy. ¡Día de descanso!", true);
+        } else if (isAdmin() && memberFilter == null) {
+          state.members.forEach(function(m){
+            var mine = todayActs.filter(function(a){ return a.member_id === m.orden; });
+            if (!mine.length) return;
+            h += '<h3 class="hoy-group">' + avatar(m, 26) + esc(m.name) + "</h3>" + '<div class="grid-2">';
+            mine.forEach(function(a){ h += appActivityCardHTML(a, false); });
+            h += "</div>";
+          });
+          var sinAsig = todayActs.filter(function(a){ return a.member_id == null; });
+          if (sinAsig.length) {
+            h += '<h3 class="hoy-group">Sin asignar</h3><div class="grid-2">';
+            sinAsig.forEach(function(a){ h += appActivityCardHTML(a, false); });
+            h += "</div>";
+          }
+        } else {
+          h += '<div class="grid-2">';
+          todayActs.forEach(function(a){ h += appActivityCardHTML(a, false); });
+          h += "</div>";
+        }
+        h += "</section>";
+        main.innerHTML = h;
+        bindFilterBar(main);
+        bindActivityControls(main);
+        bindGoto(main);
+      }
+      /* ---------- view: Panel (solo admin, modo app) ---------- */
+      function renderPanel(main){
+        if (!isAdmin()) { view = "hoy"; renderHoy(main); return; }
+        var todayAll = state.activities.filter(function(a){ return a.date === TODAY; });
+        var sinMarcarHoy = todayAll.filter(function(a){ return !isClosedAct(a); });
+        var abiertos = state.reportsResumen.filter(function(r){ return (r.estado || "Recibido") !== "Cerrado"; });
+        var wa = weekActs();
+        var wDone = wa.filter(function(a){ return a.status === "completada"; }).length;
+        var wPct = wa.length ? Math.round(wDone / wa.length * 100) : 0;
+        var h = '<section aria-label="Panel"><div class="sec-head"><h2>' + secBadge("chart", true) + "Panel</h2></div>";
+        h += '<div class="kpi-grid">'
+          + '<div class="kpi"><p class="num' + (sinMarcarHoy.length ? " red" : "") + '">' + sinMarcarHoy.length + '</p><p class="lbl">Sin marcar hoy</p></div>'
+          + '<div class="kpi"><p class="num' + (abiertos.length ? " red" : "") + '">' + abiertos.length + '</p><p class="lbl">Reportes abiertos</p></div>'
+          + '<div class="kpi"><p class="num">' + wPct + '%</p><p class="lbl">Cumplimiento de la semana</p></div></div>';
+        if (!markHourReached()) h += '<div class="hoy-help">' + icon("clock", 15) + "<span>El marcado de hoy se abre a las 18:00.</span></div>";
+        /* Quién no ha marcado hoy */
+        h += '<div class="sec-head"><h2>' + secBadge("users") + "Quién no ha marcado hoy</h2></div>";
+        var porPersona = {};
+        sinMarcarHoy.forEach(function(a){ if (a.member_id != null) porPersona[a.member_id] = (porPersona[a.member_id] || 0) + 1; });
+        var alguien = false;
+        state.members.forEach(function(m){
+          var n = porPersona[m.orden] || 0;
+          if (!n) return;
+          alguien = true;
+          h += '<div class="panel-row">' + avatar(m, 34) + '<span class="pr-main"><strong>' + esc(m.name) + '</strong></span><span class="panel-count">' + n + (n === 1 ? " sin marcar" : " sin marcar") + "</span></div>";
+        });
+        if (!alguien) h += '<p style="font-size:13.5px;font-weight:600;color:var(--dim);margin:-.5rem 0 1.25rem">' + (todayAll.length ? "Todas las actividades de hoy ya están marcadas." : "Hoy no hay actividades programadas.") + "</p>";
+        /* Reportes abiertos por gravedad */
+        h += '<div class="sec-head" style="margin-top:1.75rem"><h2>' + secBadge("report", true) + "Reportes abiertos por gravedad</h2></div>";
+        REPORT_GRAVEDADES.slice().reverse().forEach(function(g){
+          var n = abiertos.filter(function(r){ return (r.gravedad || "") === g; }).length;
+          h += '<div class="panel-row"><span class="pr-main">Gravedad <strong>' + esc(g) + '</strong></span>' + gravedadPillHTML(g) + '<span class="panel-count' + (g === "Alta" && n ? "" : " dark") + '">' + n + "</span></div>";
+        });
+        if (abiertos.length) {
+          abiertos.slice(0, 8).forEach(function(r){
+            h += '<button type="button" class="hist-item" data-panel-report="' + esc(r.id) + '"><span class="agenda-ico' + (r.gravedad === "Alta" ? " curso" : "") + '">' + icon("report", 17) + '</span><span class="hist-main"><span class="hist-title" style="display:block">' + esc(reportLugar(r)) + '</span><p class="hist-brief">' + esc(r.resumen_breve || "") + '</p><span class="hist-meta">' + gravedadPillHTML(r.gravedad) + estadoPillHTML(r.estado) + '<span class="pill pill-meta">' + icon("users", 11) + esc(r.reporter_nombre || "") + '</span><span class="pill pill-meta">' + icon("calendar", 11) + esc(r.fecha || "") + "</span></span></span></button>";
+          });
+          if (abiertos.length > 8) h += '<p style="font-size:13px;font-weight:600;color:var(--dim)">Y ' + (abiertos.length - 8) + " reportes abiertos más en el Repositorio.</p>";
+          h += '<button type="button" class="btn-black" data-goto="reporte" data-repo="1" style="margin-top:.5rem">' + icon("box", 14) + " Abrir el Repositorio</button>";
+        } else {
+          h += '<p style="font-size:13.5px;font-weight:600;color:var(--dim)">No hay reportes abiertos. Todo está cerrado o resuelto.</p>';
+        }
+        /* Motivos frecuentes de No Completado */
+        h += '<div class="sec-head" style="margin-top:1.75rem"><h2>' + secBadge("x") + "Motivos frecuentes de No Completado</h2></div>";
+        var motivos = {};
+        state.activities.forEach(function(a){
+          if (a.status !== "no_completado") return;
+          var k = String(a.no_completado_motivo || "").trim();
+          if (!k) return;
+          motivos[k] = (motivos[k] || 0) + 1;
+        });
+        var mlist = Object.keys(motivos).map(function(k){ return { texto: k, n: motivos[k] }; }).sort(function(x, y){ return y.n - x.n; }).slice(0, 5);
+        if (!mlist.length) {
+          h += '<p style="font-size:13.5px;font-weight:600;color:var(--dim)">Todavía no hay actividades marcadas como No Completado con novedad.</p>';
+        } else {
+          mlist.forEach(function(mo){
+            h += '<div class="panel-row"><span class="pr-main">' + esc(mo.texto) + '</span><span class="panel-count dark">' + mo.n + (mo.n === 1 ? " vez" : " veces") + "</span></div>";
+          });
+        }
+        h += "</section>";
+        main.innerHTML = h;
+        bindGoto(main);
+        var opens = main.querySelectorAll("[data-panel-report]");
+        for (var i = 0; i < opens.length; i++) opens[i].addEventListener("click", function(){ handleReportOpen(this.getAttribute("data-panel-report")); });
+      }
+      /* ---------- view: Más (modo app) ---------- */
+      function renderMas(main){
+        if (!currentProfile) { main.innerHTML = ""; return; }
+        var items = [
+          { id: "agenda", label: "Agenda", sub: "Calendario mensual de actividades", ic: "agenda" },
+          { id: "objetivos", label: "Objetivos", sub: "Avance individual de la semana", ic: "target" },
+          { id: "temas", label: "Temas", sub: "Temas y avisos del equipo", ic: "bell" },
+          { id: "equipo", label: "Equipo", sub: "Todas las personas del equipo", ic: "users" }
+        ];
+        if (isAdmin()) {
+          items.push({ id: "panel", label: "Panel", sub: "Sin marcar, reportes abiertos y cumplimiento", ic: "chart" });
+          items.push({ id: "datos", label: "Datos del equipo", sub: "Datos personales y postulación · solo admins", ic: "idcard" });
+        }
+        var meM = memberByOrden(myMemberOrden());
+        var h = '<section aria-label="Más"><div class="sec-head"><h2>' + secBadge("grid") + "Más</h2></div>";
+        h += '<div class="mas-list">';
+        items.forEach(function(it){
+          h += '<button type="button" class="mas-item" data-goto="' + it.id + '"><span class="mas-item-ico">' + icon(it.ic, 20, 2.1) + '</span><span class="mas-item-txt"><strong>' + it.label + "</strong><span>" + it.sub + "</span></span>" + icon("chevR", 18, 2.2) + "</button>";
+        });
+        h += "</div>";
+        h += '<div class="sec-head"><h2>' + secBadge("users") + "Cuenta</h2></div>";
+        h += '<div class="mas-cuenta">' + (meM ? avatar(meM, 46) : avatar({ name: currentProfile.name, color: "#0A0A0A" }, 46)) + '<span class="mc-main"><strong>' + esc(currentProfile.name) + "</strong><span>" + esc(currentProfile.email) + "</span></span></div>";
+        h += '<div class="mas-list">'
+          + '<button type="button" class="mas-item" id="masPass"><span class="mas-item-ico">' + icon("key", 20, 2.1) + '</span><span class="mas-item-txt"><strong>Cambiar contraseña</strong><span>Actualiza la contraseña de tu cuenta</span></span>' + icon("chevR", 18, 2.2) + "</button>"
+          + '<button type="button" class="mas-item" id="masLogout"><span class="mas-item-ico red">' + icon("logout", 20, 2.1) + '</span><span class="mas-item-txt"><strong>Cerrar sesión</strong><span>Salir de tu cuenta en este dispositivo</span></span>' + icon("chevR", 18, 2.2) + "</button></div>";
+        h += '<div class="help-card"><h3>Cómo funciona el marcado</h3>'
+          + '<div class="help-row">' + icon("clock", 16) + "<span><strong>Se marca desde las 18:00</strong> del día de la actividad. Antes, el estado se ve Pendiente o En curso de forma automática.</span></div>"
+          + '<div class="help-row">' + icon("calendar", 16) + "<span><strong>La semana se cierra el domingo:</strong> después, el estado de esa semana ya no se puede cambiar.</span></div>"
+          + '<div class="help-row">' + icon("x", 16) + "<span><strong>No Completado pide la novedad:</strong> hay que escribir por qué no se cumplió; queda guardado en la actividad.</span></div></div>";
+        h += "</section>";
+        main.innerHTML = h;
+        bindGoto(main);
+        $("masPass").addEventListener("click", function(){ openChangePasswordModal(); });
+        $("masLogout").addEventListener("click", function(){ signOutSession(false); });
+      }
+      /* ---------- Equipo en modo app: solo nombre y rol ----------
+         Sin insignias «Admin», «Postulando» ni «Con cargo»: eso solo
+         vive en Datos del equipo (solo admins). */
+      function renderEquipoApp(main){
+        var h = '<section aria-label="Equipo"><div class="sec-head" style="margin-bottom:.5rem"><h2>' + secBadge("users") + "Equipo de Formación</h2></div>";
+        h += '<p class="team-sub">Todas las personas del equipo de Formación y Desarrollo.</p><div class="grid-3">';
+        state.members.forEach(function(m){
+          h += '<article class="card team-card" style="--team-color:' + m.color + '"><div class="team-top"><div class="team-who">' + avatar(m, 52) + "<div><h3>" + esc(m.name) + "</h3><p>" + esc(m.role || "Equipo de Formación") + "</p></div></div></div></article>";
+        });
+        h += "</div></section>";
+        main.innerHTML = h;
+      }
+      /* ---------- Navegación inferior del modo app ---------- */
+      function renderAppNav(){
+        var nav = $("appNav");
+        if (!nav) return;
+        if (!APP_MODE) { nav.innerHTML = ""; return; }
+        var badge = 0;
+        if (currentProfile) {
+          badge = isAdmin()
+            ? visibleActivities().filter(function(a){ return a.date === TODAY && !isClosedAct(a); }).length
+            : unmarkedActionable().length;
+        }
+        var masActive = ["agenda", "objetivos", "temas", "equipo", "panel", "datos", "mas"].indexOf(view) !== -1;
+        var items = [
+          { id: "hoy", label: "Hoy", ic: "sun", badge: badge },
+          { id: "semana", label: "Semana", ic: "calendar", badge: 0 },
+          { id: "reporte", label: "Reporte", ic: "report", badge: 0 },
+          { id: "guia", label: "Guía", ic: "book", badge: 0 },
+          { id: "mas", label: "Más", ic: "grid", badge: 0 }
+        ];
+        nav.innerHTML = items.map(function(it){
+          var active = it.id === "mas" ? masActive : view === it.id;
+          return '<button type="button" class="app-nav-btn' + (active ? " active" : "") + '" data-appnav="' + it.id + '" aria-pressed="' + active + '">' + icon(it.ic, 21, 2.1) + "<span>" + it.label + "</span>" + (it.badge ? '<span class="app-nav-badge">' + it.badge + "</span>" : "") + "</button>";
+        }).join("");
+        var btns = nav.querySelectorAll("[data-appnav]");
+        for (var i = 0; i < btns.length; i++) btns[i].addEventListener("click", function(){ view = this.getAttribute("data-appnav"); window.scrollTo(0, 0); render(); });
       }
 
       /* ---------- view: Agenda ---------- */
@@ -2503,6 +2847,7 @@
 
       /* ---------- view: Equipo ---------- */
       function renderEquipo(main){
+        if (APP_MODE) { renderEquipoApp(main); return; }
         var mo = monday();
         var wa = weekActs();
         var mineOrden = isAdmin() ? null : myMemberOrden();
@@ -3685,7 +4030,11 @@
           if (name && !el.querySelector("svg")) el.insertAdjacentHTML("afterbegin", icon(name, 11));
         });
         var main = document.getElementById("main");
-        if (view === "semana") renderSemana(main);
+        renderAppNav();
+        if (view === "hoy") renderHoy(main);
+        else if (view === "panel") renderPanel(main);
+        else if (view === "mas") renderMas(main);
+        else if (view === "semana") renderSemana(main);
         else if (view === "agenda") renderAgenda(main);
         else if (view === "objetivos") renderObjetivos(main);
         else if (view === "temas") renderTemas(main);
@@ -3793,6 +4142,7 @@
         if (window.matchMedia) {
           var mq = window.matchMedia("(display-mode: standalone)");
           if (mq.addEventListener) mq.addEventListener("change", refreshInstallUI);
+          if (mq.addEventListener) mq.addEventListener("change", function (e) { if (e.matches) window.location.reload(); });
         }
         refreshInstallUI();
       })();
