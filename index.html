@@ -1828,6 +1828,10 @@
       }
       function renderPhrase(){
         var box = $("phraseBox");
+        /* En modo app la frase solo aparece en la vista Hoy; en el resto
+           de vistas (Semana, Agenda, Reporte, Guía, Más y sus subvistas)
+           se oculta. En el navegador (fuera de modo app) siempre se ve. */
+        if (box) box.classList.toggle("hidden", !!(APP_MODE && view !== "hoy"));
         var mo = monday();
         var phrase = phraseForMonday(mo);
         var fixed = !!phrase;
@@ -4042,6 +4046,10 @@
         else if (view === "reporte") renderReporte(main);
         else if (view === "guia") renderGuia(main);
         else if (view === "datos") renderDatos(main);
+        /* Algunas vistas corrigen `view` al renderizar (p. ej. Panel o
+           Datos sin permiso): se re-aplica la visibilidad de la frase
+           con la vista final, solo en modo app. */
+        if (APP_MODE) { var pb = document.getElementById("phraseBox"); if (pb) pb.classList.toggle("hidden", view !== "hoy"); }
       }
       document.getElementById("weekPrev").innerHTML = icon("chevL",18);
       document.getElementById("weekNext").innerHTML = icon("chevR",18);
