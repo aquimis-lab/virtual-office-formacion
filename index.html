@@ -581,7 +581,7 @@
       .obj-pending li .pmeta.nc{color:var(--accent-ink)}
       .obj-empty-note{margin-top:1rem;border-radius:.75rem;background:var(--surface-2);padding:.75rem .85rem;font-size:13.5px;font-weight:700;color:var(--dim)}
       .obj-done-note{margin-top:1rem;border-radius:.75rem;background:#000;color:#fff;padding:.75rem .85rem;font-size:13.5px;font-weight:700}
-      /* Subpestañas de Reporte (solo admins, solo en modo app): Reporte de novedades / Repositorio */
+      /* Subpestañas genéricas (las usa la Guía: Correo / Entrenamiento / Seguimiento) */
       .rep-subtabs{display:flex;gap:.25rem;border-radius:1rem;background:var(--surface-2);padding:.375rem;margin-bottom:1.25rem}
       .rep-subtab{flex:1;display:flex;align-items:center;justify-content:center;gap:.375rem;border-radius:.75rem;padding:.625rem .5rem;font-size:13px;font-weight:800;color:#52525b;transition:all .15s;min-height:2.75rem}
       @media(min-width:640px){.rep-subtab{font-size:.875rem}}
@@ -1423,7 +1423,7 @@
       var semQuery = "";            /* buscador de la tabla */
       var webSideCollapsed = false; /* barra lateral retraída (solo memoria) */
       var webNotifOpen = false;     /* panel de notificaciones abierto */
-      var perfiles = {};            /* perfiles/{uid} de Firestore: foto, frase, gustos, signo, reacciones_dadas */
+      var perfiles = {};            /* perfiles/{uid} de Firestore: foto, gustos, signo, reacciones_dadas */
       var perfilFotoDraft = "";     /* foto en edición dentro del modal Mi perfil */
       var weekOffset = 0;
       var memberFilter = null;
@@ -2005,7 +2005,7 @@
           }, function(err){ console.error(err); });
 
           /* Perfiles personales (colección nueva perfiles/{uid}): la
-             foto, la frase de «cómo me identifico» y «qué me gusta» que
+             foto y «qué me gusta» que
              cada persona edita desde Mi perfil. PENDIENTE: publicar en
              Firestore la regla de esta colección (lectura para los 10
              usuarios con acceso; escritura solo del documento del
@@ -2222,7 +2222,7 @@
           return '<button type="button" class="tab'+(view===t.id?" active":"")+'" data-view="'+t.id+'" aria-pressed="'+(view===t.id)+'">'+icon(t.ic,16,2.2)+'<span class="tab-label">'+t.label+'</span>'+(t.count>0?'<span class="count">'+t.count+'</span>':"")+'</button>';
         }).join("");
         var btns = $("tabs").querySelectorAll("[data-view]");
-        for (var i=0;i<btns.length;i++) btns[i].addEventListener("click", function(){ view = this.getAttribute("data-view"); render(); });
+        for (var i=0;i<btns.length;i++) btns[i].addEventListener("click", function(){ var tabId = this.getAttribute("data-view"); if (tabId === "reporte") reportSubTab = "novedades"; view = tabId; render(); });
         var fab = $("fab");
         if (view === "equipo" || view === "reporte" || view === "datos" || view === "objetivos" || view === "guia" || (APP_MODE && (view === "hoy" || view === "panel" || view === "mas" || view === "perfil"))) { fab.classList.add("hidden"); }
         else {
@@ -2721,6 +2721,7 @@
         var gs = root.querySelectorAll("[data-goto]");
         for (var i = 0; i < gs.length; i++) gs[i].addEventListener("click", function(){
           if (this.getAttribute("data-repo")) reportSubTab = "repositorio";
+          else if (this.getAttribute("data-goto") === "reporte") reportSubTab = "novedades";
           view = this.getAttribute("data-goto");
           window.scrollTo(0, 0);
           render();
@@ -2897,7 +2898,6 @@
           + '<p class="pname">' + esc(currentProfile.name) + '</p><p class="prole">' + esc(meM ? (meM.role || "Equipo de Formación") : "Equipo de Formación") + "</p>"
           + '<div class="pmeta">'
           + "<p><strong>Correo:</strong> " + esc(currentProfile.email) + "</p>"
-          + "<p><strong>Cómo me identifico:</strong> " + esc(pf.frase || "—") + "</p>"
           + "<p><strong>Me gusta:</strong> " + esc(pf.gustos || "—") + "</p>"
           + "<p><strong>Mi signo:</strong> " + (pf.signo ? esc(pf.signo) : "No lo comparto (es opcional)") + "</p></div>"
           + '<button type="button" class="perfil-edit-btn" id="perfilEditBtn">' + icon("pencil", 14, 2.4) + " Editar mi perfil</button></div>";
@@ -2941,8 +2941,8 @@
       /* ---------- Equipo en modo app: lista limpia tipo WhatsApp ----------
          Solo foto, nombre y rol (sin insignias «Admin», «Postulando» ni
          «Con cargo»: eso solo vive en Datos del equipo, solo admins).
-         Al tocar a alguien se abre su perfil personal —cómo se
-         identifica, qué le gusta y su signo si lo comparte— con los
+         Al tocar a alguien se abre su perfil personal —qué le
+         gusta y su signo si lo comparte— con los
          mensajes de ánimo predeterminados, usando el MISMO guardado
          de perfiles de la web (colección perfiles/{uid}). */
       function renderEquipoApp(main){
@@ -2955,7 +2955,7 @@
             + (rec.total ? '<span class="wa-love">' + icon("heart", 13, 2.2) + rec.total + "</span>" : "")
             + '<span class="wa-chev">' + icon("chevR", 17, 2.2) + "</span></button>";
         });
-        h += '</div><p class="app-note">En el perfil de cada persona ves cómo se identifica, qué le gusta y su signo si lo comparte, y puedes dejarle un mensaje de ánimo predeterminado.</p></section>';
+        h += '</div><p class="app-note">En el perfil de cada persona ves qué le gusta y su signo si lo comparte, y puedes dejarle un mensaje de ánimo predeterminado.</p></section>';
         main.innerHTML = h;
         Array.prototype.forEach.call(main.querySelectorAll("[data-perfil-orden]"), function(btn){
           btn.addEventListener("click", function(){
@@ -2994,7 +2994,7 @@
           return '<button type="button" class="app-nav-btn' + (active ? " active" : "") + '" data-appnav="' + it.id + '" aria-pressed="' + active + '">' + icon(it.ic, 21, 2.1) + "<span>" + it.label + "</span>" + (it.badge ? '<span class="app-nav-badge">' + it.badge + "</span>" : "") + "</button>";
         }).join("");
         var btns = nav.querySelectorAll("[data-appnav]");
-        for (var i = 0; i < btns.length; i++) btns[i].addEventListener("click", function(){ view = this.getAttribute("data-appnav"); window.scrollTo(0, 0); render(); });
+        for (var i = 0; i < btns.length; i++) btns[i].addEventListener("click", function(){ var navId = this.getAttribute("data-appnav"); if (navId === "reporte") reportSubTab = "novedades"; view = navId; window.scrollTo(0, 0); render(); });
       }
 
       /* ---------- view: Agenda ---------- */
@@ -3444,8 +3444,8 @@
         });
       }
       /* Vista de perfil al tocar una tarjeta de Equipo (solo web):
-         lo que la persona quiso compartir de sí misma (cómo se
-         identifica, qué le gusta y su signo si lo puso), los
+         lo que la persona quiso compartir de sí misma (qué le
+         gusta y su signo si lo puso), los
          mensajes de ánimo recibidos y el selector para dejarle uno. */
       function openPerfilView(m){
         if (!m) return;
@@ -3456,11 +3456,10 @@
         var mine = miReaccionA(uid);
         var body = '<div class="pv-head">' + perfilAvatarHTML(m, 76) + "<div><h4>" + esc(m.name) + (isMe ? " · Tú" : "") + "</h4><p>" + esc(m.role || "Equipo de Formación") + "</p></div></div>";
         var rows = "";
-        if (pf.frase) rows += '<div class="pv-row"><span>Cómo se identifica</span><p>' + esc(pf.frase) + "</p></div>";
         if (pf.gustos) rows += '<div class="pv-row"><span>Qué le gusta</span><p>' + esc(pf.gustos) + "</p></div>";
         if (pf.signo) rows += '<div class="pv-row"><span>Signo</span><p>' + esc(pf.signo) + "</p></div>";
         body += rows ? '<div class="pv-rows">' + rows + "</div>"
-          : '<p class="pv-empty">' + (isMe ? "Todavía no completaste tu perfil personal. Edítalo y comparte cómo te identificas, qué te gusta y, si quieres, tu signo." : "Todavía no completó su perfil personal.") + "</p>";
+          : '<p class="pv-empty">' + (isMe ? "Todavía no completaste tu perfil personal. Edítalo y comparte qué te gusta y, si quieres, tu signo." : "Todavía no completó su perfil personal.") + "</p>";
         body += '<div class="pv-sec"><h4>' + icon("heart", 16, 2.2) + " Mensajes de ánimo</h4>";
         if (rec.total) {
           body += '<div class="react-got">';
@@ -3504,7 +3503,6 @@
         var body = '<form class="form" id="perfilForm">'
           + '<p class="form-note">Este es <strong>tu perfil personal</strong>: lo que pongas aquí se ve cuando alguien toca tu tarjeta en Equipo, y Anthony y Gio lo ven en Datos del equipo. No tiene nada que ver con tus datos administrativos.</p>'
           + '<div><span style="display:block;margin-bottom:.5rem;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#52525b">Tu foto</span><div class="perfil-photo-row"><span id="pfPreview">' + preview + '</span><label class="rep-photo-btn">' + icon("camera", 15) + 'Subir mi foto<input type="file" id="pfFoto" accept="image/*" class="hidden"></label></div><p class="form-note" style="margin-top:.5rem">La foto se comprime automáticamente para que pese poco.</p></div>'
-          + '<div><label class="flabel" for="pfFrase">Cómo me identifico</label><input class="input" id="pfFrase" type="text" maxlength="120" placeholder="Ej.: Aprendo rápido y me encanta estar en tienda." value="' + esc(pf.frase || "") + '"></div>'
           + '<div><label class="flabel" for="pfGustos">Qué me gusta</label><textarea class="input" id="pfGustos" placeholder="Ej.: El mar, la fotografía y el vóley.">' + esc(pf.gustos || "") + "</textarea></div>"
           + '<div><label class="flabel" for="pfSigno">Mi signo (opcional)</label><select class="input" id="pfSigno"><option value="">Prefiero no decirlo</option>' + SIGNOS.map(function(s){ return '<option value="' + esc(s) + '"' + (pf.signo === s ? " selected" : "") + ">" + esc(s) + "</option>"; }).join("") + '</select><p class="form-note" style="margin-top:.4rem">Solo si quieres compartirlo: tú lo eliges aquí y se verá en tu perfil de Equipo.</p></div>'
           + '<div class="form-error" id="formError"></div>'
@@ -3532,7 +3530,7 @@
              y la web sigue funcionando sin perfiles. */
           db.collection("perfiles").doc(currentUser.uid).set({
             nombre: currentProfile.name,
-            frase: $("pfFrase").value.trim(),
+            frase: firebase.firestore.FieldValue.delete(),
             gustos: $("pfGustos").value.trim(),
             signo: $("pfSigno").value,
             foto: perfilFotoDraft || "",
@@ -3554,12 +3552,12 @@
          administrativos de siempre. */
       function datosPerfilHTML(){
         var h = '<div class="sec-head" style="margin-top:2.25rem"><h2>' + secBadge("camera") + 'Perfil personal del equipo</h2></div>';
-        h += '<p style="margin:-.5rem 0 1.25rem;font-size:13.5px;font-weight:600;line-height:1.55;color:var(--dim)">La foto, la frase y los gustos que cada persona puso en su propio perfil desde «Mi perfil». Es información personal y amable, aparte de los datos administrativos de arriba.</p><div class="datos-grid">';
+        h += '<p style="margin:-.5rem 0 1.25rem;font-size:13.5px;font-weight:600;line-height:1.55;color:var(--dim)">La foto y los gustos que cada persona puso en su propio perfil desde «Mi perfil». Es información personal y amable, aparte de los datos administrativos de arriba.</p><div class="datos-grid">';
         state.members.forEach(function(m){
           var pf = perfilDeMember(m);
           h += '<article class="card datos-card"><div class="team-who">' + perfilAvatarHTML(m, 48) + "<div><h3>" + esc(m.name) + "</h3><p>" + esc(m.role || "Equipo de Formación") + "</p></div></div>"
-            + (pf && (pf.frase || pf.gustos || pf.signo)
-              ? '<div class="datos-rows">' + (pf.frase ? "<p><strong>Cómo se identifica:</strong> " + esc(pf.frase) + "</p>" : "") + (pf.gustos ? "<p><strong>Qué le gusta:</strong> " + esc(pf.gustos) + "</p>" : "") + (pf.signo ? "<p><strong>Signo:</strong> " + esc(pf.signo) + "</p>" : "") + "</div>"
+            + (pf && (pf.gustos || pf.signo)
+              ? '<div class="datos-rows">' + (pf.gustos ? "<p><strong>Qué le gusta:</strong> " + esc(pf.gustos) + "</p>" : "") + (pf.signo ? "<p><strong>Signo:</strong> " + esc(pf.signo) + "</p>" : "") + "</div>"
               : '<p class="team-note" style="margin-top:.85rem">Todavía no completó su perfil personal.</p>')
             + "</article>";
         });
@@ -4285,12 +4283,12 @@
       /* Rango elegido por el admin para el PDF de novedades (Desde/Hasta);
          por defecto, del lunes de la semana actual a hoy. */
       var pdfDesde = null, pdfHasta = null;
-      /* Apartado activo de Reporte SOLO para admins: "novedades" (el
-         formulario de siempre) y "repositorio" (todos los reportes, con
-         filtros). En la web el Repositorio se abre desde Administración
-         (barra lateral), sin subpestaña dentro de Reporte; en modo app las
-         subpestañas se mantienen porque no hay barra lateral.
-         El equipo no ve subpestañas: sigue con formulario + historial. */
+      /* Apartado activo SOLO para admins: "novedades" (el formulario de
+         Reporte de siempre) y "repositorio" (todos los reportes, con
+         filtros). El Repositorio se abre ÚNICAMENTE desde Administración
+         —barra lateral en la web, Perfil > Administración en la app— y
+         Reporte nunca muestra subpestañas ni botón de Repositorio, en
+         ningún modo. El equipo sigue con formulario + historial. */
       var reportSubTab = "novedades";
       var appSemanaDay = null; /* día seleccionado en la Semana del modo app (chips) */
       /* Filtros combinables del Repositorio (admins): "" = sin filtro. */
@@ -4430,16 +4428,14 @@
         var enRepo = admin && reportSubTab === "repositorio";
         var h = '<section aria-label="' + (enRepo ? "Repositorio de novedades" : "Reporte de novedades") + '"><div class="sec-head"><h2>' + secBadge(enRepo ? "box" : "report", true) + (enRepo ? "Repositorio de novedades" : "Reporte de novedades") + '</h2></div>';
         if (admin) {
-          /* El Repositorio vive en Administración (barra lateral web): dentro
-             de Reporte ya no aparece ninguna subpestaña para saltar a él.
-             En modo app no hay barra lateral, así que ahí se mantienen las
-             dos subpestañas para que los admins sigan llegando al
-             Repositorio. El equipo nunca ve subpestañas. */
-          if (APP_MODE) {
-            h += '<div class="rep-subtabs" role="group" aria-label="Apartados de Reporte">'
-              + '<button type="button" class="rep-subtab' + (reportSubTab === "novedades" ? " active" : "") + '" data-repsubtab="novedades" aria-pressed="' + (reportSubTab === "novedades") + '">' + icon("report", 15, 2.2) + 'Reporte de novedades</button>'
-              + '<button type="button" class="rep-subtab' + (reportSubTab === "repositorio" ? " active" : "") + '" data-repsubtab="repositorio" aria-pressed="' + (reportSubTab === "repositorio") + '">' + icon("box", 15, 2.2) + 'Repositorio' + (state.reportsResumen.length ? '<span class="count">' + state.reportsResumen.length + "</span>" : "") + "</button></div>";
-          }
+          /* El Repositorio vive SOLO en Administración: en la web, en su
+             apartado de la barra lateral; en la app, en Perfil >
+             Administración. Dentro de Reporte no aparece ninguna
+             subpestaña ni botón de Repositorio en ningún modo: esta
+             vista es solo el formulario de novedades (y, para el
+             equipo, su historial). Al Repositorio se llega únicamente
+             desde los accesos de Administración, que son los que
+             activan reportSubTab = "repositorio". */
           if (reportSubTab === "repositorio") {
             h += renderRepositorioHTML();
             h += "</section>";
@@ -4506,8 +4502,6 @@
         bindReportForm(main);
       }
       function bindReportForm(main){
-        var subtabs = main.querySelectorAll("[data-repsubtab]");
-        for (var s = 0; s < subtabs.length; s++) subtabs[s].addEventListener("click", function(){ reportSubTab = this.getAttribute("data-repsubtab"); render(); });
         var repoDayEl = $("repoDay");
         if (repoDayEl) repoDayEl.addEventListener("change", function(){ repoFilterDay = this.value || ""; render(); });
         var repoDayAll = $("repoDayAll");
