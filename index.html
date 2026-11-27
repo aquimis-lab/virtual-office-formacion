@@ -1244,6 +1244,11 @@
       .buzon-hist-row{display:flex;align-items:center;gap:.65rem;border-radius:14px;border:1px solid var(--border);background:#fff;padding:.7rem .85rem;margin-bottom:.5rem;box-shadow:0 1px 3px rgba(0,0,0,.04)}
       .buzon-hist-row .bh-main{flex:1;min-width:0;font-size:13px;font-weight:600;color:var(--dim);line-height:1.45}
       .buzon-hist-row .bh-main strong{display:block;font-size:13.5px;font-weight:800;color:#000;line-height:1.3}
+      /* Buzón, vía simple: subir un Word (.docx) o .txt con la
+         planificación en texto libre; queda guardado «por organizar» */
+      .buzon-texto{margin:.6rem 0 .5rem;border-radius:.75rem;background:var(--surface-2);padding:.85rem 1rem;font-size:13.5px;font-weight:500;line-height:1.65;white-space:pre-wrap;word-break:break-word;color:rgba(10,10,10,.88);max-height:22rem;overflow:auto}
+      .buzon-ver-btn{flex-shrink:0;border:1px solid var(--border);background:#fff;border-radius:999px;padding:.35rem .8rem;font:inherit;font-size:12px;font-weight:800;color:#000;cursor:pointer}
+      .buzon-ver-btn:hover{border-color:#000}
       .perfil-photo-row{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
       .perfil-photo-row img{border-radius:50%;object-fit:cover}
       /* Perfil de Equipo (solo web): tarjeta tocable, vista de perfil
@@ -4274,7 +4279,109 @@
         reader2.onerror = function(){ buzonShowResult(false, "No se pudo leer el archivo. Inténtalo de nuevo."); };
         reader2.readAsText(file, "UTF-8");
       }
+      /* ---------- Buzón, vía simple: Word (.docx) o texto (.txt) ----------
+         Además del Excel (que sigue activo), la admin puede escribir la
+         planificación en un Word, en texto simple, y subirlo tal cual.
+         El navegador extrae el texto plano (mammoth.js para .docx, carga
+         diferida solo al usar esta opción; lectura directa para .txt) y
+         lo guarda en buzon_planificacion con tipo:"texto" y
+         estado:"por_organizar". NO se adapta al tablero aquí: Sofi lo
+         organiza después y marca el documento como estado:"organizado".
+         Si el archivo no se puede leer o el texto sale vacío, se avisa
+         en rojo y no se guarda nada. */
+      var buzonWordBusy = false;
+      var buzonMammothPromise = null;
+      function loadBuzonMammoth(){
+        if (window.mammoth) return Promise.resolve(window.mammoth);
+        if (buzonMammothPromise) return buzonMammothPromise;
+        buzonMammothPromise = buzonLoadScript("https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js", "mammoth")
+          .catch(function(){ return buzonLoadScript("https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js", "mammoth"); })
+          .catch(function(err){ buzonMammothPromise = null; throw err; });
+        return buzonMammothPromise;
+      }
+      function buzonWordFail(msg){
+        buzonWordBusy = false;
+        buzonShowResult(false, msg);
+      }
+      function buzonSaveWordText(texto, nombreArchivo){
+        if (!requireDb()) { buzonWordBusy = false; if (view === "panel" || view === "buzon") render(); return; }
+        db.collection("buzon_planificacion").add({
+          tipo: "texto",
+          texto: texto,
+          nombre_archivo: nombreArchivo || "",
+          subido_por: currentProfile ? currentProfile.name : "",
+          subido_en: new Date(),
+          estado: "por_organizar"
+        }).then(function(){
+          buzonWordBusy = false;
+          buzonShowResult(true, "Quedó guardado. Sofi lo organiza y lo carga al tablero.");
+          toast("Word guardado en el Buzón.");
+        }).catch(function(err){
+          console.error(err);
+          buzonWordFail("No se pudo guardar el Word. Revisa la conexión e inténtalo de nuevo.");
+        });
+      }
+      function buzonHandleWordText(texto, nombreArchivo){
+        var t = String(texto || "").trim();
+        if (!t) {
+          buzonWordFail("El archivo no trajo texto legible. Revisa que tenga la planificación escrita e inténtalo de nuevo.");
+          return;
+        }
+        buzonSaveWordText(t, nombreArchivo);
+      }
+      function handleBuzonWordFile(file){
+        if (!file || buzonWordBusy) return;
+        var name = file.name || "";
+        var isDocx = /\.docx$/i.test(name);
+        var isTxt = /\.txt$/i.test(name) || (!isDocx && /text\/plain/.test(file.type || ""));
+        if (!isDocx && !isTxt) { buzonShowResult(false, "Ese archivo no sirve aquí: sube un Word (.docx) o un texto (.txt)."); return; }
+        buzonWordBusy = true;
+        if (view === "panel" || view === "buzon") render();
+        if (isTxt) {
+          var rTxt = new FileReader();
+          rTxt.onload = function(){ buzonHandleWordText(String(rTxt.result || ""), name); };
+          rTxt.onerror = function(){ buzonWordFail("No se pudo leer el archivo. Inténtalo de nuevo."); };
+          rTxt.readAsText(file, "UTF-8");
+          return;
+        }
+        loadBuzonMammoth().then(function(mammothLib){
+          var rDoc = new FileReader();
+          rDoc.onload = function(){
+            mammothLib.extractRawText({ arrayBuffer: rDoc.result }).then(function(res){
+              buzonHandleWordText(res && res.value ? res.value : "", name);
+            }).catch(function(e){
+              console.error(e);
+              buzonWordFail("No se pudo leer el Word. Revisa que sea un .docx válido e inténtalo de nuevo.");
+            });
+          };
+          rDoc.onerror = function(){ buzonWordFail("No se pudo leer el archivo. Inténtalo de nuevo."); };
+          rDoc.readAsArrayBuffer(file);
+        }).catch(function(){
+          buzonWordFail("No se pudo cargar el lector de Word (revisa la conexión) e inténtalo de nuevo.");
+        });
+      }
+      /* Subida tipo texto (Word/.txt): se muestra con su etiqueta de
+         estado y un «Ver texto» que despliega el texto guardado,
+         solo lectura. */
+      function buzonTextoUploadHTML(u){
+        var fh = buzonFechaHora(u);
+        var organizado = u.estado === "organizado";
+        var h = '<div class="buzon-meta">'
+          + "<span>" + icon("user", 13) + " Subido por <strong>" + esc(u.subido_por || "—") + "</strong></span>"
+          + (fh ? "<span>" + icon("clock", 13) + " " + esc(fh) + "</span>" : "")
+          + (u.nombre_archivo ? "<span>" + icon("book", 13) + " " + esc(u.nombre_archivo) + "</span>" : "")
+          + "</div>";
+        h += '<div class="buzon-meta" style="margin-top:.45rem">'
+          + (organizado
+            ? '<span class="pill pill-completado">Organizado</span>'
+            : '<span class="pill" style="background:#000;color:#fff">Word por organizar</span>')
+          + '<button type="button" class="buzon-ver-btn" data-buzon-texto="' + esc(u.id || "") + '">Ver texto</button>'
+          + "</div>";
+        h += '<div class="buzon-texto hidden" id="buzonTexto-' + esc(u.id || "") + '">' + esc(u.texto || "") + "</div>";
+        return h;
+      }
       function buzonUploadHTML(u, detailed){
+        if (u.tipo === "texto") return buzonTextoUploadHTML(u);
         var errs = (u.errores && u.errores.length) ? u.errores : [];
         var fh = buzonFechaHora(u);
         var h = '<div class="buzon-meta">'
@@ -4305,14 +4412,26 @@
           + '<button type="button" class="btn-black" id="buzonUploadBtn"' + (buzonBusy ? " disabled" : "") + ">" + icon("upload", 15, 2.2) + (buzonBusy ? "Procesando…" : "Subir borrador") + "</button>"
           + '<input type="file" id="buzonFile" accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="hidden" tabindex="-1" aria-hidden="true"></div>';
         if (buzonLastResult) h += buzonLastResult;
+        h += '<div class="buzon-block"><h4>¿Más simple? Sube un Word</h4>'
+          + '<p class="buzon-intro">Escribe la planificación en un Word, en texto simple, y súbelo aquí. Sofi lo organiza y lo carga al tablero.</p>'
+          + '<div class="buzon-actions">'
+          + '<button type="button" class="btn-black" id="buzonWordBtn"' + (buzonWordBusy ? " disabled" : "") + ">" + icon("upload", 15, 2.2) + (buzonWordBusy ? "Subiendo…" : "Subir Word") + "</button>"
+          + '<input type="file" id="buzonWordFile" accept=".docx,.txt,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="hidden" tabindex="-1" aria-hidden="true"></div></div>';
         var ups = state.buzon || [];
         if (ups.length) {
           h += '<div class="buzon-block"><h4>Última subida</h4>' + buzonUploadHTML(ups[0], true) + "</div>";
           if (ups.length > 1) {
             h += '<div class="buzon-block"><h4>Historial de subidas</h4>';
             ups.slice(1).forEach(function(u){
-              var errsN = (u.errores && u.errores.length) || 0;
               var fh2 = buzonFechaHora(u);
+              if (u.tipo === "texto") {
+                h += '<div class="buzon-hist-row"><span class="agenda-ico">' + icon("book", 16) + '</span><span class="bh-main"><strong>' + esc(u.subido_por || "—") + (fh2 ? " · " + esc(fh2) : "") + "</strong>"
+                  + (u.estado === "organizado" ? "Organizado" : "Word por organizar") + (u.nombre_archivo ? " · " + esc(u.nombre_archivo) : "") + "</span>"
+                  + '<button type="button" class="buzon-ver-btn" data-buzon-texto="' + esc(u.id || "") + '">Ver texto</button></div>'
+                  + '<div class="buzon-texto hidden" id="buzonTexto-' + esc(u.id || "") + '">' + esc(u.texto || "") + "</div>";
+                return;
+              }
+              var errsN = (u.errores && u.errores.length) || 0;
               h += '<div class="buzon-hist-row"><span class="agenda-ico">' + icon("inbox", 16) + '</span><span class="bh-main"><strong>' + esc(u.subido_por || "—") + (fh2 ? " · " + esc(fh2) : "") + "</strong>"
                 + (u.semana_lunes ? "Semana del " + esc(buzonSemanaTxt(u.semana_lunes)) + " · " : "") + (u.cargadas || 0) + " cargadas · " + (u.saltadas_duplicadas || 0) + " ya existían · " + errsN + " con error</span></div>";
             });
@@ -4334,6 +4453,22 @@
           var f = fi.files && fi.files[0];
           fi.value = "";
           handleBuzonFile(f);
+        });
+        var wb = root.querySelector("#buzonWordBtn");
+        var wf = root.querySelector("#buzonWordFile");
+        if (wb && wf) wb.addEventListener("click", function(){ wf.click(); });
+        if (wf) wf.addEventListener("change", function(){
+          var f2 = wf.files && wf.files[0];
+          wf.value = "";
+          handleBuzonWordFile(f2);
+        });
+        root.querySelectorAll("[data-buzon-texto]").forEach(function(btn){
+          btn.addEventListener("click", function(){
+            var box = document.getElementById("buzonTexto-" + btn.getAttribute("data-buzon-texto"));
+            if (!box) return;
+            var nowHidden = box.classList.toggle("hidden");
+            btn.textContent = nowHidden ? "Ver texto" : "Ocultar texto";
+          });
         });
       }
       /* Vista Buzón: apartado individual propio, solo admins.
