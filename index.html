@@ -1225,8 +1225,8 @@
       .panel-person .pp-num{flex-shrink:0;text-align:right;font-family:var(--font-display);font-size:16px;font-weight:900;line-height:1.1}
       .panel-person .pp-num span{display:block;font-family:var(--font-sans);font-size:11px;font-weight:700;color:var(--dim)}
       .age-tag{flex-shrink:0;border-radius:999px;background:var(--accent-soft);color:var(--accent-ink);box-shadow:inset 0 0 0 1px #fecdd3;padding:.2rem .6rem;font-size:11px;font-weight:900;white-space:nowrap}
-      /* Buzón de planificación (solo admins): borrador CSV de la semana
-         siguiente, subida automática al tablero y registro de subidas */
+      /* Buzón de planificación (solo admins): borrador Excel de la
+         semana siguiente, subida automática al tablero y registro */
       .buzon-card{padding:1.25rem}
       .buzon-intro{margin:0;font-size:13.5px;font-weight:600;line-height:1.6;color:rgba(10,10,10,.85)}
       .buzon-actions{margin-top:1rem;display:flex;gap:.5rem;flex-wrap:wrap}
@@ -1444,14 +1444,55 @@
       function _isoToday(){var d=new Date();var m=String(d.getMonth()+1).padStart(2,"0");var day=String(d.getDate()).padStart(2,"0");return d.getFullYear()+"-"+m+"-"+day;}
       var TODAY = _isoToday();
 
+      /* ===== Nombres canónicos del equipo (2 nombres y 2 apellidos) =====
+         Los nombres que se muestran en Equipo, en el perfil que se
+         abre desde Equipo, en Equipo en modo app y en cualquier
+         encabezado de perfil son SIEMPRE estos nombres completos,
+         los mismos de Datos del equipo. La fuente al mostrar es el
+         roster canónico (colección equipo, campo name): al cargar
+         el roster, cualquier forma corta guardada («Anthony Quimis»,
+         «Josué Pérez») se normaliza aquí a su nombre completo por
+         su primer nombre (único en el equipo). El nombre guardado
+         en perfiles (perfiles/{uid}.nombre) NUNCA se usa para
+         mostrar a una persona. El rol mostrado sale igual del
+         campo role de equipo, no de copias en perfiles. */
+      var CANONICAL_MEMBER_NAMES = {
+        anthony: "Anthony Joel Quimis Méndez",
+        joseph: "Joseph Alberto Vera Cabrera",
+        paulina: "Paulina Nicole Rodríguez Rosales",
+        josue: "Josue Dario Villao Moran",
+        jesus: "Jesús Octavio Menoscal Choez",
+        jelexi: "Jelexi Nicole Merchán Franco",
+        giovanna: "Giovanna Paulette Caballero Holguín",
+        nayeli: "Nayeli Pilar Medranda Velásquez",
+        melani: "Melani Naomi Sellán Domínguez",
+        dennise: "Dennise Johana Pico Minda"
+      };
+      function canonicalMemberName(raw){
+        var v = String(raw || "").trim();
+        if (!v) return v;
+        var first = v.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").split(/\s+/)[0];
+        return CANONICAL_MEMBER_NAMES[first] || v;
+      }
+      function withCanonicalName(m){
+        if (!m) return m;
+        var full = canonicalMemberName(m.name);
+        if (full === m.name) return m;
+        var c = {}; for (var k in m) c[k] = m[k]; c.name = full; return c;
+      }
+
       /* ===== Datos de ejemplo (se siembran en Firestore una sola vez si está vacío) ===== */
       var SEED_MEMBERS = [
-        { docId:"m1", orden:1, name:"Anthony Quimis", role:"Líder de Formación", color:"#FF5A1F" },
-        { docId:"m2", orden:2, name:"Joseph Vera", role:"Facilitador", color:"#2563EB" },
-        { docId:"m3", orden:3, name:"Paulina Rodríguez", role:"Facilitadora en Campo", color:"#0E7C66" },
-        { docId:"m4", orden:4, name:"Josué Pérez", role:"Facilitador en Campo", color:"#B45309" },
-        { docId:"m5", orden:5, name:"Jesús Menoscal", role:"Facilitador", color:"#7C3AED" },
-        { docId:"m6", orden:6, name:"Jelexi Merchán", role:"Facilitadora", color:"#DB2777" }
+        { docId:"m1", orden:1, name:"Anthony Joel Quimis Méndez", role:"Líder de Formación", color:"#FF5A1F" },
+        { docId:"m2", orden:2, name:"Joseph Alberto Vera Cabrera", role:"Facilitador", color:"#2563EB" },
+        { docId:"m3", orden:3, name:"Paulina Nicole Rodríguez Rosales", role:"Facilitadora en Campo", color:"#0E7C66" },
+        { docId:"m4", orden:4, name:"Josue Dario Villao Moran", role:"Facilitador en Campo", color:"#B45309" },
+        { docId:"m5", orden:5, name:"Jesús Octavio Menoscal Choez", role:"Facilitador", color:"#7C3AED" },
+        { docId:"m6", orden:6, name:"Jelexi Nicole Merchán Franco", role:"Facilitadora", color:"#DB2777" },
+        { docId:"m7", orden:7, name:"Giovanna Paulette Caballero Holguín", role:"Encargado de Formación", color:"#0B3B39" },
+        { docId:"m8", orden:8, name:"Nayeli Pilar Medranda Velásquez", role:"Formador en Valco", color:"#DC2626" },
+        { docId:"m9", orden:9, name:"Melani Naomi Sellán Domínguez", role:"Formador en Campo", color:"#6B7280" },
+        { docId:"m10", orden:10, name:"Dennise Johana Pico Minda", role:"Formador en Campo", color:"#111827" }
       ];
       var SEED_ACTIVITIES = [
         { docId:"a3", title:"Revisión de pendientes de Formación", detail:"", member_id:1, date:"2026-11-16", place:"Valco", deliverable:"Lista de pendientes actualizada", status:"completada", priority:"alta" },
@@ -1751,17 +1792,21 @@
          y ve únicamente su propia planificación. Las contraseñas viven
          solo en Firebase Authentication: nunca en el código ni en
          Firestore. Cada persona puede cambiar la suya desde la web. */
+      /* Los name de PROFILES son los nombres completos canónicos
+         (iguales a los de Datos del equipo / colección equipo):
+         currentProfile.name alimenta encabezados de perfil, y debe
+         coincidir siempre con el roster, nunca con perfiles.nombre. */
       var PROFILES = [
-        { uid:"YcOaz7IboFMptFEOZMEfXGx6Jau2", email:"anthony.quimis@formacion.ec", name:"Anthony Quimis", role:"admin" },
-        { uid:"M9gCQC8AwScvh8rBn7I3Rjfjhn92", email:"giovanna.caballero@formacion.ec", name:"Giovanna Caballero", role:"admin" },
-        { uid:"fHp5Q5056pbD27uPP2a7vKi4QlR2", email:"jesus.menoscal@formacion.ec", name:"Jesús Menoscal", role:"equipo" },
-        { uid:"ozSajxBuM0RjZBLbsnvFMQggtFL2", email:"jelexi.merchan@formacion.ec", name:"Jelexi Merchán", role:"equipo" },
-        { uid:"kUCufPTUOmbjn9r5bs97XVkaWZ32", email:"paulina.rodriguez@formacion.ec", name:"Paulina Rodríguez", role:"equipo" },
-        { uid:"4qhocW1IlvhfqM9gDf28qD4kmjk1", email:"joseph.vera@formacion.ec", name:"Joseph Vera", role:"equipo" },
-        { uid:"yUWBx9xknwQFpsCQe0KPSQPZpfs2", email:"josue.villao@formacion.ec", name:"Josue Villao", role:"equipo" },
-        { uid:"sIoSfhxRhUYakOD98bvzwtJjqnI2", email:"nayeli.medranda@formacion.ec", name:"Nayeli Medranda", role:"equipo" },
-        { uid:"EEcpCm9wncOnX5AQaoBBTRfxVYh2", email:"melani.sellan@formacion.ec", name:"Melani Sellan", role:"equipo" },
-        { uid:"inKQBPajqfSjEi40y3fKMSzf1Ek2", email:"dennise.pico@formacion.ec", name:"Dennise Pico", role:"equipo" }
+        { uid:"YcOaz7IboFMptFEOZMEfXGx6Jau2", email:"anthony.quimis@formacion.ec", name:"Anthony Joel Quimis Méndez", role:"admin" },
+        { uid:"M9gCQC8AwScvh8rBn7I3Rjfjhn92", email:"giovanna.caballero@formacion.ec", name:"Giovanna Paulette Caballero Holguín", role:"admin" },
+        { uid:"fHp5Q5056pbD27uPP2a7vKi4QlR2", email:"jesus.menoscal@formacion.ec", name:"Jesús Octavio Menoscal Choez", role:"equipo" },
+        { uid:"ozSajxBuM0RjZBLbsnvFMQggtFL2", email:"jelexi.merchan@formacion.ec", name:"Jelexi Nicole Merchán Franco", role:"equipo" },
+        { uid:"kUCufPTUOmbjn9r5bs97XVkaWZ32", email:"paulina.rodriguez@formacion.ec", name:"Paulina Nicole Rodríguez Rosales", role:"equipo" },
+        { uid:"4qhocW1IlvhfqM9gDf28qD4kmjk1", email:"joseph.vera@formacion.ec", name:"Joseph Alberto Vera Cabrera", role:"equipo" },
+        { uid:"yUWBx9xknwQFpsCQe0KPSQPZpfs2", email:"josue.villao@formacion.ec", name:"Josue Dario Villao Moran", role:"equipo" },
+        { uid:"sIoSfhxRhUYakOD98bvzwtJjqnI2", email:"nayeli.medranda@formacion.ec", name:"Nayeli Pilar Medranda Velásquez", role:"equipo" },
+        { uid:"EEcpCm9wncOnX5AQaoBBTRfxVYh2", email:"melani.sellan@formacion.ec", name:"Melani Naomi Sellán Domínguez", role:"equipo" },
+        { uid:"inKQBPajqfSjEi40y3fKMSzf1Ek2", email:"dennise.pico@formacion.ec", name:"Dennise Johana Pico Minda", role:"equipo" }
       ];
       var PROFILES_BY_UID = {};
       PROFILES.forEach(function(p){ PROFILES_BY_UID[p.uid] = p; });
@@ -1782,6 +1827,14 @@
          por nombre normalizado (sin asumir IDs): coincidencia exacta o,
          si no, mismo primer nombre y mayor cantidad de apellidos en
          común. Así se sabe qué member_id (orden) le corresponde. */
+      /* Nombre completo canónico de la persona logueada, tomado de
+         su tarjeta del roster (equipo.name ya normalizado); nunca
+         del nombre guardado en su perfil personal. */
+      function myCanonicalName(){
+        var m = memberByOrden(myMemberOrden());
+        if (m && m.name) return m.name;
+        return currentProfile ? canonicalMemberName(currentProfile.name) : "";
+      }
       function myMemberOrden(){
         if (!currentProfile) return null;
         var target = normName(currentProfile.name);
@@ -2028,7 +2081,7 @@
               seedCollection("equipo", SEED_MEMBERS, function(s){ return { orden:s.orden, name:s.name, role:s.role, color:s.color }; });
             } else {
               var arr = [];
-              snap.forEach(function(d){ var v=d.data(); arr.push({ id:d.id, orden:v.orden!=null?v.orden:999, name:v.name||"", role:v.role||"", color:v.color||"#0A0A0A" }); });
+              snap.forEach(function(d){ var v=d.data(); arr.push({ id:d.id, orden:v.orden!=null?v.orden:999, name:canonicalMemberName(v.name||""), role:v.role||"", color:v.color||"#0A0A0A" }); });
               arr.sort(function(a,b){return a.orden-b.orden;});
               state.members = arr;
             }
@@ -2333,7 +2386,7 @@
           { id:"reporte", label:"Reporte", ic:"report", count: state.reportsResumen.length },
           { id:"guia", label:"Guía", ic:"book", count: 0 }
         ];
-        if (isAdmin()) tabs.push({ id:"datos", label:"Datos", ic:"idcard", count: state.members.length });
+        if (isAdmin()) { tabs.push({ id:"buzon", label:"Buzón", ic:"inbox", count: 0 }); tabs.push({ id:"datos", label:"Datos", ic:"idcard", count: state.members.length }); }
         $("tabs").innerHTML = tabs.map(function(t){
           return '<button type="button" class="tab'+(view===t.id?" active":"")+'" data-view="'+t.id+'" aria-pressed="'+(view===t.id)+'">'+icon(t.ic,16,2.2)+'<span class="tab-label">'+t.label+'</span>'+(t.count>0?'<span class="count">'+t.count+'</span>':"")+'</button>';
         }).join("");
@@ -3010,8 +3063,8 @@
         var meM = memberByOrden(myMemberOrden());
         var pf = (currentUser && perfiles[currentUser.uid]) || {};
         var h = '<section aria-label="Perfil">';
-        h += '<div class="profile-head">' + (meM ? perfilAvatarHTML(meM, 76) : avatar({ name: currentProfile.name, color: "#0A0A0A" }, 76))
-          + '<p class="pname">' + esc(currentProfile.name) + '</p><p class="prole">' + esc(meM ? (meM.role || "Equipo de Formación") : "Equipo de Formación") + "</p>"
+        h += '<div class="profile-head">' + (meM ? perfilAvatarHTML(meM, 76) : avatar({ name: myCanonicalName(), color: "#0A0A0A" }, 76))
+          + '<p class="pname">' + esc(meM ? meM.name : myCanonicalName()) + '</p><p class="prole">' + esc(meM ? (meM.role || "Equipo de Formación") : "Equipo de Formación") + "</p>"
           + '<div class="pmeta">'
           + "<p><strong>Correo:</strong> " + esc(currentProfile.email) + "</p>"
           + "<p><strong>Me gusta:</strong> " + esc(pf.gustos || "—") + "</p>"
@@ -3098,7 +3151,7 @@
             return isAdmin() || (currentUser && r.reporter_uid === currentUser.uid);
           }).length;
         }
-        var perfilActive = ["agenda", "objetivos", "temas", "equipo", "panel", "datos", "perfil", "mas"].indexOf(view) !== -1;
+        var perfilActive = ["agenda", "objetivos", "temas", "equipo", "panel", "buzon", "datos", "perfil", "mas"].indexOf(view) !== -1;
         var items = [
           { id: "hoy", label: "Hoy", ic: "sun", badge: badge },
           { id: "semana", label: "Semana", ic: "calendar", badge: 0 },
@@ -3520,7 +3573,10 @@
           counts[rid] = (counts[rid] || 0) + 1;
           total++;
           var gp = PROFILES_BY_UID[gid];
-          var gname = (perfiles[gid] && perfiles[gid].nombre) || (gp ? gp.name : "Alguien del equipo");
+          /* Quién dejó el mensaje sale del roster canónico
+             (PROFILES/equipo), nunca del nombre guardado en
+             perfiles: ese dato guardado no se usa para mostrar. */
+          var gname = gp ? gp.name : "Alguien del equipo";
           (givers[rid] = givers[rid] || []).push(String(gname).split(" ")[0]);
         });
         return { counts: counts, givers: givers, total: total };
@@ -3537,7 +3593,7 @@
         if (!targetUid || targetUid === currentUser.uid) return;
         /* Actualización optimista local: la vista se refresca al
            instante y el snapshot de perfiles lo confirma después. */
-        if (!perfiles[currentUser.uid]) perfiles[currentUser.uid] = { nombre: currentProfile.name };
+        if (!perfiles[currentUser.uid]) perfiles[currentUser.uid] = { nombre: myCanonicalName() };
         var next = {};
         var cur = perfiles[currentUser.uid].reacciones_dadas || {};
         Object.keys(cur).forEach(function(k){ next[k] = cur[k]; });
@@ -3545,14 +3601,14 @@
         perfiles[currentUser.uid].reacciones_dadas = next;
         openPerfilView(m);
         render();
-        var patch = { nombre: currentProfile.name, updated_at: new Date().toISOString() };
+        var patch = { nombre: myCanonicalName(), updated_at: new Date().toISOString() };
         patch["reacciones_dadas." + targetUid] = rid ? rid : firebase.firestore.FieldValue.delete();
         var ref = db.collection("perfiles").doc(currentUser.uid);
         ref.update(patch).catch(function(err){
           if (err && err.code === "not-found" && rid) {
             /* La persona aún no tenía documento de perfil: se crea
                con solo su nombre y su mapa de reacciones dadas. */
-            var data = { nombre: currentProfile.name, updated_at: new Date().toISOString(), reacciones_dadas: {} };
+            var data = { nombre: myCanonicalName(), updated_at: new Date().toISOString(), reacciones_dadas: {} };
             data.reacciones_dadas[targetUid] = rid;
             return ref.set(data, { merge: true });
           }
@@ -3616,9 +3672,10 @@
         var meM = memberByOrden(myMemberOrden());
         var preview = perfilFotoDraft
           ? '<img id="pfPreviewImg" src="' + esc(perfilFotoDraft) + '" alt="Tu foto de perfil" style="width:76px;height:76px">'
-          : (meM ? avatar(meM, 76) : avatar({ name: currentProfile.name, color: "#0A0A0A" }, 76));
+          : (meM ? avatar(meM, 76) : avatar({ name: myCanonicalName(), color: "#0A0A0A" }, 76));
         var body = '<form class="form" id="perfilForm">'
           + '<p class="form-note">Este es <strong>tu perfil personal</strong>: lo que pongas aquí se ve cuando alguien toca tu tarjeta en Equipo, y Anthony y Gio lo ven en Datos del equipo. No tiene nada que ver con tus datos administrativos.</p>'
+          + '<div><span style="display:block;margin-bottom:.375rem;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#52525b">Mi nombre</span><p class="input" style="margin:0;background:var(--surface-2);font-weight:700" aria-readonly="true">' + esc(myCanonicalName()) + '</p><p class="form-note" style="margin-top:.4rem">' + esc(meM ? (meM.role || "Equipo de Formación") : "Equipo de Formación") + ' · Tu nombre y tu rol vienen de Datos del equipo y no se editan aquí: si están mal, Anthony o Gio los corrigen ahí.</p></div>'
           + '<div><span style="display:block;margin-bottom:.5rem;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#52525b">Tu foto</span><div class="perfil-photo-row"><span id="pfPreview">' + preview + '</span><label class="rep-photo-btn">' + icon("camera", 15) + 'Subir mi foto<input type="file" id="pfFoto" accept="image/*" class="hidden"></label></div><p class="form-note" style="margin-top:.5rem">La foto se comprime automáticamente para que pese poco.</p></div>'
           + '<div><label class="flabel" for="pfGustos">Qué me gusta</label><textarea class="input" id="pfGustos" placeholder="Ej.: El mar, la fotografía y el vóley.">' + esc(pf.gustos || "") + "</textarea></div>"
           + '<div><label class="flabel" for="pfSigno">Mi signo (opcional)</label><select class="input" id="pfSigno"><option value="">Prefiero no decirlo</option>' + SIGNOS.map(function(s){ return '<option value="' + esc(s) + '"' + (pf.signo === s ? " selected" : "") + ">" + esc(s) + "</option>"; }).join("") + '</select><p class="form-note" style="margin-top:.4rem">Solo si quieres compartirlo: tú lo eliges aquí y se verá en tu perfil de Equipo.</p></div>'
@@ -3646,7 +3703,7 @@
              propio uid): hasta entonces este guardado puede fallar
              y la web sigue funcionando sin perfiles. */
           db.collection("perfiles").doc(currentUser.uid).set({
-            nombre: currentProfile.name,
+            nombre: myCanonicalName(),
             frase: firebase.firestore.FieldValue.delete(),
             gustos: $("pfGustos").value.trim(),
             signo: $("pfSigno").value,
@@ -3789,16 +3846,21 @@
       }
 
       /* ---------- Buzón de planificación (solo admins) ----------
-         Gio descarga el borrador CSV de la semana siguiente (una fila
-         por persona y día, con fecha y nombre ya puestos), escribe solo
-         actividad/detalle/local y lo sube: al subirlo se procesa
-         AUTOMÁTICAMENTE, sin confirmación, y cada fila válida se vuelve
-         una actividad del tablero con la misma forma de documento que
-         crea el formulario (más origen:"buzon" y buzon_semana). El local
-         y las líneas de apertura/instalación se integran en el detalle
-         con el formato de texto que el render ya muestra con el recuadro
-         LOCAL y las fechas en rojo. Cada subida queda registrada en la
-         colección buzon_planificacion. */
+         Gio descarga el borrador Excel (.xlsx) de la semana siguiente
+         (una fila por persona y día, con fecha y nombre ya puestos),
+         escribe solo actividad/detalle/local y lo sube: al subirlo se
+         procesa AUTOMÁTICAMENTE, sin confirmación, y cada fila válida
+         se vuelve una actividad del tablero con la misma forma de
+         documento que crea el formulario (más origen:"buzon" y
+         buzon_semana). El local y las líneas de apertura/instalación
+         se integran en el detalle con el formato de texto que el
+         render ya muestra con el recuadro LOCAL y las fechas en rojo.
+         Cada subida queda registrada en buzon_planificacion.
+         La librería SheetJS (xlsx) se carga por CDN solo cuando se
+         usa el Buzón (descargar o subir), nunca al abrir la página.
+         Si no carga (sin conexión), la descarga cae a un CSV con
+         punto y coma y BOM, que Excel en español abre ya separado
+         en columnas. La subida acepta .xlsx y .csv (coma o ;). */
       var buzonLastResult = "";
       var buzonBusy = false;
       function buzonTimeMs(u){
@@ -3821,9 +3883,53 @@
         return "lunes " + d.getDate() + "/" + String(d.getMonth() + 1).padStart(2, "0") + "/" + d.getFullYear();
       }
       function buzonCell(v){ return '"' + String(v == null ? "" : v).replace(/"/g, '""') + '"'; }
-      function downloadBuzonDraft(){
+      /* Carga diferida de SheetJS (xlsx): solo al usar el Buzón.
+         Primero la variante con estilos (xlsx-js-style, basada en
+         SheetJS) para que la cabecera con color y la fila de ejemplo
+         en amarillo se vean en Excel; si falla, la SheetJS clásica
+         de cdnjs, que genera el mismo .xlsx aunque sin estilos. */
+      var buzonXlsxPromise = null;
+      function buzonLoadScript(src, globalName){
+        return new Promise(function(resolve, reject){
+          var s = document.createElement("script");
+          s.src = src; s.async = true;
+          s.onload = function(){ window[globalName] ? resolve(window[globalName]) : reject(new Error(globalName)); };
+          s.onerror = function(){ reject(new Error(globalName)); };
+          document.head.appendChild(s);
+        });
+      }
+      function loadBuzonXLSX(){
+        if (window.XLSX) return Promise.resolve(window.XLSX);
+        if (buzonXlsxPromise) return buzonXlsxPromise;
+        buzonXlsxPromise = buzonLoadScript("https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js", "XLSX")
+          .catch(function(){ return buzonLoadScript("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js", "XLSX"); })
+          .catch(function(err){ buzonXlsxPromise = null; throw err; });
+        return buzonXlsxPromise;
+      }
+      /* JSZip (también diferido, solo para el Buzón): SheetJS no
+         escribe el panel inmovilizado en el .xlsx, así que tras
+         generar el libro se parcha la hoja «Planificación» dentro
+         del zip con el <pane state="frozen"> de la primera fila.
+         Si JSZip no carga, el Excel se descarga igual, sin fijar. */
+      var buzonJSZipPromise = null;
+      function loadBuzonJSZip(){
+        if (window.JSZip) return Promise.resolve(window.JSZip);
+        if (buzonJSZipPromise) return buzonJSZipPromise;
+        buzonJSZipPromise = buzonLoadScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js", "JSZip")
+          .catch(function(err){ buzonJSZipPromise = null; throw err; });
+        return buzonJSZipPromise;
+      }
+      function buzonTriggerDownload(blob, filename){
+        var aEl = document.createElement("a");
+        aEl.href = URL.createObjectURL(blob);
+        aEl.download = filename;
+        document.body.appendChild(aEl);
+        aEl.click();
+        setTimeout(function(){ URL.revokeObjectURL(aEl.href); aEl.remove(); }, 400);
+      }
+      function buzonDraftData(){
         var mo = addDaysISO(mondayOfISO(TODAY), 7);
-        var rows = [["fecha", "persona", "actividad", "detalle", "local", "apertura", "instalacion", "prioridad"]];
+        var rows = [["Fecha", "Persona", "Actividad", "Detalle", "Local", "Apertura", "Instalación", "Prioridad"]];
         var firstRow = true;
         state.members.forEach(function(m){
           for (var d = 0; d < 7; d++){
@@ -3836,7 +3942,12 @@
             }
           }
         });
-        var csv = rows.map(function(r){ return r.map(buzonCell).join(","); }).join("\r\n");
+        return { mo: mo, rows: rows };
+      }
+      /* Respaldo sin librería: CSV con punto y coma + BOM UTF-8,
+         para que Excel en español lo abra ya en columnas. */
+      function downloadBuzonCSVFallback(mo, rows){
+        var csv = rows.map(function(r){ return r.map(buzonCell).join(";"); }).join("\r\n");
         var blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
         var aEl = document.createElement("a");
         aEl.href = URL.createObjectURL(blob);
@@ -3844,7 +3955,64 @@
         document.body.appendChild(aEl);
         aEl.click();
         setTimeout(function(){ URL.revokeObjectURL(aEl.href); aEl.remove(); }, 400);
-        toast("Borrador descargado: una fila por persona y día, " + weekLabel(mo).toLowerCase() + ".");
+        toast("Borrador descargado (CSV): una fila por persona y día, " + weekLabel(mo).toLowerCase() + ".");
+      }
+      function downloadBuzonDraft(){
+        var draft = buzonDraftData();
+        var mo = draft.mo, rows = draft.rows;
+        loadBuzonXLSX().then(function(XLSXLib){
+          try {
+            var ws = XLSXLib.utils.aoa_to_sheet(rows);
+            ws["!cols"] = [{ wch: 13 }, { wch: 24 }, { wch: 38 }, { wch: 44 }, { wch: 30 }, { wch: 16 }, { wch: 16 }, { wch: 12 }];
+            /* Primera fila inmovilizada al bajar. */
+            ws["!views"] = [{ state: "frozen", ySplit: 1, topLeftCell: "A2", activePane: "bottomLeft", selection: [{ activeCell: "A2", sqref: "A2" }] }];
+            var headStyle = { font: { bold: true, color: { rgb: "FFFFFF" } }, fill: { patternType: "solid", fgColor: { rgb: "111111" } }, alignment: { horizontal: "center", vertical: "center" } };
+            var exStyle = { fill: { patternType: "solid", fgColor: { rgb: "FFF2CC" } } };
+            for (var c = 0; c < 8; c++){
+              var hAddr = XLSXLib.utils.encode_cell({ r: 0, c: c });
+              if (ws[hAddr]) ws[hAddr].s = headStyle;
+              var eAddr = XLSXLib.utils.encode_cell({ r: 1, c: c });
+              if (ws[eAddr]) ws[eAddr].s = exStyle;
+              else ws[eAddr] = { t: "s", v: "", s: exStyle };
+            }
+            var wsAyuda = XLSXLib.utils.aoa_to_sheet([
+              ["Escribe solo en las filas de cada persona: completa Actividad, Detalle y Local."],
+              ["Deja en blanco lo que no va ese día. No borres la Fecha ni la Persona."],
+              ["Guarda el archivo tal cual, en Excel."],
+              ["Vuelve al Buzón y súbelo con «Subir borrador». Se carga solo."]
+            ]);
+            wsAyuda["!cols"] = [{ wch: 95 }];
+            var wb = XLSXLib.utils.book_new();
+            XLSXLib.utils.book_append_sheet(wb, ws, "Planificación");
+            XLSXLib.utils.book_append_sheet(wb, wsAyuda, "Ayuda");
+            var out = XLSXLib.write(wb, { bookType: "xlsx", type: "array" });
+            var plainBlob = new Blob([out], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+            var doneMsg = "Borrador descargado (Excel): una fila por persona y día, " + weekLabel(mo).toLowerCase() + ".";
+            loadBuzonJSZip().then(function(JSZipLib){
+              return JSZipLib.loadAsync(out).then(function(zip){
+                var sheetFile = zip.file("xl/worksheets/sheet1.xml");
+                if (!sheetFile) throw new Error("sheet1");
+                return sheetFile.async("string").then(function(xml){
+                  var patched = xml.replace(/<sheetView([^>]*?)\/>/, '<sheetView$1><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft" activeCell="A2" sqref="A2"/></sheetView>');
+                  if (patched === xml) throw new Error("freeze");
+                  zip.file("xl/worksheets/sheet1.xml", patched);
+                  return zip.generateAsync({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+                });
+              });
+            }).then(function(frozenBlob){
+              buzonTriggerDownload(frozenBlob, "borrador_planificacion.xlsx");
+              toast(doneMsg);
+            }).catch(function(){
+              buzonTriggerDownload(plainBlob, "borrador_planificacion.xlsx");
+              toast(doneMsg);
+            });
+          } catch (e) {
+            console.error(e);
+            downloadBuzonCSVFallback(mo, rows);
+          }
+        }).catch(function(){
+          downloadBuzonCSVFallback(mo, rows);
+        });
       }
       /* Parser CSV con comillas, comas dentro de campos y saltos de
          línea dentro de campos; acepta coma o punto y coma como
@@ -3886,6 +4054,12 @@
           if (v === full) return m;
           var toks = full.split(" ").filter(Boolean);
           if (toks.length >= 2 && v === toks[0] + "." + toks[1]) return m;
+          /* Con el nombre completo (2 nombres y 2 apellidos) el
+             usuario nombre.apellido usa el primer apellido, que es
+             el tercer token; también se acepta el slug de su correo
+             de acceso, que es el mismo usuario. */
+          if (toks.length >= 3 && v === toks[0] + "." + toks[2]) return m;
+          if (typeof emailSlugForMember === "function" && emailSlugForMember(m) && v === emailSlugForMember(m)) return m;
         }
         return null;
       }
@@ -3934,9 +4108,33 @@
         buzonLastResult = h;
         if (view === "panel" || view === "buzon") render();
       }
+      function buzonXlsxDateStr(c){
+        /* Fecha que llega de un .xlsx como objeto Date o como número
+           de serie de Excel: se pasa a AAAA-MM-DD en UTC, porque las
+           fechas de Excel son medianoche UTC y en hora local (UTC-5)
+           caerían en el día anterior. */
+        if (c instanceof Date) {
+          if (isNaN(c.getTime())) return "";
+          return c.getUTCFullYear() + "-" + String(c.getUTCMonth() + 1).padStart(2, "0") + "-" + String(c.getUTCDate()).padStart(2, "0");
+        }
+        if (typeof c === "number" && c > 20000 && c < 80000) {
+          var d = new Date(Math.round((c - 25569) * 86400000));
+          return d.getUTCFullYear() + "-" + String(d.getUTCMonth() + 1).padStart(2, "0") + "-" + String(d.getUTCDate()).padStart(2, "0");
+        }
+        return null;
+      }
       function processBuzonCSV(text){
+        processBuzonRows(parseCSVText(text));
+      }
+      function processBuzonRows(rowsIn){
         if (!requireDb()) return;
-        var rows = parseCSVText(text);
+        var rows = (rowsIn || []).map(function(r){
+          return (r || []).map(function(c, idx){
+            if (c instanceof Date) return buzonXlsxDateStr(c);
+            if (idx === 0 && typeof c === "number") { var ds = buzonXlsxDateStr(c); if (ds) return ds; }
+            return c == null ? "" : String(c);
+          });
+        });
         if (!rows.length) { buzonShowResult(false, "El archivo está vacío o no se pudo leer."); return; }
         var head = rows[0].map(function(c){ return normName(c).replace(/\s+/g, ""); });
         function colIdx(name){ return head.indexOf(name); }
@@ -4047,10 +4245,34 @@
       }
       function handleBuzonFile(file){
         if (!file || buzonBusy) return;
-        var reader = new FileReader();
-        reader.onload = function(){ processBuzonCSV(String(reader.result || "")); };
-        reader.onerror = function(){ buzonShowResult(false, "No se pudo leer el archivo. Inténtalo de nuevo."); };
-        reader.readAsText(file, "UTF-8");
+        var isXlsx = /\.xlsx$/i.test(file.name || "") || /spreadsheetml/.test(file.type || "");
+        if (isXlsx) {
+          loadBuzonXLSX().then(function(XLSXLib){
+            var reader = new FileReader();
+            reader.onload = function(){
+              try {
+                var wb = XLSXLib.read(new Uint8Array(reader.result), { type: "array", cellDates: true });
+                var sheetName = wb.SheetNames.indexOf("Planificación") !== -1 ? "Planificación" : wb.SheetNames[0];
+                var ws = wb.Sheets[sheetName];
+                if (!ws) { buzonShowResult(false, "El Excel no tiene ninguna hoja con datos."); return; }
+                var rows = XLSXLib.utils.sheet_to_json(ws, { header: 1, defval: "", raw: true });
+                processBuzonRows(rows);
+              } catch (e) {
+                console.error(e);
+                buzonShowResult(false, "No se pudo leer el Excel. Revisa que sea el borrador descargado desde aquí.");
+              }
+            };
+            reader.onerror = function(){ buzonShowResult(false, "No se pudo leer el archivo. Inténtalo de nuevo."); };
+            reader.readAsArrayBuffer(file);
+          }).catch(function(){
+            buzonShowResult(false, "No se pudo cargar el lector de Excel (revisa la conexión) e inténtalo de nuevo.");
+          });
+          return;
+        }
+        var reader2 = new FileReader();
+        reader2.onload = function(){ processBuzonCSV(String(reader2.result || "")); };
+        reader2.onerror = function(){ buzonShowResult(false, "No se pudo leer el archivo. Inténtalo de nuevo."); };
+        reader2.readAsText(file, "UTF-8");
       }
       function buzonUploadHTML(u, detailed){
         var errs = (u.errores && u.errores.length) ? u.errores : [];
@@ -4077,12 +4299,11 @@
         var mo = addDaysISO(mondayOfISO(TODAY), 7);
         var h = '<div class="sec-head"' + (topGap ? ' style="margin-top:2rem"' : "") + '><h2>' + secBadge("inbox", true) + 'Buzón de planificación</h2></div>';
         h += '<div class="card buzon-card">';
-        h += '<p class="buzon-intro">El borrador de la <strong>' + esc(weekLabel(mo).toLowerCase()) + '</strong> ya trae una fila por persona y por día, con la fecha y el nombre puestos: solo hay que escribir la <strong>actividad</strong>, el <strong>detalle</strong> y el <strong>local</strong> en las filas que se necesiten. Al subir el borrador editado, la planificación se carga <strong>automáticamente</strong> en el tablero, una tarjeta por día y con el formato de siempre. Las filas que queden con la actividad vacía se ignoran, sin dar error.</p>';
+        h += '<p class="buzon-intro">Descarga el Excel, llena solo las actividades de cada persona y vuelve a subirlo aquí. Se carga solo.</p>';
         h += '<div class="buzon-actions">'
-          + '<button type="button" class="btn-red" id="buzonDownload"' + (buzonBusy ? " disabled" : "") + ">" + icon("download", 15, 2.2) + "Descargar borrador</button>"
+          + '<button type="button" class="btn-red" id="buzonDownload"' + (buzonBusy ? " disabled" : "") + ">" + icon("download", 15, 2.2) + "Descargar borrador (Excel)</button>"
           + '<button type="button" class="btn-black" id="buzonUploadBtn"' + (buzonBusy ? " disabled" : "") + ">" + icon("upload", 15, 2.2) + (buzonBusy ? "Procesando…" : "Subir borrador") + "</button>"
-          + '<input type="file" id="buzonFile" accept=".csv,text/csv" class="hidden" tabindex="-1" aria-hidden="true"></div>';
-        h += '<p class="buzon-note">La persona se reconoce por su nombre completo o por su usuario (nombre.apellido). Apertura, instalación y prioridad solo se llenan si aplican. Si se vuelve a subir el borrador de una semana, se reemplazan solo las actividades de esa semana que vinieron del buzón y que el equipo aún no ha marcado; lo ya marcado y lo creado a mano no se toca.</p>';
+          + '<input type="file" id="buzonFile" accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="hidden" tabindex="-1" aria-hidden="true"></div>';
         if (buzonLastResult) h += buzonLastResult;
         var ups = state.buzon || [];
         if (ups.length) {
@@ -4115,7 +4336,10 @@
           handleBuzonFile(f);
         });
       }
-      /* Vista Buzón en modo app (se llega desde Perfil › Administración) */
+      /* Vista Buzón: apartado individual propio, solo admins.
+         En web es su propia pestaña «Buzón» de la navegación principal
+         (grupo Administración de la barra lateral); en modo app se
+         llega desde Perfil › Administración. No vive dentro del Panel. */
       function renderBuzon(main){
         if (!isAdmin()) { view = "hoy"; if (APP_MODE) renderHoy(main); else renderHoyWeb(main); return; }
         main.innerHTML = '<section aria-label="Buzón de planificación">' + buzonSectionHTML(false) + "</section>";
@@ -4201,14 +4425,10 @@
         });
         h += "</tbody></table></div>";
         h += '<p style="margin-top:.75rem;font-size:12.5px;font-weight:600;color:var(--dim)">Cumplimiento y completadas se calculan con las actividades de la semana que muestra el tablero; los reportes se cuentan de todo el historial cargado, por la persona que reportó.</p>';
-        /* Buzón de planificación: descargar / subir el borrador de la
-           semana siguiente (se procesa solo al subirse). */
-        h += buzonSectionHTML(true);
         h += "</section>";
         main.innerHTML = h;
         var opens = main.querySelectorAll("[data-panel-report]");
         for (var i = 0; i < opens.length; i++) opens[i].addEventListener("click", function(){ handleReportOpen(this.getAttribute("data-panel-report")); });
-        bindBuzonSection(main);
       }
 
       /* ---------- Semana web: Tabla y Kanban ---------- */
@@ -4342,6 +4562,7 @@
         ];
         if (isAdmin()) groups.push({ label: "Administración", items: [
           { id: "panel", label: "Panel", ic: "chart" },
+          { id: "buzon", label: "Buzón", ic: "inbox" },
           { id: "repositorio", label: "Repositorio de novedades", ic: "box" },
           { id: "datos", label: "Datos del equipo", ic: "idcard" }
         ]});
@@ -4404,10 +4625,11 @@
         var su = $("wsideUser"), tu = $("wTopUser");
         if (currentProfile) {
           var meM = memberByOrden(myMemberOrden());
-          var av = meM ? perfilAvatarHTML(meM, 38) : avatar({ name: currentProfile.name, color: "#0A0A0A" }, 38);
+          var av = meM ? perfilAvatarHTML(meM, 38) : avatar({ name: myCanonicalName(), color: "#0A0A0A" }, 38);
           var roleTxt = isAdmin() ? "Administrador" : "Equipo de Formación";
-          if (su) su.innerHTML = '<button type="button" class="wside-user-main" id="wMiPerfil" title="Editar mi perfil">' + av + '<span class="wside-user-txt"><strong>' + esc(currentProfile.name) + "</strong><span>" + roleTxt + '</span></span></button><div class="wside-user-btns"><button type="button" class="wside-btn" id="wPassBtn">Cambiar contraseña</button><button type="button" class="wside-btn logout" id="wLogoutBtn">Cerrar sesión</button></div>';
-          if (tu) tu.innerHTML = av + '<span class="wtop-user-txt"><strong>' + esc(currentProfile.name) + "</strong><span>" + roleTxt + "</span></span>";
+          var myFull = meM ? meM.name : myCanonicalName();
+          if (su) su.innerHTML = '<button type="button" class="wside-user-main" id="wMiPerfil" title="Editar mi perfil">' + av + '<span class="wside-user-txt"><strong>' + esc(myFull) + "</strong><span>" + roleTxt + '</span></span></button><div class="wside-user-btns"><button type="button" class="wside-btn" id="wPassBtn">Cambiar contraseña</button><button type="button" class="wside-btn logout" id="wLogoutBtn">Cerrar sesión</button></div>';
+          if (tu) tu.innerHTML = av + '<span class="wtop-user-txt"><strong>' + esc(myFull) + "</strong><span>" + roleTxt + "</span></span>";
           var mp = $("wMiPerfil"); if (mp) mp.addEventListener("click", openPerfilModal);
           var pb = $("wPassBtn"); if (pb) pb.addEventListener("click", function(){ openChangePasswordModal(); });
           var lb = $("wLogoutBtn"); if (lb) lb.addEventListener("click", function(){ signOutSession(false); });
@@ -5367,7 +5589,7 @@
           var info = datosForMember(m);
           var doc = info.doc || {};
           var fechaTxt = info.fecha ? fmtFull(info.fecha) : "";
-          h += '<article class="card datos-card"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem"><div class="team-who">' + avatar(m, 48) + "<div><h3>" + esc(doc.nombre || m.name) + "</h3><p>" + esc(doc.rol || m.role || "Equipo de Formación") + '</p></div></div><button type="button" class="icon-btn" data-datos-edit="' + m.orden + '" aria-label="Editar datos de ' + esc(m.name) + '">' + icon("pencil", 15) + "</button></div>"
+          h += '<article class="card datos-card"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem"><div class="team-who">' + avatar(m, 48) + "<div><h3>" + esc(canonicalMemberName(doc.nombre || m.name)) + "</h3><p>" + esc(doc.rol || m.role || "Equipo de Formación") + '</p></div></div><button type="button" class="icon-btn" data-datos-edit="' + m.orden + '" aria-label="Editar datos de ' + esc(m.name) + '">' + icon("pencil", 15) + "</button></div>"
             + '<div class="datos-rows">'
             + "<p><strong>Postulación:</strong> " + esc(info.estado) + (fechaTxt ? " · desde el " + esc(fechaTxt) : "") + "</p>"
             + "<p><strong>Fecha de nacimiento:</strong> " + esc(doc.fecha_nacimiento ? fmtFull(doc.fecha_nacimiento) : "—") + "</p>"
