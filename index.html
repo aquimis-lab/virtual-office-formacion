@@ -1225,6 +1225,25 @@
       .panel-person .pp-num{flex-shrink:0;text-align:right;font-family:var(--font-display);font-size:16px;font-weight:900;line-height:1.1}
       .panel-person .pp-num span{display:block;font-family:var(--font-sans);font-size:11px;font-weight:700;color:var(--dim)}
       .age-tag{flex-shrink:0;border-radius:999px;background:var(--accent-soft);color:var(--accent-ink);box-shadow:inset 0 0 0 1px #fecdd3;padding:.2rem .6rem;font-size:11px;font-weight:900;white-space:nowrap}
+      /* Buzón de planificación (solo admins): borrador CSV de la semana
+         siguiente, subida automática al tablero y registro de subidas */
+      .buzon-card{padding:1.25rem}
+      .buzon-intro{margin:0;font-size:13.5px;font-weight:600;line-height:1.6;color:rgba(10,10,10,.85)}
+      .buzon-actions{margin-top:1rem;display:flex;gap:.5rem;flex-wrap:wrap}
+      .buzon-actions .btn-red,.buzon-actions .btn-black{min-height:2.75rem}
+      .buzon-actions button:disabled{opacity:.55}
+      .buzon-note{margin:.85rem 0 0;font-size:12.5px;font-weight:600;line-height:1.55;color:var(--dim)}
+      .buzon-summary{margin-top:1rem;border-radius:.75rem;background:#000;color:#fff;padding:.85rem 1rem;font-size:13.5px;font-weight:700;line-height:1.55}
+      .buzon-summary .bs-sub{display:block;margin-top:.25rem;font-size:12.5px;font-weight:600;color:rgba(255,255,255,.75)}
+      .buzon-block{margin-top:1.25rem;border-top:1px solid var(--border);padding-top:1rem}
+      .buzon-block h4{margin:0 0 .6rem;font-family:var(--font-display);font-size:.95rem;font-weight:900}
+      .buzon-meta{display:flex;flex-wrap:wrap;gap:.375rem;align-items:center;font-size:13px;font-weight:600;color:var(--dim);line-height:1.5}
+      .buzon-errors{margin:.6rem 0 0;padding:.7rem .85rem;border-radius:.75rem;background:var(--accent-soft);box-shadow:inset 0 0 0 1px #fecdd3}
+      .buzon-errors p{margin:0;font-size:13px;font-weight:700;line-height:1.55;color:var(--accent-ink)}
+      .buzon-errors p + p{margin-top:.3rem}
+      .buzon-hist-row{display:flex;align-items:center;gap:.65rem;border-radius:14px;border:1px solid var(--border);background:#fff;padding:.7rem .85rem;margin-bottom:.5rem;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+      .buzon-hist-row .bh-main{flex:1;min-width:0;font-size:13px;font-weight:600;color:var(--dim);line-height:1.45}
+      .buzon-hist-row .bh-main strong{display:block;font-size:13.5px;font-weight:800;color:#000;line-height:1.3}
       .perfil-photo-row{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
       .perfil-photo-row img{border-radius:50%;object-fit:cover}
       /* Perfil de Equipo (solo web): tarjeta tocable, vista de perfil
@@ -1487,7 +1506,8 @@
           topics: SEED_TOPICS.map(function(t){var c={};for(var k in t){if(k!=="docId")c[k]=t[k];}c.id=t.docId;return c;}),
           reportsResumen: [],
           datosEquipo: {},
-          guiaDoc: null
+          guiaDoc: null,
+          buzon: []
         };
       }
       var state = seedState();
@@ -1575,7 +1595,10 @@
         grid:["M3 3h7v7H3z","M14 3h7v7h-7z","M14 14h7v7h-7z","M3 14h7v7H3z"],
         chart:["M3 3v18h18","M8 17v-6","M13 17V7","M18 17v-9"],
         logout:["M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4","m16 17 5-5-5-5","M21 12H9"],
-        user:["M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2","M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"]
+        user:["M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2","M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"],
+        download:["M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4","m7 10 5 5 5-5","M12 15V3"],
+        upload:["M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4","m17 8-5-5-5 5","M12 3v12"],
+        inbox:["M22 12h-6l-2 3h-4l-2-3H2","M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"]
       };
       function icon(name,size,sw){
         size=size||16; sw=sw||2;
@@ -1990,7 +2013,7 @@
                 }
               } else {
                 var arr = [];
-                snap.forEach(function(d){ var v=d.data(); arr.push({ id:d.id, title:v.title||"", detail:v.detail||"", member_id:v.member_id!=null?Number(v.member_id):null, date:v.date||TODAY, place:v.place||"", deliverable:v.deliverable||"", status:normActStatus(v.status)||"pendiente", priority:v.priority!=null?String(v.priority).toLowerCase().trim():"", no_completado_motivo:v.no_completado_motivo||"" }); });
+                snap.forEach(function(d){ var v=d.data(); arr.push({ id:d.id, title:v.title||"", detail:v.detail||"", member_id:v.member_id!=null?Number(v.member_id):null, date:v.date||TODAY, place:v.place||"", deliverable:v.deliverable||"", status:normActStatus(v.status)||"pendiente", priority:v.priority!=null?String(v.priority).toLowerCase().trim():"", no_completado_motivo:v.no_completado_motivo||"", origen:v.origen||"", buzon_semana:v.buzon_semana||"" }); });
                 arr.sort(function(a,b){ return a.date<b.date?-1:a.date>b.date?1:(a.title<b.title?-1:1); });
                 state.activities = arr;
               }
@@ -2105,6 +2128,19 @@
               snap.forEach(function(d){ map[d.id] = d.data(); });
               state.datosEquipo = map;
               if (view === "datos") render();
+            }, function(err){ console.error(err); });
+          }
+
+          /* Registro del Buzón de planificación (colección
+             buzon_planificacion): solo lo escuchan las admins; el
+             equipo nunca lo ve ni lo consulta. */
+          if (isAdmin()) {
+            db.collection("buzon_planificacion").onSnapshot(function(snap){
+              var arr = [];
+              snap.forEach(function(d){ var v = d.data(); v.id = d.id; arr.push(v); });
+              arr.sort(function(a, b){ return buzonTimeMs(b) - buzonTimeMs(a); });
+              state.buzon = arr;
+              if (view === "panel" || view === "buzon") render();
             }, function(err){ console.error(err); });
           }
 
@@ -2304,7 +2340,7 @@
         var btns = $("tabs").querySelectorAll("[data-view]");
         for (var i=0;i<btns.length;i++) btns[i].addEventListener("click", function(){ var tabId = this.getAttribute("data-view"); if (tabId === "reporte") reportSubTab = "novedades"; view = tabId; render(); });
         var fab = $("fab");
-        if (view === "equipo" || view === "reporte" || view === "datos" || view === "objetivos" || view === "guia" || (APP_MODE && (view === "hoy" || view === "panel" || view === "mas" || view === "perfil"))) { fab.classList.add("hidden"); }
+        if (view === "equipo" || view === "reporte" || view === "datos" || view === "objetivos" || view === "guia" || view === "buzon" || (APP_MODE && (view === "hoy" || view === "panel" || view === "mas" || view === "perfil"))) { fab.classList.add("hidden"); }
         else {
           fab.classList.remove("hidden");
           var label = view === "temas" ? "Nuevo tema" : "Nueva actividad";
@@ -3000,6 +3036,7 @@
           var pendN = state.reportsResumen.filter(function(r){ return (r.estado || "Recibido") === "Recibido"; }).length;
           h += '<h3 class="app-sec-title">Administración</h3><div class="menu-group">'
             + perfilMenuItem("panel", "chart", "red", "Panel", "Sin marcar, reportes abiertos y cumplimiento", pendN)
+            + perfilMenuItem("buzon", "inbox", "blue", "Buzón de planificación", "Descarga el borrador de la semana siguiente y súbelo editado: se carga solo", 0)
             + '<button type="button" class="menu-row" data-goto="reporte" data-repo="1"><span class="ic blue">' + icon("report", 19, 2) + '</span><span class="mt"><span class="tt">Repositorio de novedades</span><span class="ds">Todos los reportes, filtros y PDF por fechas</span></span><span class="chev">' + icon("chevR", 18, 2.2) + "</span></button>"
             + perfilMenuItem("datos", "idcard", "blue", "Datos del equipo", "Roles, postulación y datos personales", 0)
             + "</div>";
@@ -3751,6 +3788,340 @@
         bindGoto(main);
       }
 
+      /* ---------- Buzón de planificación (solo admins) ----------
+         Gio descarga el borrador CSV de la semana siguiente (una fila
+         por persona y día, con fecha y nombre ya puestos), escribe solo
+         actividad/detalle/local y lo sube: al subirlo se procesa
+         AUTOMÁTICAMENTE, sin confirmación, y cada fila válida se vuelve
+         una actividad del tablero con la misma forma de documento que
+         crea el formulario (más origen:"buzon" y buzon_semana). El local
+         y las líneas de apertura/instalación se integran en el detalle
+         con el formato de texto que el render ya muestra con el recuadro
+         LOCAL y las fechas en rojo. Cada subida queda registrada en la
+         colección buzon_planificacion. */
+      var buzonLastResult = "";
+      var buzonBusy = false;
+      function buzonTimeMs(u){
+        var v = u && u.subido_en;
+        if (!v) return 0;
+        if (typeof v.toMillis === "function") return v.toMillis();
+        if (v instanceof Date) return v.getTime();
+        var n = Number(v);
+        return isNaN(n) ? 0 : n;
+      }
+      function buzonFechaHora(u){
+        var ms = buzonTimeMs(u);
+        if (!ms) return "";
+        var d = new Date(ms);
+        return d.getDate() + " " + MONTHS_SHORT[d.getMonth()] + " " + d.getFullYear() + ", " + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+      }
+      function buzonSemanaTxt(iso){
+        if (!iso) return "";
+        var d = parseISO(iso);
+        return "lunes " + d.getDate() + "/" + String(d.getMonth() + 1).padStart(2, "0") + "/" + d.getFullYear();
+      }
+      function buzonCell(v){ return '"' + String(v == null ? "" : v).replace(/"/g, '""') + '"'; }
+      function downloadBuzonDraft(){
+        var mo = addDaysISO(mondayOfISO(TODAY), 7);
+        var rows = [["fecha", "persona", "actividad", "detalle", "local", "apertura", "instalacion", "prioridad"]];
+        var firstRow = true;
+        state.members.forEach(function(m){
+          for (var d = 0; d < 7; d++){
+            var fecha = addDaysISO(mo, d);
+            if (firstRow) {
+              rows.push([fecha, m.name, "Visita de locales por aperturar", "Distrito 1 · Zona 12 (ejemplo, bórralo)", "860 Libertad Velazco Ibarra", "15 de diciembre", "", ""]);
+              firstRow = false;
+            } else {
+              rows.push([fecha, m.name, "", "", "", "", "", ""]);
+            }
+          }
+        });
+        var csv = rows.map(function(r){ return r.map(buzonCell).join(","); }).join("\r\n");
+        var blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
+        var aEl = document.createElement("a");
+        aEl.href = URL.createObjectURL(blob);
+        aEl.download = "borrador_planificacion.csv";
+        document.body.appendChild(aEl);
+        aEl.click();
+        setTimeout(function(){ URL.revokeObjectURL(aEl.href); aEl.remove(); }, 400);
+        toast("Borrador descargado: una fila por persona y día, " + weekLabel(mo).toLowerCase() + ".");
+      }
+      /* Parser CSV con comillas, comas dentro de campos y saltos de
+         línea dentro de campos; acepta coma o punto y coma como
+         separador (Excel en español suele guardar con punto y coma). */
+      function parseCSVText(text){
+        var src = String(text || "").replace(/^\ufeff/, "");
+        var firstLine = src.split(/\r?\n/, 1)[0] || "";
+        var commas = (firstLine.match(/,/g) || []).length;
+        var semis = (firstLine.match(/;/g) || []).length;
+        var delim = semis > commas ? ";" : ",";
+        var rows = [], row = [], field = "", inQ = false;
+        for (var i = 0; i < src.length; i++){
+          var c = src.charAt(i);
+          if (inQ) {
+            if (c === '"') {
+              if (src.charAt(i + 1) === '"') { field += '"'; i++; }
+              else inQ = false;
+            } else field += c;
+          } else if (c === '"') {
+            if (field === "") inQ = true; else field += c;
+          } else if (c === delim) {
+            row.push(field); field = "";
+          } else if (c === "\n") {
+            row.push(field); field = ""; rows.push(row); row = [];
+          } else if (c !== "\r") field += c;
+        }
+        row.push(field);
+        rows.push(row);
+        return rows;
+      }
+      /* La persona se reconoce por nombre completo (sin importar
+         mayúsculas ni acentos) o por su usuario nombre.apellido. */
+      function buzonMemberFor(raw){
+        var v = normName(raw).replace(/@formacion\.ec$/, "").trim();
+        if (!v) return null;
+        for (var i = 0; i < state.members.length; i++){
+          var m = state.members[i];
+          var full = normName(m.name);
+          if (v === full) return m;
+          var toks = full.split(" ").filter(Boolean);
+          if (toks.length >= 2 && v === toks[0] + "." + toks[1]) return m;
+        }
+        return null;
+      }
+      function buzonFechaISO(raw){
+        var v = String(raw || "").trim();
+        var m = v.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (m) {
+          var iso = m[1] + "-" + m[2] + "-" + m[3];
+          return isoOf(parseISO(iso)) === iso ? iso : null;
+        }
+        var m2 = v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (m2) {
+          var iso2 = m2[3] + "-" + String(m2[2]).padStart(2, "0") + "-" + String(m2[1]).padStart(2, "0");
+          return isoOf(parseISO(iso2)) === iso2 ? iso2 : null;
+        }
+        return null;
+      }
+      /* El detalle final integra el local (con su palabra «Local» para
+         que el render lo muestre en el recuadro negro) y las líneas de
+         instalación y de fecha de apertura, que el render pinta en rojo
+         igual que en las actividades cargadas a mano. */
+      function buzonBuildDetail(detalle, local, apertura, instalacion){
+        var lines = [];
+        var det = String(detalle || "").trim();
+        if (det) lines.push(det);
+        var inst = String(instalacion || "").trim();
+        if (inst) lines.push(/^instalaci/i.test(inst) ? inst : "Instalación: " + inst);
+        var loc = String(local || "").trim();
+        if (loc) lines.push(/^local\b/i.test(loc) ? loc : "Local " + loc);
+        var ape = String(apertura || "").trim();
+        if (ape) lines.push(/^fecha\s+de\s+apertura/i.test(ape) ? ape : "Fecha de apertura: " + ape);
+        return lines.join("\n");
+      }
+      function buzonShowResult(ok, mainText, subText, errores){
+        var h = "";
+        if (ok) {
+          h += '<div class="buzon-summary" role="status">' + esc(mainText);
+          if (subText) h += '<span class="bs-sub">' + esc(subText) + "</span>";
+          h += "</div>";
+        } else {
+          h += '<div class="buzon-errors" role="alert"><p>' + esc(mainText) + "</p></div>";
+        }
+        if (errores && errores.length) {
+          h += '<div class="buzon-errors"><p><strong>Filas con error:</strong></p>' + errores.map(function(e){ return "<p>Fila " + esc(e.fila) + ": " + esc(e.motivo) + "</p>"; }).join("") + "</div>";
+        }
+        buzonLastResult = h;
+        if (view === "panel" || view === "buzon") render();
+      }
+      function processBuzonCSV(text){
+        if (!requireDb()) return;
+        var rows = parseCSVText(text);
+        if (!rows.length) { buzonShowResult(false, "El archivo está vacío o no se pudo leer."); return; }
+        var head = rows[0].map(function(c){ return normName(c).replace(/\s+/g, ""); });
+        function colIdx(name){ return head.indexOf(name); }
+        var ci = { fecha: colIdx("fecha"), persona: colIdx("persona"), actividad: colIdx("actividad"), detalle: colIdx("detalle"), local: colIdx("local"), apertura: colIdx("apertura"), instalacion: colIdx("instalacion"), prioridad: colIdx("prioridad") };
+        if (ci.fecha === -1 || ci.persona === -1 || ci.actividad === -1) {
+          buzonShowResult(false, "El archivo no tiene las columnas del borrador (fecha, persona, actividad…). Descarga el borrador desde aquí y edítalo sin cambiar la primera fila.");
+          return;
+        }
+        function cell(r, idx){ return idx >= 0 && r[idx] != null ? String(r[idx]).trim() : ""; }
+        var errores = [], candidates = [], totalFilas = 0, ignoradas = 0;
+        var semanasVistas = {};
+        for (var i = 1; i < rows.length; i++){
+          var r = rows[i];
+          var allEmpty = true;
+          for (var j = 0; j < r.length; j++) if (String(r[j] || "").trim()) { allEmpty = false; break; }
+          if (allEmpty) continue;
+          totalFilas++;
+          var fila = i + 1;
+          var detalleRaw = cell(r, ci.detalle);
+          if (detalleRaw.toLowerCase().indexOf("(ejemplo") !== -1) { ignoradas++; continue; }
+          var actividad = cell(r, ci.actividad);
+          if (!actividad) { ignoradas++; continue; }
+          var personaRaw = cell(r, ci.persona);
+          var member = buzonMemberFor(personaRaw);
+          if (!member) { errores.push({ fila: fila, motivo: personaRaw ? "Persona no encontrada: «" + personaRaw + "»" : "Falta la persona" }); continue; }
+          var fechaRaw = cell(r, ci.fecha);
+          var fecha = buzonFechaISO(fechaRaw);
+          if (!fecha) { errores.push({ fila: fila, motivo: fechaRaw ? "Fecha inválida: «" + fechaRaw + "» (usa AAAA-MM-DD)" : "Falta la fecha" }); continue; }
+          var prioN = normName(cell(r, ci.prioridad));
+          var semana = mondayOfISO(fecha);
+          semanasVistas[semana] = true;
+          candidates.push({
+            title: actividad,
+            detail: buzonBuildDetail(detalleRaw, cell(r, ci.local), cell(r, ci.apertura), cell(r, ci.instalacion)),
+            member_id: member.orden,
+            date: fecha,
+            place: "",
+            deliverable: "",
+            status: "pendiente",
+            priority: (prioN === "alta" || prioN === "baja") ? prioN : "media",
+            origen: "buzon",
+            buzon_semana: semana
+          });
+        }
+        /* Reemplazo por semana: antes de cargar se borran solo las
+           actividades de esa(s) semana(s) que vinieron del buzón y que
+           el equipo aún NO marcó; Completada / No Completado y lo
+           creado a mano nunca se toca. */
+        var toDelete = state.activities.filter(function(a){
+          return a.origen === "buzon" && semanasVistas[a.buzon_semana] && !isClosedAct(a);
+        });
+        var deletedIds = {};
+        toDelete.forEach(function(a){ deletedIds[String(a.id)] = true; });
+        var pool = {};
+        state.activities.forEach(function(a){
+          if (deletedIds[String(a.id)]) return;
+          pool[a.member_id + "|" + a.date + "|" + normName(a.title)] = true;
+        });
+        var toAdd = [], saltadas = 0;
+        candidates.forEach(function(c){
+          var k = c.member_id + "|" + c.date + "|" + normName(c.title);
+          if (pool[k]) { saltadas++; return; }
+          pool[k] = true;
+          toAdd.push(c);
+        });
+        var semList = Object.keys(semanasVistas).sort();
+        var semanaLunes = semList.length ? semList[0] : "";
+        buzonBusy = true;
+        if (view === "panel" || view === "buzon") render();
+        var batchDel = db.batch();
+        toDelete.forEach(function(a){ batchDel.delete(db.collection("actividades").doc(String(a.id))); });
+        var chain = toDelete.length ? batchDel.commit() : Promise.resolve();
+        chain.then(function(){
+          var batchAdd = db.batch();
+          toAdd.forEach(function(c){ batchAdd.set(db.collection("actividades").doc(), c); });
+          return toAdd.length ? batchAdd.commit() : Promise.resolve();
+        }).then(function(){
+          /* El registro es lo último: si su guardado fallara, la carga
+             de actividades ya hecha no se reporta como error total. */
+          return db.collection("buzon_planificacion").add({
+            subido_por: currentProfile ? currentProfile.name : "",
+            subido_en: new Date(),
+            semana_lunes: semanaLunes,
+            total_filas: totalFilas,
+            cargadas: toAdd.length,
+            saltadas_duplicadas: saltadas,
+            errores: errores
+          }).then(function(){ return ""; }, function(regErr){ console.error(regErr); return "sin-registro"; });
+        }).then(function(regRes){
+          buzonBusy = false;
+          var ddmm = "";
+          if (semanaLunes) { var sd = parseISO(semanaLunes); ddmm = sd.getDate() + "/" + String(sd.getMonth() + 1).padStart(2, "0"); }
+          var mainTxt = toAdd.length
+            ? "Se cargaron " + toAdd.length + " actividades de la semana del lunes " + ddmm + "."
+            : "No se cargó ninguna actividad nueva.";
+          var subParts = [];
+          if (saltadas) subParts.push(saltadas + (saltadas === 1 ? " ya existía y se saltó" : " ya existían y se saltaron"));
+          if (ignoradas) subParts.push(ignoradas + (ignoradas === 1 ? " fila vacía o de ejemplo ignorada" : " filas vacías o de ejemplo ignoradas"));
+          if (errores.length) subParts.push(errores.length + (errores.length === 1 ? " fila con error (revisa abajo)" : " filas con error (revisa abajo)"));
+          if (regRes === "sin-registro") subParts.push("ojo: el registro de la subida no se pudo guardar");
+          buzonShowResult(true, mainTxt, subParts.join(" · "), errores);
+          toast("Borrador procesado: " + toAdd.length + " actividades cargadas al tablero.");
+        }).catch(function(err){
+          buzonBusy = false;
+          console.error(err);
+          buzonShowResult(false, "No se pudo guardar en Firestore. Revisa la conexión e inténtalo de nuevo.");
+        });
+      }
+      function handleBuzonFile(file){
+        if (!file || buzonBusy) return;
+        var reader = new FileReader();
+        reader.onload = function(){ processBuzonCSV(String(reader.result || "")); };
+        reader.onerror = function(){ buzonShowResult(false, "No se pudo leer el archivo. Inténtalo de nuevo."); };
+        reader.readAsText(file, "UTF-8");
+      }
+      function buzonUploadHTML(u, detailed){
+        var errs = (u.errores && u.errores.length) ? u.errores : [];
+        var fh = buzonFechaHora(u);
+        var h = '<div class="buzon-meta">'
+          + "<span>" + icon("user", 13) + " Subido por <strong>" + esc(u.subido_por || "—") + "</strong></span>"
+          + (fh ? "<span>" + icon("clock", 13) + " " + esc(fh) + "</span>" : "")
+          + (u.semana_lunes ? "<span>" + icon("calendar", 13) + " Semana del " + esc(buzonSemanaTxt(u.semana_lunes)) + "</span>" : "")
+          + "</div>";
+        h += '<div class="buzon-meta" style="margin-top:.45rem">'
+          + '<span class="pill pill-completado">' + (u.cargadas || 0) + " cargadas</span>"
+          + '<span class="pill pill-meta">' + (u.saltadas_duplicadas || 0) + " ya existían</span>"
+          + '<span class="pill pill-meta">' + (u.total_filas || 0) + " filas en el archivo</span>"
+          + (errs.length
+            ? '<span class="pill" style="background:var(--accent);color:#fff">' + errs.length + (errs.length === 1 ? " error" : " errores") + "</span>"
+            : '<span class="pill pill-meta">Sin errores</span>')
+          + "</div>";
+        if (detailed && errs.length) {
+          h += '<div class="buzon-errors">' + errs.map(function(e){ return "<p>Fila " + esc(e.fila) + ": " + esc(e.motivo) + "</p>"; }).join("") + "</div>";
+        }
+        return h;
+      }
+      function buzonSectionHTML(topGap){
+        var mo = addDaysISO(mondayOfISO(TODAY), 7);
+        var h = '<div class="sec-head"' + (topGap ? ' style="margin-top:2rem"' : "") + '><h2>' + secBadge("inbox", true) + 'Buzón de planificación</h2></div>';
+        h += '<div class="card buzon-card">';
+        h += '<p class="buzon-intro">El borrador de la <strong>' + esc(weekLabel(mo).toLowerCase()) + '</strong> ya trae una fila por persona y por día, con la fecha y el nombre puestos: solo hay que escribir la <strong>actividad</strong>, el <strong>detalle</strong> y el <strong>local</strong> en las filas que se necesiten. Al subir el borrador editado, la planificación se carga <strong>automáticamente</strong> en el tablero, una tarjeta por día y con el formato de siempre. Las filas que queden con la actividad vacía se ignoran, sin dar error.</p>';
+        h += '<div class="buzon-actions">'
+          + '<button type="button" class="btn-red" id="buzonDownload"' + (buzonBusy ? " disabled" : "") + ">" + icon("download", 15, 2.2) + "Descargar borrador</button>"
+          + '<button type="button" class="btn-black" id="buzonUploadBtn"' + (buzonBusy ? " disabled" : "") + ">" + icon("upload", 15, 2.2) + (buzonBusy ? "Procesando…" : "Subir borrador") + "</button>"
+          + '<input type="file" id="buzonFile" accept=".csv,text/csv" class="hidden" tabindex="-1" aria-hidden="true"></div>';
+        h += '<p class="buzon-note">La persona se reconoce por su nombre completo o por su usuario (nombre.apellido). Apertura, instalación y prioridad solo se llenan si aplican. Si se vuelve a subir el borrador de una semana, se reemplazan solo las actividades de esa semana que vinieron del buzón y que el equipo aún no ha marcado; lo ya marcado y lo creado a mano no se toca.</p>';
+        if (buzonLastResult) h += buzonLastResult;
+        var ups = state.buzon || [];
+        if (ups.length) {
+          h += '<div class="buzon-block"><h4>Última subida</h4>' + buzonUploadHTML(ups[0], true) + "</div>";
+          if (ups.length > 1) {
+            h += '<div class="buzon-block"><h4>Historial de subidas</h4>';
+            ups.slice(1).forEach(function(u){
+              var errsN = (u.errores && u.errores.length) || 0;
+              var fh2 = buzonFechaHora(u);
+              h += '<div class="buzon-hist-row"><span class="agenda-ico">' + icon("inbox", 16) + '</span><span class="bh-main"><strong>' + esc(u.subido_por || "—") + (fh2 ? " · " + esc(fh2) : "") + "</strong>"
+                + (u.semana_lunes ? "Semana del " + esc(buzonSemanaTxt(u.semana_lunes)) + " · " : "") + (u.cargadas || 0) + " cargadas · " + (u.saltadas_duplicadas || 0) + " ya existían · " + errsN + " con error</span></div>";
+            });
+            h += "</div>";
+          }
+        } else {
+          h += '<p class="buzon-note">Todavía no se ha subido ningún borrador.</p>';
+        }
+        h += "</div>";
+        return h;
+      }
+      function bindBuzonSection(root){
+        var dl = root.querySelector("#buzonDownload");
+        if (dl) dl.addEventListener("click", downloadBuzonDraft);
+        var up = root.querySelector("#buzonUploadBtn");
+        var fi = root.querySelector("#buzonFile");
+        if (up && fi) up.addEventListener("click", function(){ fi.click(); });
+        if (fi) fi.addEventListener("change", function(){
+          var f = fi.files && fi.files[0];
+          fi.value = "";
+          handleBuzonFile(f);
+        });
+      }
+      /* Vista Buzón en modo app (se llega desde Perfil › Administración) */
+      function renderBuzon(main){
+        if (!isAdmin()) { view = "hoy"; if (APP_MODE) renderHoy(main); else renderHoyWeb(main); return; }
+        main.innerHTML = '<section aria-label="Buzón de planificación">' + buzonSectionHTML(false) + "</section>";
+        bindBuzonSection(main);
+      }
+
       /* ---------- Panel web (solo admin): centro de administración ----------
          Avance por persona, balance de carga, No Completado con
          motivos, escalaciones por antigüedad y productividad, todo
@@ -3830,10 +4201,14 @@
         });
         h += "</tbody></table></div>";
         h += '<p style="margin-top:.75rem;font-size:12.5px;font-weight:600;color:var(--dim)">Cumplimiento y completadas se calculan con las actividades de la semana que muestra el tablero; los reportes se cuentan de todo el historial cargado, por la persona que reportó.</p>';
+        /* Buzón de planificación: descargar / subir el borrador de la
+           semana siguiente (se procesa solo al subirse). */
+        h += buzonSectionHTML(true);
         h += "</section>";
         main.innerHTML = h;
         var opens = main.querySelectorAll("[data-panel-report]");
         for (var i = 0; i < opens.length; i++) opens[i].addEventListener("click", function(){ handleReportOpen(this.getAttribute("data-panel-report")); });
+        bindBuzonSection(main);
       }
 
       /* ---------- Semana web: Tabla y Kanban ---------- */
@@ -3974,7 +4349,7 @@
       }
       function webViewTitle(){
         if (view === "reporte") return reportSubTab === "repositorio" ? "Repositorio de novedades" : "Reporte de novedades";
-        return { agenda: "Agenda", objetivos: "Objetivos", guia: "Guía para el Formador", temas: "Temas", equipo: "Equipo", panel: "Panel", datos: "Datos del equipo", mas: "Más" }[view] || "";
+        return { agenda: "Agenda", objetivos: "Objetivos", guia: "Guía para el Formador", temas: "Temas", equipo: "Equipo", panel: "Panel", buzon: "Buzón de planificación", datos: "Datos del equipo", mas: "Más" }[view] || "";
       }
       function webNotifications(){
         var list = [];
@@ -5372,6 +5747,7 @@
         renderAppNav();
         if (view === "hoy") { if (APP_MODE) renderHoy(main); else renderHoyWeb(main); }
         else if (view === "panel") { if (APP_MODE) renderPanel(main); else renderPanelWeb(main); }
+        else if (view === "buzon") renderBuzon(main);
         else if (view === "perfil" || view === "mas") renderPerfil(main);
         else if (view === "semana") renderSemana(main);
         else if (view === "agenda") renderAgenda(main);
